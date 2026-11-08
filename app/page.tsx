@@ -1,87 +1,59 @@
 import Link from "next/link";
-import { ArrowRight, Compass, Scale, Search } from "lucide-react";
+import { ArrowRight, BookOpen, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const VALUES = [
-  {
-    icon: Search,
-    title: "Enquêter",
-    text: "Explorez modules, données et entretiens pour comprendre la situation.",
-  },
-  {
-    icon: Scale,
-    title: "Décider",
-    text: "Arbitrez avec des impacts visibles sur les indicateurs clés.",
-  },
-  {
-    icon: Compass,
-    title: "Maîtriser",
-    text: "Pilotez trésorerie, production et moral comme un tableau de bord.",
-  },
-] as const;
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-canvas text-navy">
-      <div className="pointer-events-none absolute inset-0 atmosphere" aria-hidden />
+    <div className="relative min-h-screen overflow-hidden text-foreground">
+      <div className="pointer-events-none absolute inset-0 atmosphere-landing" aria-hidden />
       <div
-        className="pointer-events-none absolute -right-24 top-[-10%] h-[70vh] w-[55vw] rounded-full bg-navy/[0.06] blur-3xl"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -left-20 bottom-[-20%] h-[50vh] w-[40vw] rounded-full bg-accent/[0.08] blur-3xl"
+        className="pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-30"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 70% 40%, rgba(61,214,198,0.25), transparent 45%), linear-gradient(135deg, transparent 40%, rgba(240,160,90,0.12))",
+        }}
         aria-hidden
       />
 
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
-        <p className="font-display text-xl font-semibold tracking-tight text-navy">
+        <p className="font-display text-xl font-semibold tracking-tight text-accent">
           KEYBER
         </p>
         <Button asChild variant="outline" size="sm">
-          <Link href="/play">Démo</Link>
+          <Link href="/profil">Profil</Link>
         </Button>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col px-6 pb-20 pt-10 md:pt-20">
+      <main className="relative z-10 mx-auto flex min-h-[75vh] w-full max-w-6xl flex-col justify-center px-6 pb-20">
         <section className="hero-enter max-w-3xl">
-          <p className="mb-4 font-display text-5xl font-semibold tracking-tight text-navy md:text-7xl">
+          <p className="font-display text-5xl font-semibold tracking-tight text-accent md:text-7xl">
             KEYBER
           </p>
-          <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight text-navy md:text-5xl">
+          <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-5xl">
             Prends les commandes.
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 md:text-lg">
-            Plateforme générique de simulation de décisions. Une coquille
-            claire pour enquêter, décider et maîtriser — sans scénario métier.
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted md:text-lg">
+            Plateforme de simulation de décision professionnelle. Enquête,
+            investis dans la visibilité, pilote l&apos;atelier — comme un jeu
+            de gestion, avec la rigueur d&apos;un ERP.
           </p>
-          <div className="mt-8">
-            <Button asChild variant="accent" size="lg" className="cta-pulse">
-              <Link href="/play">
-                Entrer dans la démo
+
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <Button asChild variant="default" size="lg" className="cta-pulse">
+              <Link href="/skills">
+                <Brain className="h-4 w-4" />
+                Mode Compétence
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="accent" size="lg">
+              <Link href="/story">
+                <BookOpen className="h-4 w-4" />
+                Mode Histoire
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>
-        </section>
-
-        <section className="mt-24 grid gap-10 border-t border-slate-200/80 pt-12 md:grid-cols-3 md:gap-8">
-          {VALUES.map(({ icon: Icon, title, text }, index) => (
-            <article
-              key={title}
-              className="value-enter"
-              style={{ animationDelay: `${180 + index * 120}ms` }}
-            >
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-navy text-white">
-                <Icon className="h-5 w-5" />
-              </div>
-              <h2 className="font-display text-xl font-semibold text-navy">
-                {title}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {text}
-              </p>
-            </article>
-          ))}
         </section>
       </main>
     </div>

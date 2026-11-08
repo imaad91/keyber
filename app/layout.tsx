@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Outfit } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const body = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const body = localFont({
+  src: "./fonts/GeistVF.woff",
   variable: "--font-body",
+  weight: "100 900",
   display: "swap",
 });
 
-const display = Outfit({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+const display = localFont({
+  src: "./fonts/GeistVF.woff",
   variable: "--font-display",
+  weight: "100 900",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "KEYBER — Simulation de décisions",
+  title: "KEYBER — Simulation de décision professionnelle",
   description:
-    "Plateforme générique de simulation de décisions. Enquêter, décider, maîtriser.",
+    "Plateforme de simulation de décision : compétences, histoire, ERP, atelier live et brouillard de données.",
 };
 
 export default function RootLayout({

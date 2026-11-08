@@ -1,9 +1,68 @@
+export type VisibilityLevel = "INCONNU" | "ESTIME" | "PRECIS" | "TEMPS_REEL";
+
+export type ObjectiveType = "JOURNALIER" | "HEBDOMADAIRE" | "ANNUEL";
+
+export type ObjectiveStatus = "EN_COURS" | "COMPLETE" | "ECHOUE";
+
+export type MachineEtat = "PRODUCTION" | "PANNE" | "ARRET";
+
 export type ActionType =
-  | "CONSULT_MODULE"
+  | "OPEN_ERP"
   | "VIEW_DASHBOARD"
   | "ANALYZE_DATA"
   | "INTERVIEW"
-  | "DECIDE";
+  | "DECIDE"
+  | "VIEW_ATELIER_LIVE"
+  | "EMAILS"
+  | "CHAT";
+
+export type EventKind =
+  | "CLIENT"
+  | "CONTRAT"
+  | "MACHINE"
+  | "RH"
+  | "RUMEUR"
+  | "AUTRE";
+
+export type Skill = {
+  id: string;
+  nom: string;
+  description: string;
+  niveau: number;
+  xp: number;
+  xpMax: number;
+  scenarioIds: string[];
+  icone: string;
+};
+
+export type Role = {
+  id: string;
+  titre: string;
+  description: string;
+  icone: string;
+  focus: string[];
+};
+
+export type Objective = {
+  id: string;
+  type: ObjectiveType;
+  titre: string;
+  description: string;
+  progression: number;
+  cible: number;
+  xp: number;
+  status: ObjectiveStatus;
+};
+
+export type CompanyEvent = {
+  id: string;
+  kind: EventKind;
+  titre: string;
+  description: string;
+  timestamp: string;
+  isRumor?: boolean;
+  rumorResolved?: boolean | null;
+};
 
 export type Action = {
   id: string;
@@ -11,13 +70,7 @@ export type Action = {
   titre: string;
   icone: string;
   description: string;
-};
-
-export type GameState = {
-  tresorerie: number;
-  production: number;
-  moral: number;
-  [key: string]: number;
+  timeCostMinutes: number;
 };
 
 export type Personnage = {
@@ -25,12 +78,128 @@ export type Personnage = {
   nom: string;
   role: string;
   avatar: string;
-  dialogues: string[];
+  bio: string;
+  questions: { id: string; texte: string; reponse: string }[];
+};
+
+export type DecisionImpact = {
+  label: string;
+  value: string;
+  tone: "pos" | "neg" | "neu";
 };
 
 export type Decision = {
   id: string;
   titre: string;
-  impact: string;
-  deltas?: Partial<GameState>;
+  description: string;
+  categorie: string;
+  impacts: DecisionImpact[];
+  deltas?: Partial<Record<string, number>>;
+  visibilityUpgrade?: 1 | 2 | 3;
+  machineEffects?: { machineId: string; etat: MachineEtat }[];
+  unlockMachine?: Machine;
+  xpReward?: number;
+  timeCostMinutes: number;
+  costEuros?: number;
 };
+
+export type Email = {
+  id: string;
+  from: string;
+  subject: string;
+  preview: string;
+  body: string;
+  time: string;
+  read: boolean;
+  urgent?: boolean;
+};
+
+export type ChatMessage = {
+  id: string;
+  from: string;
+  role: string;
+  text: string;
+  time: string;
+  alert?: boolean;
+};
+
+export type Rumor = {
+  id: string;
+  titre: string;
+  texte: string;
+  verified: boolean | null;
+  eventId: string;
+};
+
+export type Machine = {
+  id: string;
+  nom: string;
+  etat: MachineEtat;
+  production: number;
+  nextMaintenance: string;
+  x: number;
+  y: number;
+};
+
+export type KpiDefinition = {
+  id: string;
+  label: string;
+  unit?: string;
+  format: "money" | "number" | "percent";
+  estimatedValue: number;
+  preciseValue: number;
+};
+
+export type VisibilityInvestment = {
+  level: 0 | 1 | 2 | 3;
+  label: string;
+  cost: number;
+  description: string;
+};
+
+export type Badge = {
+  id: string;
+  titre: string;
+  description: string;
+  unlocked: boolean;
+};
+
+export type DecisionHistoryItem = {
+  id: string;
+  titre: string;
+  at: string;
+  xp: number;
+};
+
+export type GameMode = "skills" | "story" | null;
+
+export type GameState = {
+  mode: GameMode;
+  roleId: string | null;
+  day: number;
+  week: number;
+  minutesSinceStart: number;
+  dayLengthMinutes: number;
+  xp: number;
+  level: number;
+  tresorerie: number;
+  production: number;
+  moral: number;
+  piecesAujourdhui: number;
+  tauxPanne: number;
+  vitesseProduction: number;
+  visibilityLevel: 0 | 1 | 2 | 3;
+  kpiVisibility: Record<string, VisibilityLevel>;
+  machines: Machine[];
+  objectives: Objective[];
+  events: CompanyEvent[];
+  emails: Email[];
+  messages: ChatMessage[];
+  rumors: Rumor[];
+  decisionHistory: DecisionHistoryItem[];
+  badges: Badge[];
+  skillProgress: Record<string, { niveau: number; xp: number }>;
+  feedbackFlash: string | null;
+};
+
+export type PlayTab = "workspace" | "emails" | "chat" | "feed";

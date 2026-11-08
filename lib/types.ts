@@ -107,6 +107,8 @@ export type DecisionImpact = {
   tone: "pos" | "neg" | "neu";
 };
 
+export type EndingKind = "VICTOIRE" | "PARTIELLE" | "ECHEC" | null;
+
 export type Decision = {
   id: string;
   titre: string;
@@ -278,6 +280,24 @@ export type GameState = {
   piecesAujourdhui: number;
   tauxPanne: number;
   vitesseProduction: number;
+  stockKg: number;
+  rebutRate: number;
+  ethique: number;
+  confianceAutoVolt: number;
+  piecesQualiteSemaine: number;
+  piecesBrutesSemaine: number;
+  dailyProductionBase: number;
+  overtimeBonus: number;
+  marieReorgBonus: number;
+  sensorInstalled: boolean;
+  machine3Bypass: boolean;
+  machine3DownDays: number;
+  dayDecisionId: string | null;
+  decisionsTaken: string[];
+  showDebrief: boolean;
+  ending: EndingKind;
+  alarmActive: boolean;
+  scenarioActive: boolean;
   visibilityLevel: 0 | 1 | 2 | 3;
   kpiVisibility: Record<string, VisibilityLevel>;
   machines: Machine[];

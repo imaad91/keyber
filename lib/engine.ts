@@ -2,12 +2,13 @@ import type {
   ActionType,
   Decision,
   DialogueChoice,
+  EndingKind,
   GameState,
   JournalEntry,
   Objective,
   VisibilityLevel,
 } from "./types";
-import { onboardingStepsMeta } from "./mock";
+import { ALL_ACTIONS, createScenarioDayState, onboardingStepsMeta } from "./mock";
 
 const XP_PER_LEVEL = 500;
 
@@ -119,6 +120,17 @@ export function checkObjectives(state: GameState): GameState {
     if (obj.id === "obj-j0") {
       progression = Math.min(obj.cible, Math.max(0, state.onboardingStep - 1));
       if (state.onboardingDone) progression = obj.cible;
+    }
+    if (obj.id === "obj-j1-cause") {
+      if (
+        state.sensorInstalled ||
+        state.unlockedInfos.includes("CAPTEUR_M3_MORT")
+      ) {
+        progression = 1;
+      }
+    }
+    if (obj.id === "obj-hebdo-500") {
+      progression = Math.min(obj.cible, state.piecesQualiteSemaine);
     }
 
     const status =
@@ -242,9 +254,341 @@ export function applyDecision(
       `Décision validée : ${decision.titre}${
         decision.xpReward ? ` (+${decision.xpReward} XP)` : ""
       }`,
+    dayDecisionId: decision.id,
+    decisionsTaken: [...next.decisionsTaken, decision.id],
   };
 
+  next = applyScenarioDecisionEffects(next, decision);
   return checkObjectives(next);
+}
+
+export function applyScenarioDecisionEffects(
+  state: GameState,
+  decision: Decision
+): GameState {
+  let next = { ...state };
+
+  if (decision.id === "d1-capteur") {
+    next = {
+      ...next,
+      sensorInstalled: true,
+      visibilityLevel: 2,
+      kpiVisibility: {
+        ...next.kpiVisibility,
+        tresorerie: "PRECIS",
+        production: "TEMPS_REEL",
+        moral: "PRECIS",
+        pieces: "TEMPS_REEL",
+        panne: "PRECIS",
+        rebut: "TEMPS_REEL",
+        stock: "PRECIS",
+        ethique: "PRECIS",
+        autovolt: "PRECIS",
+      },
+      rebutRate: 18,
+      production: next.dailyProductionBase,
+      feedbackFlash: "Capteur live — rebut réel 18 %, prod 60/jour",
+      badges: next.badges.map((b) =>
+        b.id === "badge-eye" ? { ...b, unlocked: true } : b
+      ),
+    };
+  }
+
+  if (decision.id === "d1-machine") {
+    next = {
+      ...next,
+      feedbackFlash:
+        "Nouvelle machine commandée — trop tard pour cette semaine",
+    };
+  }
+
+  if (decision.id === "d2-hs") {
+    next = {
+      ...next,
+      overtimeBonus: 20,
+      dailyProductionBase: 60 + 20 + next.marieReorgBonus,
+      production: 60 + 20 + next.marieReorgBonus,
+      relations: {
+        ...next.relations,
+        "pers-marie": clamp((next.relations["pers-marie"] ?? 30) - 10, 0, 100),
+      },
+    };
+  }
+
+  if (decision.id === "d2-no-hs") {
+    next = {
+      ...next,
+      relations: {
+        ...next.relations,
+        "pers-marie": clamp((next.relations["pers-marie"] ?? 30) + 8, 0, 100),
+      },
+    };
+  }
+
+  if (decision.id === "d2-marie-reorg") {
+    next = {
+      ...next,
+      marieReorgBonus: 15,
+      dailyProductionBase: 60 + next.overtimeBonus + 15,
+      production: 60 + next.overtimeBonus + 15,
+    };
+  }
+
+  if (decision.id === "d3-repair") {
+    next = {
+      ...next,
+      machine3DownDays: 1,
+      alarmActive: false,
+      machines: next.machines.map((m) =>
+        m.id === "m3"
+          ? { ...m, etat: "ARRET", production: 0, nextMaintenance: "Réparation J+1" }
+          : m
+      ),
+      feedbackFlash: "Machine 3 en réparation — atelier mis à jour",
+    };
+  }
+
+  if (decision.id === "d3-bypass") {
+    next = {
+      ...next,
+      machine3Bypass: true,
+      rebutRate: next.rebutRate + 8,
+      alarmActive: true,
+      feedbackFlash: "Contournement actif — qualité -10 %, Machine 3 rouge",
+    };
+  }
+
+  if (decision.id === "d3-externe") {
+    next = {
+      ...next,
+      alarmActive: false,
+      machine3DownDays: 0,
+      machines: next.machines.map((m) =>
+        m.id === "m3"
+          ? { ...m, etat: "PRODUCTION", production: 18, nextMaintenance: "J+7" }
+          : m
+      ),
+      feedbackFlash: "Machine 3 réparée (prestataire) — retour au vert",
+    };
+  }
+
+  if (decision.id === "d4-livrer") {
+    next = {
+      ...next,
+      ethique: clamp(next.ethique - 30, 0, 100),
+      confianceAutoVolt: clamp(next.confianceAutoVolt - 15, 0, 100),
+      piecesBrutesSemaine: next.piecesBrutesSemaine + 40,
+      piecesQualiteSemaine: next.piecesQualiteSemaine + 40,
+      feedbackFlash: "40 pièces livrées — éthique -30",
+    };
+  }
+
+  if (decision.id === "d4-jeter") {
+    next = {
+      ...next,
+      ethique: clamp(next.ethique + 20, 0, 100),
+      confianceAutoVolt: clamp(next.confianceAutoVolt + 10, 0, 100),
+      badges: next.badges.map((b) =>
+        b.id === "badge-ethique" ? { ...b, unlocked: true } : b
+      ),
+      feedbackFlash: "Pièces jetées — éthique +20, AutoVolt +10",
+    };
+  }
+
+  if (decision.id === "d5-nego-transparence") {
+    next = {
+      ...next,
+      ethique: clamp(next.ethique + 10, 0, 100),
+      confianceAutoVolt: clamp(next.confianceAutoVolt + 15, 0, 100),
+    };
+  }
+
+  if (decision.id === "d5-nego-prix") {
+    next = {
+      ...next,
+      confianceAutoVolt: clamp(next.confianceAutoVolt + 8, 0, 100),
+    };
+  }
+
+  if (decision.id === "d5-nego-dur") {
+    const bonus = next.ethique >= 50 && next.piecesQualiteSemaine >= 400 ? 5 : -5;
+    next = {
+      ...next,
+      confianceAutoVolt: clamp(next.confianceAutoVolt + bonus, 0, 100),
+    };
+  }
+
+  // After day decision, bank today's production into weekly quality
+  if (decision.id.startsWith("d") && decision.id.includes("-")) {
+    next = bankDayProduction(next);
+  }
+
+  return next;
+}
+
+function bankDayProduction(state: GameState): GameState {
+  if (state.day < 1 || state.day > 5) return state;
+  let daily = state.dailyProductionBase;
+  if (state.machine3DownDays > 0 && state.day === 3) {
+    daily = Math.round(daily * 0.55);
+  }
+  if (state.machine3Bypass) {
+    daily = Math.round(daily * 0.95);
+  }
+  const qualityFactor = Math.max(0.4, 1 - state.rebutRate / 100);
+  const quality = Math.round(daily * qualityFactor);
+  return {
+    ...state,
+    piecesAujourdhui: daily,
+    piecesBrutesSemaine: state.piecesBrutesSemaine + daily,
+    piecesQualiteSemaine: state.piecesQualiteSemaine + quality,
+    production: daily,
+    feedbackFlash:
+      (state.feedbackFlash ? state.feedbackFlash + " · " : "") +
+      `Journée bancarisée : +${quality} pièces qualité (cumul ${state.piecesQualiteSemaine + quality})`,
+  };
+}
+
+export function computeEnding(state: GameState): EndingKind {
+  const q = state.piecesQualiteSemaine;
+  const e = state.ethique;
+  if (e < 20 || q < 400) return "ECHEC";
+  if (q >= 480 && e > 50) return "VICTOIRE";
+  if (q >= 400 && q < 480) return "PARTIELLE";
+  if (q >= 480 && e <= 50) return "PARTIELLE";
+  return "ECHEC";
+}
+
+export function advanceScenarioDay(state: GameState): GameState {
+  if (state.showDebrief) return state;
+
+  // End of day 5 → debrief
+  if (state.day >= 5 && state.dayDecisionId) {
+    const ending = computeEnding(state);
+    return {
+      ...state,
+      showDebrief: true,
+      ending,
+      minutesSinceStart: state.dayLengthMinutes,
+      feedbackFlash:
+        ending === "VICTOIRE"
+          ? "Victoire — contrat AutoVolt tenu"
+          : ending === "PARTIELLE"
+            ? "Victoire partielle"
+            : "Échec — contrat en danger",
+      badges: state.badges.map((b) =>
+        b.id === "badge-victoire" && ending === "VICTOIRE"
+          ? { ...b, unlocked: true }
+          : b
+      ),
+      journal: [
+        {
+          id: `j-end-${Date.now()}`,
+          day: 5,
+          titre: "Débrief 16h00",
+          narration: endingNarration(ending, state),
+          xp: ending === "VICTOIRE" ? 500 : ending === "PARTIELLE" ? 200 : 50,
+          at: "16:00",
+        },
+        ...state.journal,
+      ],
+    };
+  }
+
+  if (!state.dayDecisionId) {
+    return {
+      ...state,
+      feedbackFlash: "Prends d'abord la décision du jour.",
+    };
+  }
+
+  const nextDay = state.day + 1;
+  const patch = createScenarioDayState(state, nextDay);
+  let next: GameState = {
+    ...state,
+    ...patch,
+    feedbackFlash: `Passage au Jour ${nextDay}`,
+  };
+
+  // Day 3: force machine 3 panne at 10:00
+  if (nextDay === 3) {
+    next = {
+      ...next,
+      minutesSinceStart: 2 * 60,
+      alarmActive: true,
+      machines: next.machines.map((m) =>
+        m.id === "m3"
+          ? { ...m, etat: "PANNE", production: 0, nextMaintenance: "URGENTE" }
+          : m
+      ),
+      journal: [
+        {
+          id: `j-panne-${Date.now()}`,
+          day: 3,
+          titre: "10h00 — PANNE MACHINE 3",
+          narration:
+            "Alarme. L'Atelier Live bascule au rouge. Il faut décider : réparer, contourner, ou prestataire.",
+          xp: 10,
+          at: "10:00",
+        },
+        ...next.journal,
+      ],
+    };
+  }
+
+  // Heal machine after repair day
+  if (state.day === 3 && state.decisionsTaken.includes("d3-repair")) {
+    next = {
+      ...next,
+      machine3DownDays: 0,
+      machines: next.machines.map((m) =>
+        m.id === "m3"
+          ? { ...m, etat: "PRODUCTION", production: 18, nextMaintenance: "J+5" }
+          : m
+      ),
+    };
+  }
+
+  return checkObjectives(next);
+}
+
+function endingNarration(ending: EndingKind, state: GameState): string {
+  const q = state.piecesQualiteSemaine;
+  const e = state.ethique;
+  if (ending === "VICTOIRE") {
+    return `Victoire. ${q} pièces qualité, éthique ${e}. AutoVolt reste. Novacier tient.`;
+  }
+  if (ending === "PARTIELLE") {
+    return `Victoire partielle. ${q} pièces qualité, éthique ${e}. Le contrat est fragile, mais vivant.`;
+  }
+  return `Échec. ${q} pièces qualité, éthique ${e}. AutoVolt s'éloigne — l'écho de 2022.`;
+}
+
+export function startScenarioWeek(state: GameState): GameState {
+  const patch = createScenarioDayState(state, 1);
+  return {
+    ...state,
+    ...patch,
+    day: 1,
+    onboardingDone: true,
+    onboardingStep: 5,
+    unlockedActions: [...ALL_ACTIONS],
+    scenarioActive: true,
+    minutesSinceStart: 15, // 08:15 — Laurent's email moment
+    feedbackFlash: "Jour 1 — 08:15. Mail de Laurent. Brouillard total.",
+    journal: [
+      {
+        id: `j-week-${Date.now()}`,
+        day: 1,
+        titre: "Jour 1 — Le brouillard",
+        narration:
+          "Lundi. Tous les KPIs affichent ???. Laurent demande où en est le retard. Karim murmure qu'un capteur est mort.",
+        xp: 10,
+        at: "08:15",
+      },
+      ...state.journal,
+    ],
+  };
 }
 
 export function applyDialogueChoice(
@@ -273,6 +617,37 @@ export function applyDialogueChoice(
 
   if (choice.xp) next = addXP(next, choice.xp);
 
+  if (
+    choice.unlockInfo === "RUMEUR_CONFIRMED" ||
+    choice.unlockInfo === "RUMEUR_PARTIELLE"
+  ) {
+    next = {
+      ...next,
+      rumors: next.rumors.map((r) =>
+        r.id === "rum-autovolt-pl" ? { ...r, verified: true } : r
+      ),
+      events: next.events.map((e) =>
+        e.id === "ev-rumor-pl" ? { ...e, rumorResolved: true } : e
+      ),
+      feedbackFlash: "Rumeur AutoVolt / Pologne confirmée via interview",
+    };
+  }
+
+  if (choice.unlockInfo === "SOLUTION_MARIE") {
+    next = {
+      ...next,
+      feedbackFlash:
+        "Solution Marie débloquée (confiance) — réorganisation sans HS",
+    };
+  }
+
+  if (choice.unlockInfo === "CAPTEUR_M3_MORT") {
+    next = checkObjectives({
+      ...next,
+      feedbackFlash: "Karim a parlé : capteur Machine 3 mort (5 k€)",
+    });
+  }
+
   next = {
     ...next,
     journal: [
@@ -290,7 +665,7 @@ export function applyDialogueChoice(
     ],
   };
 
-  return next;
+  return checkObjectives(next);
 }
 
 export function advanceOnboarding(

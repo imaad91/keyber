@@ -47,7 +47,18 @@ export function AtelierLiveView() {
         </div>
       </header>
 
-      <div className="relative min-h-[420px] flex-1 overflow-hidden rounded-2xl border border-white/10 bg-[#0a1422] shadow-soft">
+      <div
+        className={`relative min-h-[420px] flex-1 overflow-hidden rounded-2xl border shadow-soft ${
+          gameState.alarmActive
+            ? "border-danger/60 bg-[#1a0a0c] ring-2 ring-danger/40"
+            : "border-white/10 bg-[#0a1422]"
+        }`}
+      >
+        {gameState.alarmActive ? (
+          <div className="absolute left-4 top-4 z-10 rounded-full bg-danger px-3 py-1 text-xs font-bold uppercase tracking-wider text-white machine-fault">
+            Alarme Machine 3
+          </div>
+        ) : null}
         <div
           className="absolute inset-0 opacity-40"
           style={{

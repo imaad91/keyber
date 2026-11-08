@@ -52,11 +52,15 @@ export default function StoryPage() {
                 key={role.id}
                 type="button"
                 onClick={() => {
+                  if (role.id !== "prod") return;
                   setRole(role.id);
                   router.push("/intro");
                 }}
                 className={cn(
-                  "value-enter group rounded-2xl border border-white/10 bg-panel p-6 text-left shadow-soft transition hover:-translate-y-1 hover:border-accent/50 hover:shadow-glow"
+                  "value-enter group rounded-2xl border border-white/10 bg-panel p-6 text-left shadow-soft transition",
+                  role.id === "prod"
+                    ? "hover:-translate-y-1 hover:border-accent/50 hover:shadow-glow"
+                    : "cursor-not-allowed opacity-45"
                 )}
                 style={{ animationDelay: `${i * 80}ms` }}
               >

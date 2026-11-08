@@ -1,84 +1,95 @@
 import type {
   Action,
   Badge,
-  Chapitre,
-  ChatMessage,
-  CompanyEvent,
   Decision,
-  Email,
   GameState,
   KpiDefinition,
-  LivreEntreprise,
-  Machine,
-  Objective,
-  Personnage,
   Role,
-  Rumor,
   Skill,
   VisibilityInvestment,
 } from "./types";
+import {
+  DAY_LENGTH,
+  dayDecisions,
+  emailsForDay,
+  eventsForDay,
+  initialKpiVisibility,
+  livreNovacier as livreFromScenario,
+  messagesForDay,
+  scenarioChapters,
+  scenarioMachines,
+  scenarioObjectives,
+  scenarioPersonnages,
+  scenarioRumor,
+  SCENARIO_TITLE,
+} from "./scenario";
 
 export const COMPANY_NAME = "Novacier";
+export const SCENARIO_NAME = SCENARIO_TITLE;
+export const livreNovacier = livreFromScenario;
+export const examplePersonnages = scenarioPersonnages;
+export const exampleMachines = scenarioMachines;
+export const exampleObjectives = scenarioObjectives;
+export const exampleChapters = scenarioChapters;
+export const exampleNewMachine = {
+  id: "m5",
+  nom: "Ligne Flex 5",
+  etat: "PRODUCTION" as const,
+  production: 28,
+  nextMaintenance: "J+10",
+  x: 18,
+  y: 62,
+};
 
 export const skills: Skill[] = [
   {
     id: "negociation",
     nom: "Négociation",
-    description: "Obtenir des accords favorables sous contrainte.",
-    niveau: 2,
-    xp: 340,
-    xpMax: 500,
-    scenarioIds: [],
+    description: "Contrats et clients sous pression.",
+    niveau: 1,
+    xp: 40,
+    xpMax: 400,
+    scenarioIds: ["novacier"],
     icone: "Handshake",
   },
   {
     id: "crise",
     nom: "Gestion de crise",
-    description: "Stabiliser une situation critique rapidement.",
+    description: "Pannes, rebuts, délais.",
     niveau: 1,
-    xp: 120,
+    xp: 20,
     xpMax: 400,
-    scenarioIds: [],
+    scenarioIds: ["novacier"],
     icone: "Siren",
   },
   {
     id: "leadership",
     nom: "Leadership",
-    description: "Aligner équipes et décisions sous pression.",
-    niveau: 3,
-    xp: 610,
-    xpMax: 800,
-    scenarioIds: [],
+    description: "Marie, Karim, l'atelier.",
+    niveau: 1,
+    xp: 30,
+    xpMax: 400,
+    scenarioIds: ["novacier"],
     icone: "Users",
   },
   {
     id: "stock",
     nom: "Gestion de stock",
-    description: "Équilibrer stocks, délais et coûts.",
-    niveau: 2,
-    xp: 280,
-    xpMax: 500,
-    scenarioIds: [],
-    icone: "Package",
-  },
-  {
-    id: "finance",
-    nom: "Pilotage financier",
-    description: "Lire trésorerie, marges et investissements.",
+    description: "Acier, sécurité, flux.",
     niveau: 1,
-    xp: 90,
+    xp: 10,
     xpMax: 400,
-    scenarioIds: [],
-    icone: "Eye",
+    scenarioIds: ["novacier"],
+    icone: "Package",
   },
   {
     id: "data",
     nom: "Data & visibilité",
-    description: "Investir pour voir clair dans les opérations.",
+    description: "Capteurs, KPIs, brouillard.",
     niveau: 1,
-    xp: 40,
+    xp: 10,
     xpMax: 400,
-    scenarioIds: [],
+    scenarioIds: ["novacier"],
     icone: "Eye",
   },
 ];
@@ -87,139 +98,92 @@ export const roles: Role[] = [
   {
     id: "prod",
     titre: "Responsable de Production",
-    description: "Pilotez l'atelier, les machines et le rythme de sortie.",
+    description:
+      "Scénario POC : La Semaine Qui Décide De Tout — contrat AutoVolt.",
     icone: "Factory",
-    focus: ["Atelier", "Machines", "Qualité"],
+    focus: ["Atelier", "Qualité", "AutoVolt"],
     introLines: [
       "Lundi 8h00. Tu viens d'être nommé Responsable de Production chez Novacier.",
-      "L'atelier tourne. Une machine tousse. Personne ne te connaît encore.",
-      "Ton prédécesseur, Henri Vallon, t'attend près de la ligne. Il va te faire découvrir la maison — à sa façon.",
+      "120 employés. Quatre machines. AutoVolt = 45 % du CA. En 2022, l'entreprise a failli mourir.",
+      "Cette semaine décide de tout : 500 pièces qualité avant vendredi 16h. Laurent écrit déjà. Karim sait un secret. Marie te jauge.",
     ],
   },
   {
     id: "commercial",
     titre: "Commercial",
-    description: "Négociez contrats, clients et engagements de délai.",
+    description: "Disponible plus tard — POC centré Production.",
     icone: "Briefcase",
-    focus: ["Clients", "Contrats", "Marge"],
+    focus: ["Clients", "Contrats"],
     introLines: [
-      "Lundi 8h00. Tu prends le poste de Commercial chez Novacier.",
-      "Atlas Industries négocie ailleurs. Les délais font grincer des dents.",
-      "Henri Vallon, l'ancien Responsable, t'ouvre les portes avant que le téléphone sonne.",
+      "Mode non jouable dans ce POC — choisis Responsable de Production.",
     ],
   },
   {
     id: "dg",
     titre: "Directeur Général",
-    description: "Arbitrez la stratégie, les investissements et le moral.",
+    description: "Disponible plus tard — POC centré Production.",
     icone: "Crown",
-    focus: ["Vision", "Cash", "Équipes"],
+    focus: ["Vision", "Cash"],
     introLines: [
-      "Lundi 8h00. Tu es le nouveau Directeur Général de Novacier.",
-      "Les équipes te regardent. Les chiffres, eux, restent flous.",
-      "Henri Vallon te propose une visite — « avant les réunions, vois le terrain ».",
+      "Mode non jouable dans ce POC — choisis Responsable de Production.",
     ],
   },
   {
     id: "logistique",
     titre: "Logistique",
-    description: "Orchestrer stocks, fournisseurs et flux entrants.",
+    description: "Disponible plus tard — POC centré Production.",
     icone: "Truck",
-    focus: ["Stock", "Fournisseurs", "Délais"],
+    focus: ["Stock", "Délais"],
     introLines: [
-      "Lundi 8h00. Tu arrives comme Responsable Logistique chez Novacier.",
-      "Un camion Métalix est en retard. Les stocks de sécurité… personne n'est d'accord.",
-      "Henri Vallon, mentor du jour, te prend sous son aile le temps d'un premier tour.",
+      "Mode non jouable dans ce POC — choisis Responsable de Production.",
     ],
   },
 ];
-
-export const exampleMachines: Machine[] = [
-  {
-    id: "m1",
-    nom: "Presse A1",
-    etat: "PRODUCTION",
-    production: 42,
-    nextMaintenance: "J+3 14:00",
-    x: 12,
-    y: 28,
-  },
-  {
-    id: "m2",
-    nom: "Tour CNC 2",
-    etat: "PRODUCTION",
-    production: 38,
-    nextMaintenance: "J+1 09:00",
-    x: 42,
-    y: 22,
-  },
-  {
-    id: "m3",
-    nom: "Assembleuse 3",
-    etat: "PANNE",
-    production: 0,
-    nextMaintenance: "URGENTE",
-    x: 72,
-    y: 30,
-  },
-  {
-    id: "m4",
-    nom: "Contrôle Q4",
-    etat: "ARRET",
-    production: 0,
-    nextMaintenance: "J+5 11:00",
-    x: 42,
-    y: 62,
-  },
-];
-
-export const exampleNewMachine: Machine = {
-  id: "m5",
-  nom: "Ligne Flex 5",
-  etat: "PRODUCTION",
-  production: 28,
-  nextMaintenance: "J+10 08:00",
-  x: 18,
-  y: 62,
-};
 
 export const kpiDefinitions: KpiDefinition[] = [
   {
     id: "tresorerie",
     label: "Trésorerie",
     format: "money",
-    estimatedValue: 118_000,
-    preciseValue: 124_350,
+    estimatedValue: 400_000,
+    preciseValue: 420_000,
   },
   {
     id: "production",
-    label: "Production",
-    unit: "/100",
+    label: "Prod / jour",
     format: "number",
-    estimatedValue: 70,
-    preciseValue: 68,
+    estimatedValue: 55,
+    preciseValue: 60,
+  },
+  {
+    id: "rebut",
+    label: "Taux rebut",
+    format: "percent",
+    estimatedValue: 10,
+    preciseValue: 18,
+  },
+  {
+    id: "pieces",
+    label: "Qualité sem.",
+    format: "number",
+    estimatedValue: 0,
+    preciseValue: 0,
   },
   {
     id: "moral",
     label: "Moral",
     unit: "/100",
     format: "number",
-    estimatedValue: 60,
-    preciseValue: 57,
+    estimatedValue: 50,
+    preciseValue: 55,
   },
   {
-    id: "pieces",
-    label: "Pièces / jour",
+    id: "ethique",
+    label: "Éthique",
+    unit: "/100",
     format: "number",
-    estimatedValue: 450,
-    preciseValue: 412,
-  },
-  {
-    id: "panne",
-    label: "Taux de panne",
-    format: "percent",
-    estimatedValue: 8,
-    preciseValue: 12.4,
+    estimatedValue: 80,
+    preciseValue: 80,
   },
 ];
 
@@ -228,19 +192,19 @@ export const visibilityInvestments: VisibilityInvestment[] = [
     level: 1,
     label: "Suivi Excel",
     cost: 2_000,
-    description: "Passe les KPIs en ESTIMÉ, données avec retard.",
+    description: "Estimations retardées.",
   },
   {
     level: 2,
-    label: "Capteurs IoT",
-    cost: 15_000,
-    description: "Passe en PRÉCIS et débloque l'Atelier Live détaillé.",
+    label: "Capteur IoT Machine 3",
+    cost: 5_000,
+    description: "KPIs réels — cœur du Jour 1.",
   },
   {
     level: 3,
     label: "ERP + Analyste",
     cost: 40_000,
-    description: "TEMPS RÉEL, dashboards avancés et prédictions.",
+    description: "Temps réel + prédictions.",
   },
 ];
 
@@ -250,8 +214,8 @@ export const exampleActions: Action[] = [
     type: "OPEN_ERP",
     titre: "Ouvrir l'ERP",
     icone: "Database",
-    description: "Stock, commandes, employés…",
-    timeCostMinutes: 30,
+    description: "Stock, commandes…",
+    timeCostMinutes: 20,
   },
   {
     id: "act-dashboard",
@@ -259,7 +223,7 @@ export const exampleActions: Action[] = [
     titre: "Dashboard",
     icone: "LayoutDashboard",
     description: "KPIs et graphiques",
-    timeCostMinutes: 20,
+    timeCostMinutes: 15,
   },
   {
     id: "act-analyze",
@@ -267,30 +231,30 @@ export const exampleActions: Action[] = [
     titre: "Analyser",
     icone: "Table2",
     description: "Comparer les périodes",
-    timeCostMinutes: 45,
+    timeCostMinutes: 25,
   },
   {
     id: "act-interview",
     type: "INTERVIEW",
     titre: "Interview",
     icone: "MessagesSquare",
-    description: "Interroger un collaborateur",
-    timeCostMinutes: 30,
+    description: "Marie, Karim, Laurent…",
+    timeCostMinutes: 20,
   },
   {
     id: "act-decide",
     type: "DECIDE",
     titre: "Décider",
     icone: "Scale",
-    description: "Valider une décision",
-    timeCostMinutes: 15,
+    description: "Décision du jour",
+    timeCostMinutes: 0,
   },
   {
     id: "act-atelier",
     type: "VIEW_ATELIER_LIVE",
     titre: "Atelier Live",
     icone: "Factory",
-    description: "Vue 2D de l'atelier",
+    description: "Vue 2D machines",
     timeCostMinutes: 10,
   },
   {
@@ -298,7 +262,7 @@ export const exampleActions: Action[] = [
     type: "EMAILS",
     titre: "Emails",
     icone: "Mail",
-    description: "Boîte de réception",
+    description: "Boîte Laurent & cie",
     timeCostMinutes: 10,
   },
   {
@@ -306,7 +270,7 @@ export const exampleActions: Action[] = [
     type: "CHAT",
     titre: "Chat interne",
     icone: "MessageCircle",
-    description: "Messages d'équipe",
+    description: "Karim en douce…",
     timeCostMinutes: 5,
   },
 ];
@@ -314,773 +278,107 @@ export const exampleActions: Action[] = [
 export const onboardingStepsMeta = [
   {
     step: 1 as const,
-    titre: "Visite de l'Atelier Live",
-    mentorLine:
-      "Commence par le terrain. Ouvre l'Atelier Live — les machines te parlent plus vite que les réunions.",
+    titre: "Visite Atelier Live",
+    mentorLine: "Ouvre l'Atelier — vois les 4 machines avant de décider.",
     unlock: "VIEW_ATELIER_LIVE" as const,
     actionHint: "VIEW_ATELIER_LIVE" as const,
   },
   {
     step: 2 as const,
-    titre: "Présentation de Marie",
-    mentorLine:
-      "Marie Dupont tient l'atelier. Va l'interviewer. Écoute avant de décider.",
+    titre: "Parler à Marie",
+    mentorLine: "Marie Dubois te jauge. Interviewe-la.",
     unlock: "INTERVIEW" as const,
     actionHint: "INTERVIEW" as const,
   },
   {
     step: 3 as const,
-    titre: "Découverte de l'ERP",
-    mentorLine:
-      "Maintenant l'outil. L'ERP Novacier — moche, utile, indispensable. Ouvre-le.",
+    titre: "ERP Novacier",
+    mentorLine: "Ouvre l'ERP — stocks et commandes AutoVolt.",
     unlock: "OPEN_ERP" as const,
     actionHint: "OPEN_ERP" as const,
   },
   {
     step: 4 as const,
-    titre: "Premier objectif",
+    titre: "Lancer la semaine",
     mentorLine:
-      "Tu as assez vu. Ton premier objectif du jour : stabiliser la machine 3. Le reste des outils est à toi.",
+      "Objectif du jour : découvrir la vraie cause du retard. Puis Décider à 12h.",
     unlock: "ALL" as const,
     actionHint: "DECIDE" as const,
   },
 ];
 
-export const exampleChapters: Chapitre[] = [
-  {
-    id: "ch1",
-    numero: 1,
-    titre: "L'arrivée",
-    intro: "Premier jour. Découvrir l'atelier, les gens, le brouillard des chiffres.",
-    objectif: "Terminer le parcours mentor et ouvrir le Livre de l'Entreprise.",
-    fin: "Tu n'es plus un inconnu. Novacier commence à te regarder autrement.",
-    status: "ACTIF",
-  },
-  {
-    id: "ch2",
-    numero: 2,
-    titre: "La crise",
-    intro: "Une panne, un client impatient, des rumeurs. Le terrain se durcit.",
-    objectif: "Stabiliser la production sans casser le moral.",
-    fin: "La crise laisse des traces — et des leçons.",
-    status: "VERROUILLE",
-  },
-  {
-    id: "ch3",
-    numero: 3,
-    titre: "La visibilité",
-    intro: "Investir pour y voir clair, ou naviguer à l'aveugle.",
-    objectif: "Atteindre au moins le niveau Capteurs IoT.",
-    fin: "Les chiffres cessent d'être des rumeurs.",
-    status: "VERROUILLE",
-  },
-];
-
-export const livreNovacier: LivreEntreprise = {
-  nom: "Novacier",
-  slogan: "Des pièces précises. Des décisions nettes.",
-  histoire: {
-    fondation:
-      "Fondée en 1987 à Saint-Étienne par Claire Novak, Novacier est née d'un atelier de 6 personnes spécialisées dans les pièces métalliques de précision pour l'industrie.",
-    narratif:
-      "Novacier n'a jamais été la plus grande. Elle a survécu aux années 90 en refusant de sous-traiter la qualité. En 2009, une crise client a failli la couler : retards en cascade, moral en berne. L'équipe a tenu en remettant l'atelier au centre — avant les tableaux Excel. Aujourd'hui, 84 collaborateurs, 4 lignes, un ERP capricieux, et une culture du terrain qui se méfie des chiffres trop beaux.",
-    datesCles: [
-      { annee: "1987", fait: "Fondation de l'atelier Novak & Fils" },
-      { annee: "1998", fait: "Passage à Novacier SA, 1er contrat automobile" },
-      { annee: "2009", fait: "Crise Atlas — 3 mois de retards, plan de relance" },
-      { annee: "2019", fait: "Ligne Flex expérimentale (jamais finalisée)" },
-      { annee: "2024", fait: "Début du chantier IoT (reporté faute de budget)" },
-    ],
-    anecdotes: [
-      "Claire Novak testait chaque pièce à la loupe le soir, « pour dormir tranquille ».",
-      "La machine 3 s'appelle encore « La Rebelle » depuis 2011.",
-      "Le café de l'atelier est gratuit — règle non écrite, sacrée.",
-    ],
-    crisesPassees: [
-      "2009 : perte temporaire du compte Atlas, 18 % du CA.",
-      "2016 : incendie électrique mineur, arrêt 4 jours.",
-      "2022 : pénurie d'acier, stocks de sécurité épuisés.",
-    ],
-  },
-  activite: {
-    ceQuOnFabrique:
-      "Pièces métalliques de précision : usinage, emboutissage, assemblage et contrôle qualité pour l'industrie.",
-    pourQui:
-      "Équipementiers auto, machines spéciales, et quelques clients aéronautiques de rang 2.",
-    produitsPhares: [
-      {
-        nom: "Bride NV-220",
-        description: "Bride haute tolérance pour transmissions.",
-      },
-      {
-        nom: "Carter Compact C7",
-        description: "Carter usiné en petites séries.",
-      },
-      {
-        nom: "Kit Joints Pro",
-        description: "Ensemble joints + inserts pour maintenance.",
-      },
-    ],
-    clientsPrincipaux: [
-      "Atlas Industries",
-      "Nord Méca",
-      "Helio Parts",
-      "Atelier Nord",
-    ],
-  },
-  organigramme: [
-    { personnageId: "pers-henri" },
-    { personnageId: "pers-marie" },
-    { personnageId: "pers-thomas" },
-    { personnageId: "pers-samir" },
-    { personnageId: "pers-lea" },
-  ],
-  chiffresCles: {
-    ca: "12,4 M€",
-    employes: 84,
-    machines: 4,
-    clients: 27,
-    satisfaction: "78 %",
-  },
-  valeurs: [
-    {
-      titre: "Le terrain d'abord",
-      description: "Une décision sans visite d'atelier est suspecte.",
-    },
-    {
-      titre: "La qualité ne se négocie pas",
-      description: "Mieux vaut un retard assumé qu'un lot douteux.",
-    },
-    {
-      titre: "Parler vrai",
-      description: "Les mauvaises nouvelles remontent vite — ou trop tard.",
-    },
-    {
-      titre: "Investir pour voir",
-      description: "Un chiffre flou coûte plus cher qu'un capteur.",
-    },
-  ],
-  glossaire: [
-    {
-      terme: "OEE",
-      definition:
-        "Overall Equipment Effectiveness — taux de rendement global d'une machine (disponibilité × performance × qualité).",
-    },
-    {
-      terme: "Taux de rebut",
-      definition:
-        "Pourcentage de pièces non conformes par rapport au volume produit.",
-    },
-    {
-      terme: "ERP",
-      definition:
-        "Progiciel de gestion intégré : stocks, commandes, RH, factures dans un même système.",
-    },
-    {
-      terme: "Stock de sécurité",
-      definition:
-        "Quantité minimale conservée pour absorber les aléas fournisseurs ou de demande.",
-    },
-    {
-      terme: "Capteurs IoT",
-      definition:
-        "Capteurs connectés qui remontent l'état machine en temps (quasi) réel.",
-    },
-  ],
-};
-
-export const exampleObjectives: Objective[] = [
-  {
-    id: "obj-j0",
-    type: "JOURNALIER",
-    titre: "Terminer la visite mentor",
-    description: "Suivre les 4 étapes du Jour 0 avec Henri.",
-    progression: 0,
-    cible: 4,
-    xp: 60,
-    status: "EN_COURS",
-  },
-  {
-    id: "obj-j1",
-    type: "JOURNALIER",
-    titre: "Stabiliser la machine 3",
-    description: "Diagnostiquer ou décider une réparation.",
-    progression: 0,
-    cible: 1,
-    xp: 80,
-    status: "EN_COURS",
-  },
-  {
-    id: "obj-j2",
-    type: "JOURNALIER",
-    titre: "Lire 2 emails critiques",
-    description: "Traiter les urgences de la boîte.",
-    progression: 0,
-    cible: 2,
-    xp: 40,
-    status: "EN_COURS",
-  },
-  {
-    id: "obj-h1",
-    type: "HEBDOMADAIRE",
-    titre: "Améliorer la visibilité data",
-    description: "Investir au moins au niveau Excel.",
-    progression: 0,
-    cible: 1,
-    xp: 150,
-    status: "EN_COURS",
-  },
-  {
-    id: "obj-a1",
-    type: "ANNUEL",
-    titre: "Atteindre niveau 5",
-    description: "Progresser via décisions et objectifs.",
-    progression: 2,
-    cible: 5,
-    xp: 500,
-    status: "EN_COURS",
-  },
-];
-
-export const exampleEvents: CompanyEvent[] = [
-  {
-    id: "ev-1",
-    kind: "CLIENT",
-    titre: "Nouveau client — Atelier Nord",
-    description: "Demande de devis sur 12 000 pièces/mois.",
-    timestamp: "07:45",
-  },
-  {
-    id: "ev-2",
-    kind: "CONTRAT",
-    titre: "Nouveau contrat à signer",
-    description: "Clause de pénalité si retard > 48h.",
-    timestamp: "08:10",
-  },
-  {
-    id: "ev-3",
-    kind: "MACHINE",
-    titre: "Machine 3 signalée",
-    description: "Bruit anormal rapporté par l'équipe de nuit.",
-    timestamp: "08:20",
-  },
-  {
-    id: "ev-4",
-    kind: "RH",
-    titre: "Démission — technicien Q",
-    description: "Préavis de 1 mois reçu ce matin.",
-    timestamp: "08:35",
-  },
-  {
-    id: "ev-5",
-    kind: "RUMEUR",
-    titre: "Rumeur : le gros client partirait",
-    description: "Il paraît que le compte Atlas va changer de fournisseur.",
-    timestamp: "08:50",
-    isRumor: true,
-    rumorResolved: null,
-  },
-];
-
-export const exampleEmails: Email[] = [
-  {
-    id: "em-1",
-    from: "Fournisseur Métalix",
-    subject: "URGENT : Fournisseur en retard",
-    preview: "La livraison prévue à 10h sera décalée de 36h…",
-    body: "Bonjour,\n\nLa livraison prévue à 10h sera décalée de 36h suite à un incident transport.\nPouvez-vous confirmer si vous maintenez la commande ?\n\nCordialement,\nMétalix",
-    time: "07:52",
-    read: false,
-    urgent: true,
-  },
-  {
-    id: "em-2",
-    from: "Juridique",
-    subject: "Nouveau contrat à signer",
-    preview: "Le contrat Atlas V2 est prêt pour validation…",
-    body: "Le contrat Atlas V2 est prêt. Points d'attention : pénalités de retard et volume minimum.\nMerci de valider avant 17h.",
-    time: "08:05",
-    read: false,
-    urgent: true,
-  },
-  {
-    id: "em-3",
-    from: "RH",
-    subject: "Entretien de sortie — technicien Q",
-    preview: "Créneau proposé demain 11h…",
-    body: "Créneau proposé demain 11h pour l'entretien de sortie. Souhaitez-vous y assister ?",
-    time: "08:40",
-    read: true,
-  },
-  {
-    id: "em-4",
-    from: "Henri Vallon",
-    subject: "Bienvenue — et un conseil",
-    preview: "Ouvre le Livre de l'Entreprise avant de tout décider…",
-    body: "Bienvenue.\n\nAvant de tout décider : ouvre le Livre de l'Entreprise. Novacier a une mémoire. Lis-la.\n\nHenri",
-    time: "08:02",
-    read: false,
-  },
-];
-
-export const exampleMessages: ChatMessage[] = [
-  {
-    id: "msg-mentor-1",
-    from: "Henri Vallon",
-    role: "Ancien Responsable · Mentor",
-    text: "Bienvenue. Je suis Henri. Je reste dans ce chat si tu te perds. On commence par l'atelier.",
-    time: "08:00",
-    mentor: true,
-  },
-  {
-    id: "msg-1",
-    from: "Samir",
-    role: "Opérateur",
-    text: "Chef, la machine 3 fait un bruit bizarre depuis 20 min.",
-    time: "08:18",
-    alert: true,
-  },
-  {
-    id: "msg-2",
-    from: "Léa",
-    role: "Qualité",
-    text: "Trois lots ont un écart dimensionnel léger. Je surveille.",
-    time: "08:26",
-  },
-  {
-    id: "msg-3",
-    from: "Nora",
-    role: "Logistique",
-    text: "Le camion Métalix n'est pas encore scanné à l'entrée.",
-    time: "08:31",
-    alert: true,
-  },
-  {
-    id: "msg-4",
-    from: "Hugo",
-    role: "Maintenance",
-    text: "Je peux passer sur A1 cet après-midi si besoin.",
-    time: "08:44",
-  },
-];
-
-export const exampleRumors: Rumor[] = [
-  {
-    id: "rum-1",
-    titre: "Le gros client va partir ?",
-    texte: "Il paraît que le compte Atlas négocie ailleurs.",
-    verified: null,
-    eventId: "ev-5",
-  },
-];
-
-export const examplePersonnages: Personnage[] = [
-  {
-    id: "pers-henri",
-    nom: "Henri Vallon",
-    role: "Ancien Responsable · Mentor",
-    avatar: "HV",
-    bio: "22 ans chez Novacier. A connu la crise 2009. Parle peu, explique bien.",
-    phrase: "Le terrain d'abord. Les tableaux ensuite.",
-    isMentor: true,
-    relationConfiance: 70,
-    questions: [
-      {
-        id: "hq1",
-        texte: "Par où je commence vraiment ?",
-        choices: [
-          {
-            id: "hq1a",
-            texte: "Je te fais confiance — guide-moi.",
-            reponse:
-              "Bien. Atelier, Marie, ERP, puis ton premier objectif. Dans cet ordre.",
-            confianceDelta: 8,
-            xp: 15,
-          },
-          {
-            id: "hq1b",
-            texte: "Montre-moi d'abord les chiffres.",
-            reponse:
-              "Les chiffres sont flous ici. Tu verras des ???. On investira pour y voir clair — après le terrain.",
-            confianceDelta: -2,
-            unlockInfo: "Les KPIs démarrent en brouillard volontaire.",
-            xp: 10,
-          },
-        ],
-      },
-      {
-        id: "hq2",
-        texte: "Pourquoi tu restes en mentor ?",
-        choices: [
-          {
-            id: "hq2a",
-            texte: "Parce que Novacier compte pour toi ?",
-            reponse:
-              "Oui. Et parce qu'un nouveau chef seul casse des choses sans le vouloir.",
-            confianceDelta: 6,
-            xp: 10,
-          },
-          {
-            id: "hq2b",
-            texte: "Tu surveilles mes décisions ?",
-            reponse:
-              "Je corrige si tu vas dans le mur. Sinon, tu pilotes.",
-            confianceDelta: 2,
-            xp: 5,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pers-marie",
-    nom: "Marie Dupont",
-    role: "Cheffe d'atelier",
-    avatar: "MD",
-    bio: "15 ans sur le site. Connaît chaque machine par son bruit.",
-    phrase: "Si ça vibre mal, on arrête. Point.",
-    relationConfiance: 45,
-    questions: [
-      {
-        id: "q1",
-        texte: "Que se passe-t-il sur la machine 3 ?",
-        choices: [
-          {
-            id: "q1a",
-            texte: "Je te fais confiance — que recommandes-tu ?",
-            reponse:
-              "Arrêt contrôlé. Vibration sur le palier. Si on force, on casse. Merci d'écouter.",
-            confianceDelta: 12,
-            unlockInfo: "Marie confirmera un arrêt plutôt qu'un forçage.",
-            xp: 20,
-          },
-          {
-            id: "q1b",
-            texte: "Montre-moi les chiffres de panne.",
-            reponse:
-              "Les chiffres sont approximatifs. Mon oreille, elle, est précise. Tu verras ~12 % en ESTIMÉ.",
-            confianceDelta: -4,
-            unlockInfo: "Taux de panne machine 3 probablement sous-estimé.",
-            xp: 15,
-          },
-          {
-            id: "q1c",
-            texte: "On force pour Atlas, non ?",
-            reponse:
-              "Atlas préfère un retard honnête à un lot pourri. Tu le sauras vite.",
-            confianceDelta: -10,
-            xp: 5,
-          },
-        ],
-      },
-      {
-        id: "q2",
-        texte: "Le moral de l'équipe ?",
-        choices: [
-          {
-            id: "q2a",
-            texte: "Dis-moi franchement.",
-            reponse:
-              "Fatigués mais engagés. Une démission de plus et on bascule.",
-            confianceDelta: 8,
-            xp: 10,
-          },
-          {
-            id: "q2b",
-            texte: "Je veux des solutions, pas des plaintes.",
-            reponse:
-              "Alors investis dans la maintenance et la visibilité. Les slogans, on connaît.",
-            confianceDelta: -6,
-            xp: 5,
-          },
-        ],
-      },
-      {
-        id: "q3",
-        texte: "La rumeur Atlas, c'est sérieux ?",
-        choices: [
-          {
-            id: "q3a",
-            texte: "Tu as des faits ?",
-            reponse:
-              "Rien de factuel. Thomas a l'air tendu. Vérifie en interview ou dans les mails.",
-            confianceDelta: 4,
-            unlockInfo: "Piste : interviewer Thomas Leroy.",
-            xp: 12,
-          },
-          {
-            id: "q3b",
-            texte: "Ce n'est que du bruit de couloir.",
-            reponse:
-              "Peut-être. Les rumeurs ici ont parfois raison trop tôt.",
-            confianceDelta: 0,
-            xp: 5,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pers-thomas",
-    nom: "Thomas Leroy",
-    role: "Commercial senior",
-    avatar: "TL",
-    bio: "Gère le compte Atlas et les gros contrats.",
-    phrase: "Un délai raté = une porte qui se ferme.",
-    relationConfiance: 40,
-    questions: [
-      {
-        id: "tq1",
-        texte: "Atlas va-t-il partir ?",
-        choices: [
-          {
-            id: "tq1a",
-            texte: "Parle-moi franchement.",
-            reponse:
-              "Ils comparent. Si on rate encore un délai, oui. Sinon on tient. La rumeur est… à moitié vraie.",
-            confianceDelta: 10,
-            unlockInfo: "Rumeur Atlas : partiellement fondée.",
-            xp: 20,
-          },
-          {
-            id: "tq1b",
-            texte: "Montre-moi le pipeline.",
-            reponse:
-              "Pipeline tendu. Ils veulent aussi plus de transparence production — d'où les capteurs.",
-            confianceDelta: 4,
-            xp: 12,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pers-samir",
-    nom: "Samir Benali",
-    role: "Opérateur",
-    avatar: "SB",
-    bio: "Équipe de matin, ligne presse et assembleuse.",
-    phrase: "Chef, écoute la machine 3.",
-    relationConfiance: 50,
-    questions: [
-      {
-        id: "sq1",
-        texte: "Le bruit sur la 3, depuis quand ?",
-        choices: [
-          {
-            id: "sq1a",
-            texte: "Raconte-moi tout.",
-            reponse: "Depuis la nuit. Ça grince puis ça claque. Marie a raison.",
-            confianceDelta: 6,
-            xp: 10,
-          },
-          {
-            id: "sq1b",
-            texte: "Tu exagères peut-être ?",
-            reponse: "Non. Et si ça casse, ce sera pas moi qui invente.",
-            confianceDelta: -8,
-            xp: 0,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "pers-lea",
-    nom: "Léa Martin",
-    role: "Qualité",
-    avatar: "LM",
-    bio: "Contrôle dimensionnel et lots clients sensibles.",
-    phrase: "Trois lots borderline. Je surveille.",
-    relationConfiance: 55,
-    questions: [
-      {
-        id: "lq1",
-        texte: "Les écarts qualité, c'est grave ?",
-        choices: [
-          {
-            id: "lq1a",
-            texte: "Je te fais confiance — ton avis ?",
-            reponse:
-              "Pas encore critique. Mais si on force la 3, ça le devient.",
-            confianceDelta: 8,
-            xp: 12,
-          },
-          {
-            id: "lq1b",
-            texte: "Montre-moi les mesures.",
-            reponse:
-              "Dans l'ERP onglet qualité… enfin, ce qu'on a. Le reste est encore brouillard.",
-            confianceDelta: 2,
-            unlockInfo: "Données qualité partielles sans IoT.",
-            xp: 10,
-          },
-        ],
-      },
-    ],
-  },
-];
-
-export const exampleDecisions: Decision[] = [
-  {
-    id: "dec-repair",
-    titre: "Réparer la machine 3 maintenant",
-    description: "Arrêt contrôlé + intervention maintenance immédiate.",
-    categorie: "Production",
-    impacts: [
-      { label: "Trésorerie", value: "-4 500 €", tone: "neg" },
-      { label: "Production", value: "+8 pts (demain)", tone: "pos" },
-      { label: "Moral", value: "+3", tone: "pos" },
-    ],
-    deltas: { tresorerie: -4500, production: 4, moral: 3, tauxPanne: -4 },
-    machineEffects: [{ machineId: "m3", etat: "PRODUCTION" }],
-    xpReward: 60,
-    timeCostMinutes: 60,
-    costEuros: 4500,
-    journalNarration:
-      "Tu as choisi de réparer la machine 3. Marie a souri du coin des lèvres. L'atelier a respiré.",
-  },
-  {
-    id: "dec-force",
-    titre: "Forcer la production malgré l'alerte",
-    description: "Tenir le rythme client au risque d'une panne dure.",
-    categorie: "Production",
-    impacts: [
-      { label: "Pièces aujourd'hui", value: "+40", tone: "pos" },
-      { label: "Risque panne", value: "Élevé", tone: "neg" },
-      { label: "Moral", value: "-5", tone: "neg" },
-    ],
-    deltas: {
-      piecesAujourdhui: 40,
-      moral: -5,
-      tauxPanne: 6,
-      production: -2,
-    },
-    machineEffects: [{ machineId: "m3", etat: "PANNE" }],
-    xpReward: 25,
-    timeCostMinutes: 15,
-    journalNarration:
-      "Tu as forcé malgré l'alerte. Les pièces sont sorties. La confiance, elle, a reculé.",
-  },
-  {
-    id: "dec-vis-1",
-    titre: "Investir — Suivi Excel",
-    description: "Mettre en place un suivi Excel partagé (niveau 1).",
-    categorie: "Investir dans la visibilité",
-    impacts: [
-      { label: "Coût", value: "-2 000 €", tone: "neg" },
-      { label: "Visibilité", value: "ESTIMÉ", tone: "pos" },
-    ],
-    deltas: { tresorerie: -2000 },
-    visibilityUpgrade: 1,
-    xpReward: 40,
-    timeCostMinutes: 30,
-    costEuros: 2000,
-    journalNarration:
-      "Tu as investi dans un suivi Excel. Les ??? deviennent des ~estimations. Marie était sceptique, mais les réunions sont moins aveugles.",
-  },
-  {
-    id: "dec-vis-2",
-    titre: "Investir — Capteurs IoT",
-    description: "Installer des capteurs sur les machines critiques.",
-    categorie: "Investir dans la visibilité",
-    impacts: [
-      { label: "Coût", value: "-15 000 €", tone: "neg" },
-      { label: "Visibilité", value: "PRÉCIS", tone: "pos" },
-      { label: "Atelier Live", value: "Détaillé", tone: "pos" },
-    ],
-    deltas: { tresorerie: -15000 },
-    visibilityUpgrade: 2,
-    xpReward: 90,
-    timeCostMinutes: 45,
-    costEuros: 15000,
-    journalNarration:
-      "Capteurs IoT installés. L'atelier Live s'est allumé. Pour la première fois, tu vois vraiment.",
-  },
-  {
-    id: "dec-vis-3",
-    titre: "Investir — ERP + Analyste",
-    description: "Déployer l'ERP enrichi et un analyste dédié.",
-    categorie: "Investir dans la visibilité",
-    impacts: [
-      { label: "Coût", value: "-40 000 €", tone: "neg" },
-      { label: "Visibilité", value: "TEMPS RÉEL", tone: "pos" },
-      { label: "Prédictions", value: "Débloquées", tone: "pos" },
-    ],
-    deltas: { tresorerie: -40000 },
-    visibilityUpgrade: 3,
-    xpReward: 140,
-    timeCostMinutes: 60,
-    costEuros: 40000,
-    journalNarration:
-      "ERP + analyste : le brouillard tombe. Les dashboards avancés s'ouvrent. Novacier entre dans une autre époque.",
-  },
-  {
-    id: "dec-machine",
-    titre: "Acheter une nouvelle ligne Flex",
-    description: "Investir dans une 5e machine pour absorber le pic.",
-    categorie: "Investissement",
-    impacts: [
-      { label: "Coût", value: "-28 000 €", tone: "neg" },
-      { label: "Capacité", value: "+1 machine", tone: "pos" },
-    ],
-    deltas: { tresorerie: -28000, production: 6, vitesseProduction: 8 },
-    unlockMachine: exampleNewMachine,
-    xpReward: 100,
-    timeCostMinutes: 45,
-    costEuros: 28000,
-    journalNarration:
-      "La Ligne Flex 5 a apparu dans l'atelier. Un rectangle de plus — et un symbole : tu investis pour tenir.",
-  },
-];
+export const exampleDecisions: Decision[] = Object.values(dayDecisions).flat();
 
 export const exampleBadges: Badge[] = [
   {
     id: "badge-first",
     titre: "Première décision",
-    description: "Valider une première décision.",
+    description: "Valider une décision de la semaine.",
     unlocked: false,
   },
   {
     id: "badge-eye",
     titre: "Œil ouvert",
-    description: "Investir dans la visibilité data.",
+    description: "Installer le capteur / lever le brouillard.",
     unlocked: false,
   },
   {
     id: "badge-atelier",
     titre: "Chef d'atelier",
-    description: "Ouvrir la vue Atelier Live.",
+    description: "Ouvrir l'Atelier Live.",
     unlocked: false,
   },
   {
     id: "badge-jour0",
-    titre: "Premier jour",
-    description: "Terminer le parcours mentor Jour 0.",
+    titre: "Brief mentor",
+    description: "Terminer le parcours d'arrivée.",
     unlocked: false,
   },
   {
     id: "badge-livre",
     titre: "Mémoire de Novacier",
-    description: "Ouvrir le Livre de l'Entreprise.",
+    description: "Ouvrir le Livre.",
+    unlocked: false,
+  },
+  {
+    id: "badge-ethique",
+    titre: "Ligne rouge",
+    description: "Refuser de livrer les pièces défectueuses.",
+    unlocked: false,
+  },
+  {
+    id: "badge-victoire",
+    titre: "Contrat sauvé",
+    description: "Victoire AutoVolt.",
     unlocked: false,
   },
 ];
 
+export const exampleEmails = emailsForDay(1);
+export const exampleMessages = messagesForDay(1);
+export const exampleEvents = eventsForDay(1);
+export const exampleRumors = [scenarioRumor];
+
 export const erpStock = [
-  { id: "ST-01", article: "Acier 2mm", qty: 420, seuil: 200, statut: "OK" },
+  { id: "ST-01", article: "Acier 2mm", qty: 850, seuil: 200, statut: "OK" },
   { id: "ST-02", article: "Vis M6", qty: 85, seuil: 150, statut: "BAS" },
   { id: "ST-03", article: "Joints NBR", qty: 310, seuil: 100, statut: "OK" },
-  { id: "ST-04", article: "Cartons A", qty: 40, seuil: 80, statut: "CRITIQUE" },
+  {
+    id: "ST-04",
+    article: "Supports A-42 brut",
+    qty: 120,
+    seuil: 80,
+    statut: "OK",
+  },
 ];
 
 export const erpOrders = [
   {
-    id: "CMD-1042",
-    client: "Atlas Industries",
-    montant: 48600,
-    statut: "En cours",
-    echeance: "J+2",
+    id: "CMD-AV-500",
+    client: "AutoVolt",
+    montant: 186000,
+    statut: "Critique",
+    echeance: "Vendredi 16h",
   },
   {
     id: "CMD-1043",
@@ -1089,59 +387,70 @@ export const erpOrders = [
     statut: "Validée",
     echeance: "J+5",
   },
-  {
-    id: "CMD-1044",
-    client: "Helio Parts",
-    montant: 9200,
-    statut: "Brouillon",
-    echeance: "J+9",
-  },
 ];
 
 export const erpEmployees = [
-  { id: "E-12", nom: "Marie Dupont", poste: "Cheffe d'atelier", shift: "Matin" },
-  { id: "E-18", nom: "Samir Benali", poste: "Opérateur", shift: "Matin" },
-  { id: "E-21", nom: "Léa Martin", poste: "Qualité", shift: "Journée" },
-  { id: "E-27", nom: "Hugo Petit", poste: "Maintenance", shift: "Astreinte" },
+  {
+    id: "E-12",
+    nom: "Marie Dubois",
+    poste: "Cheffe d'atelier",
+    shift: "Matin",
+  },
+  {
+    id: "E-18",
+    nom: "Karim Benali",
+    poste: "Technicien Maintenance",
+    shift: "Journée",
+  },
+  {
+    id: "E-01",
+    nom: "Laurent Perrin",
+    poste: "Directeur",
+    shift: "—",
+  },
 ];
 
 export const erpInvoices = [
-  { id: "FAC-880", client: "Atlas", montant: 22000, statut: "Payée" },
-  { id: "FAC-881", client: "Nord Méca", montant: 6400, statut: "En retard" },
-  { id: "FAC-882", client: "Helio", montant: 3100, statut: "Émise" },
+  { id: "FAC-880", client: "AutoVolt", montant: 42000, statut: "En cours" },
+  { id: "FAC-881", client: "Nord Méca", montant: 6400, statut: "Payée" },
 ];
 
 export const erpMachinesTable = [
-  { id: "m1", nom: "Presse A1", etat: "PRODUCTION", oee: "82%" },
-  { id: "m2", nom: "Tour CNC 2", etat: "PRODUCTION", oee: "76%" },
-  { id: "m3", nom: "Assembleuse 3", etat: "PANNE", oee: "0%" },
+  { id: "m1", nom: "Presse 1", etat: "PRODUCTION", oee: "78%" },
+  { id: "m2", nom: "CNC 2", etat: "PRODUCTION", oee: "74%" },
+  { id: "m3", nom: "Assembleuse 3", etat: "Capteur HS", oee: "???" },
   { id: "m4", nom: "Contrôle Q4", etat: "ARRET", oee: "—" },
 ];
 
 export const dashboardSeries = [
-  { name: "Lun", prod: 380, panne: 6 },
-  { name: "Mar", prod: 410, panne: 8 },
-  { name: "Mer", prod: 395, panne: 11 },
-  { name: "Jeu", prod: 430, panne: 7 },
-  { name: "Ven", prod: 412, panne: 12 },
+  { name: "J1", prod: 60, panne: 4 },
+  { name: "J2", prod: 60, panne: 5 },
+  { name: "J3", prod: 40, panne: 18 },
+  { name: "J4", prod: 55, panne: 8 },
+  { name: "J5", prod: 70, panne: 6 },
 ];
 
 export const analyzeSeries = [
-  { periode: "S-4", actuel: 52, precedent: 48 },
-  { periode: "S-3", actuel: 55, precedent: 50 },
-  { periode: "S-2", actuel: 49, precedent: 53 },
-  { periode: "S-1", actuel: 61, precedent: 54 },
-  { periode: "S", actuel: 58, precedent: 57 },
+  { periode: "S-2", actuel: 48, precedent: 52 },
+  { periode: "S-1", actuel: 44, precedent: 48 },
+  { periode: "S", actuel: 40, precedent: 44 },
 ];
 
 export const skillEvolution = [
-  { mois: "Jan", nego: 1, crise: 1, lead: 2, stock: 1 },
-  { mois: "Fév", nego: 1, crise: 1, lead: 2, stock: 2 },
-  { mois: "Mar", nego: 2, crise: 1, lead: 3, stock: 2 },
-  { mois: "Avr", nego: 2, crise: 1, lead: 3, stock: 2 },
+  { mois: "S0", nego: 1, crise: 1, lead: 1, stock: 1 },
+  { mois: "S1", nego: 1, crise: 2, lead: 2, stock: 1 },
 ];
 
-const DAY0_UNLOCKS: GameState["unlockedActions"] = ["CHAT", "VIEW_ATELIER_LIVE"];
+const ALL_ACTIONS: GameState["unlockedActions"] = [
+  "OPEN_ERP",
+  "VIEW_DASHBOARD",
+  "ANALYZE_DATA",
+  "INTERVIEW",
+  "DECIDE",
+  "VIEW_ATELIER_LIVE",
+  "EMAILS",
+  "CHAT",
+];
 
 export function createInitialGameState(): GameState {
   return {
@@ -1150,29 +459,41 @@ export function createInitialGameState(): GameState {
     day: 0,
     week: 1,
     minutesSinceStart: 0,
-    dayLengthMinutes: 8 * 60,
-    xp: 40,
+    dayLengthMinutes: DAY_LENGTH,
+    xp: 0,
     level: 1,
-    tresorerie: 124_350,
-    production: 68,
-    moral: 57,
-    piecesAujourdhui: 412,
-    tauxPanne: 12.4,
-    vitesseProduction: 46,
+    tresorerie: 420_000,
+    production: 60,
+    moral: 55,
+    piecesAujourdhui: 0,
+    tauxPanne: 5,
+    vitesseProduction: 60,
+    stockKg: 850,
+    rebutRate: 18,
+    ethique: 80,
+    confianceAutoVolt: 60,
+    piecesQualiteSemaine: 0,
+    piecesBrutesSemaine: 0,
+    dailyProductionBase: 60,
+    overtimeBonus: 0,
+    marieReorgBonus: 0,
+    sensorInstalled: false,
+    machine3Bypass: false,
+    machine3DownDays: 0,
+    dayDecisionId: null,
+    decisionsTaken: [],
+    showDebrief: false,
+    ending: null,
+    alarmActive: false,
+    scenarioActive: true,
     visibilityLevel: 0,
-    kpiVisibility: {
-      tresorerie: "ESTIME",
-      production: "INCONNU",
-      moral: "INCONNU",
-      pieces: "INCONNU",
-      panne: "ESTIME",
-    },
-    machines: exampleMachines.map((m) => ({ ...m })),
-    objectives: exampleObjectives.map((o) => ({ ...o })),
-    events: exampleEvents.map((e) => ({ ...e })),
-    emails: exampleEmails.map((e) => ({ ...e })),
-    messages: exampleMessages.map((m) => ({ ...m })),
-    rumors: exampleRumors.map((r) => ({ ...r })),
+    kpiVisibility: { ...initialKpiVisibility },
+    machines: scenarioMachines.map((m) => ({ ...m })),
+    objectives: scenarioObjectives.map((o) => ({ ...o })),
+    events: eventsForDay(1),
+    emails: emailsForDay(1),
+    messages: messagesForDay(1),
+    rumors: [{ ...scenarioRumor }],
     decisionHistory: [],
     badges: exampleBadges.map((b) => ({ ...b })),
     skillProgress: Object.fromEntries(
@@ -1182,15 +503,45 @@ export function createInitialGameState(): GameState {
     introSeen: false,
     onboardingStep: 1,
     onboardingDone: false,
-    unlockedActions: [...DAY0_UNLOCKS],
-    chapterId: "ch1",
-    chapters: exampleChapters.map((c) => ({ ...c })),
+    unlockedActions: ["CHAT", "VIEW_ATELIER_LIVE"],
+    chapterId: "ch-semaine",
+    chapters: scenarioChapters.map((c) => ({ ...c })),
     journal: [],
     relations: Object.fromEntries(
-      examplePersonnages.map((p) => [p.id, p.relationConfiance])
+      scenarioPersonnages.map((p) => [p.id, p.relationConfiance])
     ),
     unlockedInfos: [],
   };
 }
 
+export function createScenarioDayState(
+  from: GameState,
+  day: number
+): Partial<GameState> {
+  return {
+    day,
+    minutesSinceStart: day === 3 ? 2 * 60 : 0, // Jour 3 starts near 10:00 for panne
+    dayDecisionId: null,
+    emails: emailsForDay(day),
+    messages: messagesForDay(day),
+    events: eventsForDay(day),
+    rumors:
+      day >= 2
+        ? [
+            {
+              ...scenarioRumor,
+              verified: from.unlockedInfos.includes("RUMEUR_CONFIRMED")
+                ? true
+                : from.unlockedInfos.includes("RUMEUR_PARTIELLE")
+                  ? true
+                  : null,
+            },
+          ]
+        : from.rumors,
+    alarmActive: day === 3,
+    piecesAujourdhui: 0,
+  };
+}
+
+export { ALL_ACTIONS, dayDecisions };
 export const initialGameState = createInitialGameState();

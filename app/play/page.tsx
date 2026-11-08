@@ -15,13 +15,19 @@ import { FeedbackToast } from "@/components/FeedbackToast";
 import { InterviewView } from "@/components/InterviewView";
 import { KpiBar } from "@/components/KpiBar";
 import { ObjectivePanel } from "@/components/ObjectivePanel";
+import { DebriefView } from "@/components/DebriefView";
 import { OnboardingCoach } from "@/components/OnboardingCoach";
+import { ScenarioDayBanner } from "@/components/ScenarioDayBanner";
 import { VisibilityPanel } from "@/components/VisibilityPanel";
 import { exampleActions, roles } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
 
 function ActionWorkspace() {
-  const { activeAction, playTab } = useGameStore();
+  const { activeAction, playTab, gameState } = useGameStore();
+
+  if (gameState.showDebrief) {
+    return <DebriefView />;
+  }
 
   if (playTab === "emails" || activeAction?.type === "EMAILS") {
     return <EmailInbox />;
@@ -34,14 +40,15 @@ function ActionWorkspace() {
     return (
       <div className="view-enter flex h-full max-w-lg flex-col justify-center">
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-          Quotidien · Novacier
+          Novacier · Semaine critique
         </p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
-          Une journée à découvrir
+          La Semaine Qui Décide De Tout
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Tu viens d&apos;arriver. Suis Henri, ouvre le Livre, débloque les
-          outils — chaque action consomme du temps.
+          Lis tes emails, interroge Karim et Marie, ouvre l&apos;atelier, puis
+          prends la décision du jour. Objectif : 500 pièces qualité avant
+          vendredi 16h.
         </p>
       </div>
     );
@@ -102,6 +109,7 @@ function PlayInner() {
         <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_300px]">
           <main className="min-h-0 overflow-auto p-4 md:p-6">
             <OnboardingCoach />
+            <ScenarioDayBanner />
             <ActionWorkspace />
           </main>
           <aside className="hidden min-h-0 space-y-6 overflow-y-auto border-l border-white/10 bg-panel/60 p-4 lg:block">

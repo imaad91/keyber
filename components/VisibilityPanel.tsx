@@ -2,7 +2,8 @@
 
 import { Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { exampleActions, exampleDecisions, visibilityInvestments } from "@/lib/mock";
+import { exampleActions, visibilityInvestments } from "@/lib/mock";
+import { dayDecisions } from "@/lib/scenario";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,8 @@ export function VisibilityPanel() {
 
   if (!showVisibilityPanel) return null;
 
+  const capteur = dayDecisions[1].find((d) => d.id === "d1-capteur");
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="reward-pop w-full max-w-lg rounded-2xl border border-white/15 bg-panel p-5 shadow-soft">
@@ -32,6 +35,7 @@ export function VisibilityPanel() {
             </h2>
             <p className="mt-1 text-sm text-muted">
               Niveau actuel : {gameState.visibilityLevel} / 3
+              {gameState.sensorInstalled ? " · Capteur M3 OK" : " · Capteur M3 mort"}
             </p>
           </div>
           <button
@@ -46,10 +50,10 @@ export function VisibilityPanel() {
 
         <div className="space-y-3">
           {visibilityInvestments.map((inv) => {
-            const owned = gameState.visibilityLevel >= inv.level;
-            const decision = exampleDecisions.find(
-              (d) => d.visibilityUpgrade === inv.level
-            );
+            const owned =
+              inv.level === 2
+                ? gameState.sensorInstalled
+                : gameState.visibilityLevel >= inv.level;
             return (
               <div
                 key={inv.level}
@@ -75,38 +79,31 @@ export function VisibilityPanel() {
                   </div>
                   {owned ? (
                     <span className="text-xs font-bold text-ok">Actif</span>
-                  ) : (
+                  ) : inv.level === 2 && capteur ? (
                     <Button
                       size="sm"
-                      disabled={!decision || inv.level > gameState.visibilityLevel + 1}
+                      disabled={Boolean(gameState.dayDecisionId) && gameState.day === 1}
                       onClick={() => {
-                        if (!decision) return;
                         setShowVisibilityPanel(false);
-                        setSelectedDecisionId(decision.id);
-                        applyDecision(decision);
+                        if (gameState.day === 1 && !gameState.dayDecisionId) {
+                          applyDecision(capteur);
+                        } else {
+                          setSelectedDecisionId("d1-capteur");
+                          const decide = exampleActions.find((a) => a.type === "DECIDE");
+                          if (decide) setActiveAction({ ...decide, timeCostMinutes: 0 });
+                        }
                       }}
                     >
-                      Investir
+                      Installer
                     </Button>
+                  ) : (
+                    <span className="text-[11px] text-muted">Via Décider</span>
                   )}
                 </div>
               </div>
             );
           })}
         </div>
-
-        <Button
-          variant="ghost"
-          className="mt-4 w-full"
-          onClick={() => {
-            setShowVisibilityPanel(false);
-            setSelectedDecisionId("dec-vis-1");
-            const decide = exampleActions.find((a) => a.type === "DECIDE");
-            if (decide) setActiveAction({ ...decide, timeCostMinutes: 0 });
-          }}
-        >
-          Voir toutes les décisions de visibilité
-        </Button>
       </div>
     </div>
   );

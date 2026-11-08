@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import {
   advanceOnboarding,
+  advanceScenarioDay,
   advanceTime,
   applyDecision as engineApplyDecision,
   applyDialogueChoice as engineApplyDialogueChoice,
@@ -10,6 +11,7 @@ import {
   completeOnboardingStep4,
   markEmailRead as engineMarkEmailRead,
   resolveRumor as engineResolveRumor,
+  startScenarioWeek,
   unlockBadge,
 } from "./engine";
 import { createInitialGameState } from "./mock";
@@ -76,23 +78,26 @@ export function setRole(roleId: string) {
 }
 
 export function markIntroSeen() {
-  patchGame((s) => ({
-    ...s,
-    introSeen: true,
-    feedbackFlash: "Premier jour — suis Henri.",
-    journal: [
-      {
-        id: `j-intro-${Date.now()}`,
-        day: 0,
-        titre: "Lundi 8h00 — Arrivée",
-        narration:
-          "Tu as franchi la porte de Novacier. Henri Vallon t'attend. Le Chapitre 1 commence.",
-        xp: 10,
-        at: "08:00",
-      },
-      ...s.journal,
-    ],
-  }));
+  patchGame((s) => {
+    const withIntro = {
+      ...s,
+      introSeen: true,
+      journal: [
+        {
+          id: `j-intro-${Date.now()}`,
+          day: 0,
+          titre: "Lundi 8h00 — Arrivée",
+          narration:
+            "Tu franchis la porte de Novacier. Henri te salue. La Semaine Qui Décide De Tout commence.",
+          xp: 10,
+          at: "08:00",
+        },
+        ...s.journal,
+      ],
+    };
+    // POC: jump into Day 1 with tools unlocked for a 25–30 min run
+    return startScenarioWeek(withIntro);
+  });
 }
 
 export function setActiveAction(action: Action | null) {
@@ -168,7 +173,7 @@ export function markLivreOpened() {
             day: Math.max(0, s.day),
             titre: "Livre de Novacier",
             narration:
-              "Tu as ouvert le Livre de l'Entreprise. Histoire, organigramme, valeurs — la mémoire du lieu.",
+              "Tu as ouvert le Livre : 1987, quasi-faillite 2022, AutoVolt 45 % du CA. La mémoire du lieu.",
             xp: 20,
             at: "—",
           },
@@ -182,12 +187,28 @@ export function markLivreOpened() {
 
 export function applyDecision(decision: Decision) {
   patchGame((s) => {
+    if (s.dayDecisionId) {
+      return {
+        ...s,
+        feedbackFlash: "Décision du jour déjà prise — passe au jour suivant.",
+      };
+    }
+    if (decision.id === "d2-marie-reorg" && (s.relations["pers-marie"] ?? 0) <= 60) {
+      return {
+        ...s,
+        feedbackFlash: "Il faut confiance Marie > 60 pour cette option.",
+      };
+    }
     let next = engineApplyDecision(s, decision);
     if (!next.onboardingDone && next.onboardingStep === 4) {
       next = completeOnboardingStep4(next);
     }
     return next;
   });
+}
+
+export function advanceDay() {
+  patchGame((s) => advanceScenarioDay(s));
 }
 
 export function applyDialogueChoice(
@@ -206,7 +227,7 @@ export function resolveRumor(rumorId: string, verified: boolean) {
 }
 
 export function finishOnboarding() {
-  patchGame((s) => completeOnboardingStep4(s));
+  patchGame((s) => startScenarioWeek(completeOnboardingStep4(s)));
 }
 
 export function clearFeedback() {
@@ -249,6 +270,7 @@ export function useGameStore() {
     setShowVisibilityPanel,
     markLivreOpened,
     applyDecision,
+    advanceDay,
     applyDialogueChoice,
     markEmailRead,
     resolveRumor,

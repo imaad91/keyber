@@ -14,26 +14,15 @@ export function KpiBar() {
     <div className="flex flex-wrap items-stretch gap-2 border-b border-white/10 bg-panel/80 px-4 py-3 backdrop-blur-md">
       {kpiDefinitions.map((kpi, index) => {
         const visibility = gameState.kpiVisibility[kpi.id] ?? "INCONNU";
-        const raw =
-          visibility === "INCONNU" || visibility === "ESTIME"
-            ? kpi.estimatedValue
-            : kpi.id === "tresorerie"
-              ? gameState.tresorerie
-              : kpi.id === "production"
-                ? gameState.production
-                : kpi.id === "moral"
-                  ? gameState.moral
-                  : kpi.id === "pieces"
-                    ? gameState.piecesAujourdhui
-                    : gameState.tauxPanne;
+        const raw = resolveRaw(kpi.id, gameState, kpi);
 
         const formatted = formatKpiValue(raw, kpi.format, visibility);
 
         return (
           <div
             key={kpi.id}
-            className="kpi-tick reward-pop flex min-w-[120px] flex-1 items-center gap-2 rounded-xl border border-white/10 bg-panel-2 px-3 py-2 shadow-soft"
-            style={{ animationDelay: `${index * 50}ms` }}
+            className="kpi-tick reward-pop flex min-w-[110px] flex-1 items-center gap-2 rounded-xl border border-white/10 bg-panel-2 px-3 py-2 shadow-soft"
+            style={{ animationDelay: `${index * 40}ms` }}
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
@@ -80,8 +69,35 @@ export function KpiBar() {
         onClick={() => setShowVisibilityPanel(true)}
       >
         <Eye className="h-3.5 w-3.5" />
-        Améliorer la visibilité
+        Visibilité
       </Button>
     </div>
   );
+}
+
+function resolveRaw(
+  id: string,
+  gameState: ReturnType<typeof useGameStore>["gameState"],
+  kpi: { estimatedValue: number; preciseValue: number }
+) {
+  const visibility = gameState.kpiVisibility[id] ?? "INCONNU";
+  if (visibility === "INCONNU" || visibility === "ESTIME") {
+    return kpi.estimatedValue;
+  }
+  switch (id) {
+    case "tresorerie":
+      return gameState.tresorerie;
+    case "production":
+      return gameState.production;
+    case "moral":
+      return gameState.moral;
+    case "pieces":
+      return gameState.piecesQualiteSemaine;
+    case "rebut":
+      return gameState.rebutRate;
+    case "ethique":
+      return gameState.ethique;
+    default:
+      return kpi.preciseValue;
+  }
 }

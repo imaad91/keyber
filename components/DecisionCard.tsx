@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { exampleDecisions } from "@/lib/mock";
+import { dayDecisions } from "@/lib/mock";
+import { dayTitles } from "@/lib/scenario";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -10,57 +11,64 @@ export function DecisionCard() {
     selectedDecisionId,
     setSelectedDecisionId,
     applyDecision,
+    advanceDay,
     gameState,
   } = useGameStore();
 
-  const selected =
-    exampleDecisions.find((d) => d.id === selectedDecisionId) ??
-    exampleDecisions[0];
+  const day = Math.min(5, Math.max(1, gameState.day || 1));
+  let decisions = dayDecisions[day] ?? [];
 
-  const categories = Array.from(
-    new Set(exampleDecisions.map((d) => d.categorie))
-  );
+  // Marie reorg only if trust > 60
+  const marieTrust = gameState.relations["pers-marie"] ?? 0;
+  decisions = decisions.filter((d) => {
+    if (d.id === "d2-marie-reorg") return marieTrust > 60;
+    return true;
+  });
+
+  const selected =
+    decisions.find((d) => d.id === selectedDecisionId) ?? decisions[0];
+  const already = Boolean(gameState.dayDecisionId);
+
+  if (!selected) {
+    return (
+      <p className="text-sm text-muted">Aucune décision pour ce jour.</p>
+    );
+  }
 
   return (
     <section className="view-enter grid h-full gap-4 lg:grid-cols-[280px_1fr]">
       <aside className="space-y-3 overflow-y-auto">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-          Décisions
+          {dayTitles[day] ?? `Jour ${day}`}
         </p>
-        {categories.map((cat) => (
-          <div key={cat}>
-            <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-muted">
-              {cat}
-            </p>
-            <div className="space-y-1.5">
-              {exampleDecisions
-                .filter((d) => d.categorie === cat)
-                .map((d) => (
-                  <button
-                    key={d.id}
-                    type="button"
-                    onClick={() => setSelectedDecisionId(d.id)}
-                    className={cn(
-                      "w-full rounded-xl border px-3 py-2.5 text-left transition",
-                      selected.id === d.id
-                        ? "border-accent/50 bg-accent/10"
-                        : "border-white/10 bg-panel-2 hover:bg-white/5"
-                    )}
-                  >
-                    <span className="block text-sm font-semibold text-foreground">
-                      {d.titre}
-                    </span>
-                    <span className="text-[11px] text-muted">
-                      {d.timeCostMinutes} min
-                      {d.costEuros
-                        ? ` · ${d.costEuros.toLocaleString("fr-FR")} €`
-                        : ""}
-                    </span>
-                  </button>
-                ))}
-            </div>
-          </div>
-        ))}
+        <div className="space-y-1.5">
+          {decisions.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              disabled={already}
+              onClick={() => setSelectedDecisionId(d.id)}
+              className={cn(
+                "w-full rounded-xl border px-3 py-2.5 text-left transition",
+                selected.id === d.id
+                  ? "border-accent/50 bg-accent/10"
+                  : "border-white/10 bg-panel-2 hover:bg-white/5",
+                already && gameState.dayDecisionId === d.id && "ring-1 ring-ok",
+                already && "opacity-70"
+              )}
+            >
+              <span className="block text-sm font-semibold text-foreground">
+                {d.titre}
+              </span>
+              <span className="text-[11px] text-muted">
+                {d.timeCostMinutes} min
+                {d.costEuros
+                  ? ` · ${d.costEuros.toLocaleString("fr-FR")} €`
+                  : ""}
+              </span>
+            </button>
+          ))}
+        </div>
       </aside>
 
       <article className="reward-pop flex flex-col rounded-2xl border border-white/10 bg-panel p-6 shadow-soft">
@@ -97,17 +105,27 @@ export function DecisionCard() {
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-8">
           <p className="text-xs text-muted">
-            Coût temps : {selected.timeCostMinutes} min · XP : +
-            {selected.xpReward ?? 0} · Cash :{" "}
+            Qualité semaine : {gameState.piecesQualiteSemaine}/500 · Éthique :{" "}
+            {gameState.ethique} · Cash :{" "}
             {gameState.tresorerie.toLocaleString("fr-FR")} €
           </p>
-          <Button
-            size="lg"
-            className="cta-pulse"
-            onClick={() => applyDecision(selected)}
-          >
-            Valider la décision
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {!already ? (
+              <Button
+                size="lg"
+                className="cta-pulse"
+                onClick={() => applyDecision(selected)}
+              >
+                Valider la décision
+              </Button>
+            ) : (
+              <Button size="lg" variant="accent" onClick={() => advanceDay()}>
+                {gameState.day >= 5
+                  ? "Voir le débrief 16h"
+                  : `Passer au Jour ${gameState.day + 1}`}
+              </Button>
+            )}
+          </div>
         </div>
       </article>
     </section>

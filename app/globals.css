@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f4f6f9;
+  --foreground: #0f1c2e;
+  --navy: #1e3a5f;
+  --navy-light: #2a4a73;
+  --accent: #e85d04;
+  --accent-dark: #d14f00;
+  --canvas: #f4f6f9;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--canvas);
+}
+
+.atmosphere {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(30, 58, 95, 0.07), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(232, 93, 4, 0.06), transparent 50%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 45%, #f4f6f9 100%);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 93, 4, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(232, 93, 4, 0);
+  }
+}
+
+@keyframes kpi-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-enter {
+  animation: fade-up 0.7s ease-out both;
+}
+
+.value-enter {
+  animation: fade-up 0.6s ease-out both;
+}
+
+.view-enter {
+  animation: fade-up 0.35s ease-out both;
+}
+
+.cta-pulse {
+  animation: soft-pulse 2.4s ease-in-out infinite;
+}
+
+.kpi-card {
+  animation: kpi-in 0.4s ease-out both;
+}
+
+.kpi-card:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.kpi-card:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

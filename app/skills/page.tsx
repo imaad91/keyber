@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { skills } from "@/lib/mock";
+import { setMode } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 
@@ -50,7 +51,9 @@ export default function SkillsPage() {
             </p>
           </div>
           <Button asChild>
-            <Link href="/play">Entrer dans /play</Link>
+            <Link href="/play" onClick={() => setMode("skills")}>
+              Entrer dans /play
+            </Link>
           </Button>
         </div>
 

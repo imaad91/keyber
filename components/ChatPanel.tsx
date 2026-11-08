@@ -23,9 +23,11 @@ export function ChatPanel() {
             key={msg.id}
             className={cn(
               "reward-pop max-w-[90%] rounded-2xl rounded-tl-md border px-3 py-2",
-              msg.alert
-                ? "border-danger/40 bg-danger/10"
-                : "border-white/10 bg-panel-2"
+              msg.mentor
+                ? "border-accent/40 bg-accent/10"
+                : msg.alert
+                  ? "border-danger/40 bg-danger/10"
+                  : "border-white/10 bg-panel-2"
             )}
           >
             <div className="mb-1 flex items-baseline gap-2">
@@ -38,6 +40,11 @@ export function ChatPanel() {
               </span>
             </div>
             <p className="text-sm leading-snug text-foreground/90">{msg.text}</p>
+            {msg.mentor ? (
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-accent">
+                Mentor
+              </p>
+            ) : null}
             {msg.alert ? (
               <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-danger">
                 Alerte faible

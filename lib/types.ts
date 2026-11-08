@@ -41,6 +41,7 @@ export type Role = {
   description: string;
   icone: string;
   focus: string[];
+  introLines: string[];
 };
 
 export type Objective = {
@@ -73,13 +74,31 @@ export type Action = {
   timeCostMinutes: number;
 };
 
+export type DialogueChoice = {
+  id: string;
+  texte: string;
+  reponse: string;
+  confianceDelta: number;
+  unlockInfo?: string;
+  xp?: number;
+};
+
+export type DialogueQuestion = {
+  id: string;
+  texte: string;
+  choices: DialogueChoice[];
+};
+
 export type Personnage = {
   id: string;
   nom: string;
   role: string;
   avatar: string;
   bio: string;
-  questions: { id: string; texte: string; reponse: string }[];
+  phrase: string;
+  isMentor?: boolean;
+  relationConfiance: number;
+  questions: DialogueQuestion[];
 };
 
 export type DecisionImpact = {
@@ -101,6 +120,7 @@ export type Decision = {
   xpReward?: number;
   timeCostMinutes: number;
   costEuros?: number;
+  journalNarration?: string;
 };
 
 export type Email = {
@@ -121,6 +141,7 @@ export type ChatMessage = {
   text: string;
   time: string;
   alert?: boolean;
+  mentor?: boolean;
 };
 
 export type Rumor = {
@@ -171,6 +192,75 @@ export type DecisionHistoryItem = {
   xp: number;
 };
 
+export type JournalEntry = {
+  id: string;
+  day: number;
+  titre: string;
+  narration: string;
+  xp: number;
+  at: string;
+};
+
+export type Chapitre = {
+  id: string;
+  numero: number;
+  titre: string;
+  intro: string;
+  objectif: string;
+  fin: string;
+  status: "VERROUILLE" | "ACTIF" | "TERMINE";
+};
+
+export type OnboardingStep = 0 | 1 | 2 | 3 | 4 | 5;
+
+export type LivreHistoire = {
+  fondation: string;
+  datesCles: { annee: string; fait: string }[];
+  anecdotes: string[];
+  crisesPassees: string[];
+  narratif: string;
+};
+
+export type LivreActivite = {
+  ceQuOnFabrique: string;
+  pourQui: string;
+  produitsPhares: { nom: string; description: string }[];
+  clientsPrincipaux: string[];
+};
+
+export type LivreOrganigrammeEntry = {
+  personnageId: string;
+};
+
+export type LivreChiffresCles = {
+  ca: string;
+  employes: number;
+  machines: number;
+  clients: number;
+  satisfaction: string;
+};
+
+export type LivreValeur = {
+  titre: string;
+  description: string;
+};
+
+export type GlossaireEntry = {
+  terme: string;
+  definition: string;
+};
+
+export type LivreEntreprise = {
+  nom: string;
+  slogan: string;
+  histoire: LivreHistoire;
+  activite: LivreActivite;
+  organigramme: LivreOrganigrammeEntry[];
+  chiffresCles: LivreChiffresCles;
+  valeurs: LivreValeur[];
+  glossaire: GlossaireEntry[];
+};
+
 export type GameMode = "skills" | "story" | null;
 
 export type GameState = {
@@ -200,6 +290,15 @@ export type GameState = {
   badges: Badge[];
   skillProgress: Record<string, { niveau: number; xp: number }>;
   feedbackFlash: string | null;
+  introSeen: boolean;
+  onboardingStep: OnboardingStep;
+  onboardingDone: boolean;
+  unlockedActions: ActionType[];
+  chapterId: string;
+  chapters: Chapitre[];
+  journal: JournalEntry[];
+  relations: Record<string, number>;
+  unlockedInfos: string[];
 };
 
 export type PlayTab = "workspace" | "emails" | "chat" | "feed";

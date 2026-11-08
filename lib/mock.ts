@@ -1,12 +1,14 @@
 import type {
   Action,
   Badge,
-  Decision,
-  Email,
+  Chapitre,
   ChatMessage,
   CompanyEvent,
+  Decision,
+  Email,
   GameState,
   KpiDefinition,
+  LivreEntreprise,
   Machine,
   Objective,
   Personnage,
@@ -15,6 +17,8 @@ import type {
   Skill,
   VisibilityInvestment,
 } from "./types";
+
+export const COMPANY_NAME = "Novacier";
 
 export const skills: Skill[] = [
   {
@@ -65,7 +69,7 @@ export const skills: Skill[] = [
     xp: 90,
     xpMax: 400,
     scenarioIds: [],
-    icone: "Wallet",
+    icone: "Eye",
   },
   {
     id: "data",
@@ -86,6 +90,11 @@ export const roles: Role[] = [
     description: "Pilotez l'atelier, les machines et le rythme de sortie.",
     icone: "Factory",
     focus: ["Atelier", "Machines", "Qualité"],
+    introLines: [
+      "Lundi 8h00. Tu viens d'être nommé Responsable de Production chez Novacier.",
+      "L'atelier tourne. Une machine tousse. Personne ne te connaît encore.",
+      "Ton prédécesseur, Henri Vallon, t'attend près de la ligne. Il va te faire découvrir la maison — à sa façon.",
+    ],
   },
   {
     id: "commercial",
@@ -93,6 +102,11 @@ export const roles: Role[] = [
     description: "Négociez contrats, clients et engagements de délai.",
     icone: "Briefcase",
     focus: ["Clients", "Contrats", "Marge"],
+    introLines: [
+      "Lundi 8h00. Tu prends le poste de Commercial chez Novacier.",
+      "Atlas Industries négocie ailleurs. Les délais font grincer des dents.",
+      "Henri Vallon, l'ancien Responsable, t'ouvre les portes avant que le téléphone sonne.",
+    ],
   },
   {
     id: "dg",
@@ -100,6 +114,11 @@ export const roles: Role[] = [
     description: "Arbitrez la stratégie, les investissements et le moral.",
     icone: "Crown",
     focus: ["Vision", "Cash", "Équipes"],
+    introLines: [
+      "Lundi 8h00. Tu es le nouveau Directeur Général de Novacier.",
+      "Les équipes te regardent. Les chiffres, eux, restent flous.",
+      "Henri Vallon te propose une visite — « avant les réunions, vois le terrain ».",
+    ],
   },
   {
     id: "logistique",
@@ -107,6 +126,11 @@ export const roles: Role[] = [
     description: "Orchestrer stocks, fournisseurs et flux entrants.",
     icone: "Truck",
     focus: ["Stock", "Fournisseurs", "Délais"],
+    introLines: [
+      "Lundi 8h00. Tu arrives comme Responsable Logistique chez Novacier.",
+      "Un camion Métalix est en retard. Les stocks de sécurité… personne n'est d'accord.",
+      "Henri Vallon, mentor du jour, te prend sous son aile le temps d'un premier tour.",
+    ],
   },
 ];
 
@@ -287,14 +311,202 @@ export const exampleActions: Action[] = [
   },
 ];
 
+export const onboardingStepsMeta = [
+  {
+    step: 1 as const,
+    titre: "Visite de l'Atelier Live",
+    mentorLine:
+      "Commence par le terrain. Ouvre l'Atelier Live — les machines te parlent plus vite que les réunions.",
+    unlock: "VIEW_ATELIER_LIVE" as const,
+    actionHint: "VIEW_ATELIER_LIVE" as const,
+  },
+  {
+    step: 2 as const,
+    titre: "Présentation de Marie",
+    mentorLine:
+      "Marie Dupont tient l'atelier. Va l'interviewer. Écoute avant de décider.",
+    unlock: "INTERVIEW" as const,
+    actionHint: "INTERVIEW" as const,
+  },
+  {
+    step: 3 as const,
+    titre: "Découverte de l'ERP",
+    mentorLine:
+      "Maintenant l'outil. L'ERP Novacier — moche, utile, indispensable. Ouvre-le.",
+    unlock: "OPEN_ERP" as const,
+    actionHint: "OPEN_ERP" as const,
+  },
+  {
+    step: 4 as const,
+    titre: "Premier objectif",
+    mentorLine:
+      "Tu as assez vu. Ton premier objectif du jour : stabiliser la machine 3. Le reste des outils est à toi.",
+    unlock: "ALL" as const,
+    actionHint: "DECIDE" as const,
+  },
+];
+
+export const exampleChapters: Chapitre[] = [
+  {
+    id: "ch1",
+    numero: 1,
+    titre: "L'arrivée",
+    intro: "Premier jour. Découvrir l'atelier, les gens, le brouillard des chiffres.",
+    objectif: "Terminer le parcours mentor et ouvrir le Livre de l'Entreprise.",
+    fin: "Tu n'es plus un inconnu. Novacier commence à te regarder autrement.",
+    status: "ACTIF",
+  },
+  {
+    id: "ch2",
+    numero: 2,
+    titre: "La crise",
+    intro: "Une panne, un client impatient, des rumeurs. Le terrain se durcit.",
+    objectif: "Stabiliser la production sans casser le moral.",
+    fin: "La crise laisse des traces — et des leçons.",
+    status: "VERROUILLE",
+  },
+  {
+    id: "ch3",
+    numero: 3,
+    titre: "La visibilité",
+    intro: "Investir pour y voir clair, ou naviguer à l'aveugle.",
+    objectif: "Atteindre au moins le niveau Capteurs IoT.",
+    fin: "Les chiffres cessent d'être des rumeurs.",
+    status: "VERROUILLE",
+  },
+];
+
+export const livreNovacier: LivreEntreprise = {
+  nom: "Novacier",
+  slogan: "Des pièces précises. Des décisions nettes.",
+  histoire: {
+    fondation:
+      "Fondée en 1987 à Saint-Étienne par Claire Novak, Novacier est née d'un atelier de 6 personnes spécialisées dans les pièces métalliques de précision pour l'industrie.",
+    narratif:
+      "Novacier n'a jamais été la plus grande. Elle a survécu aux années 90 en refusant de sous-traiter la qualité. En 2009, une crise client a failli la couler : retards en cascade, moral en berne. L'équipe a tenu en remettant l'atelier au centre — avant les tableaux Excel. Aujourd'hui, 84 collaborateurs, 4 lignes, un ERP capricieux, et une culture du terrain qui se méfie des chiffres trop beaux.",
+    datesCles: [
+      { annee: "1987", fait: "Fondation de l'atelier Novak & Fils" },
+      { annee: "1998", fait: "Passage à Novacier SA, 1er contrat automobile" },
+      { annee: "2009", fait: "Crise Atlas — 3 mois de retards, plan de relance" },
+      { annee: "2019", fait: "Ligne Flex expérimentale (jamais finalisée)" },
+      { annee: "2024", fait: "Début du chantier IoT (reporté faute de budget)" },
+    ],
+    anecdotes: [
+      "Claire Novak testait chaque pièce à la loupe le soir, « pour dormir tranquille ».",
+      "La machine 3 s'appelle encore « La Rebelle » depuis 2011.",
+      "Le café de l'atelier est gratuit — règle non écrite, sacrée.",
+    ],
+    crisesPassees: [
+      "2009 : perte temporaire du compte Atlas, 18 % du CA.",
+      "2016 : incendie électrique mineur, arrêt 4 jours.",
+      "2022 : pénurie d'acier, stocks de sécurité épuisés.",
+    ],
+  },
+  activite: {
+    ceQuOnFabrique:
+      "Pièces métalliques de précision : usinage, emboutissage, assemblage et contrôle qualité pour l'industrie.",
+    pourQui:
+      "Équipementiers auto, machines spéciales, et quelques clients aéronautiques de rang 2.",
+    produitsPhares: [
+      {
+        nom: "Bride NV-220",
+        description: "Bride haute tolérance pour transmissions.",
+      },
+      {
+        nom: "Carter Compact C7",
+        description: "Carter usiné en petites séries.",
+      },
+      {
+        nom: "Kit Joints Pro",
+        description: "Ensemble joints + inserts pour maintenance.",
+      },
+    ],
+    clientsPrincipaux: [
+      "Atlas Industries",
+      "Nord Méca",
+      "Helio Parts",
+      "Atelier Nord",
+    ],
+  },
+  organigramme: [
+    { personnageId: "pers-henri" },
+    { personnageId: "pers-marie" },
+    { personnageId: "pers-thomas" },
+    { personnageId: "pers-samir" },
+    { personnageId: "pers-lea" },
+  ],
+  chiffresCles: {
+    ca: "12,4 M€",
+    employes: 84,
+    machines: 4,
+    clients: 27,
+    satisfaction: "78 %",
+  },
+  valeurs: [
+    {
+      titre: "Le terrain d'abord",
+      description: "Une décision sans visite d'atelier est suspecte.",
+    },
+    {
+      titre: "La qualité ne se négocie pas",
+      description: "Mieux vaut un retard assumé qu'un lot douteux.",
+    },
+    {
+      titre: "Parler vrai",
+      description: "Les mauvaises nouvelles remontent vite — ou trop tard.",
+    },
+    {
+      titre: "Investir pour voir",
+      description: "Un chiffre flou coûte plus cher qu'un capteur.",
+    },
+  ],
+  glossaire: [
+    {
+      terme: "OEE",
+      definition:
+        "Overall Equipment Effectiveness — taux de rendement global d'une machine (disponibilité × performance × qualité).",
+    },
+    {
+      terme: "Taux de rebut",
+      definition:
+        "Pourcentage de pièces non conformes par rapport au volume produit.",
+    },
+    {
+      terme: "ERP",
+      definition:
+        "Progiciel de gestion intégré : stocks, commandes, RH, factures dans un même système.",
+    },
+    {
+      terme: "Stock de sécurité",
+      definition:
+        "Quantité minimale conservée pour absorber les aléas fournisseurs ou de demande.",
+    },
+    {
+      terme: "Capteurs IoT",
+      definition:
+        "Capteurs connectés qui remontent l'état machine en temps (quasi) réel.",
+    },
+  ],
+};
+
 export const exampleObjectives: Objective[] = [
+  {
+    id: "obj-j0",
+    type: "JOURNALIER",
+    titre: "Terminer la visite mentor",
+    description: "Suivre les 4 étapes du Jour 0 avec Henri.",
+    progression: 0,
+    cible: 4,
+    xp: 60,
+    status: "EN_COURS",
+  },
   {
     id: "obj-j1",
     type: "JOURNALIER",
     titre: "Stabiliser la machine 3",
     description: "Diagnostiquer ou décider une réparation.",
-    progression: 1,
-    cible: 3,
+    progression: 0,
+    cible: 1,
     xp: 80,
     status: "EN_COURS",
   },
@@ -402,16 +614,24 @@ export const exampleEmails: Email[] = [
   },
   {
     id: "em-4",
-    from: "Compta",
-    subject: "Point trésorerie hebdo",
-    preview: "Cash stable mais investissements IoT en attente…",
-    body: "Cash stable. Les investissements IoT et ERP restent en attente de validation direction.",
-    time: "Hier",
-    read: true,
+    from: "Henri Vallon",
+    subject: "Bienvenue — et un conseil",
+    preview: "Ouvre le Livre de l'Entreprise avant de tout décider…",
+    body: "Bienvenue.\n\nAvant de tout décider : ouvre le Livre de l'Entreprise. Novacier a une mémoire. Lis-la.\n\nHenri",
+    time: "08:02",
+    read: false,
   },
 ];
 
 export const exampleMessages: ChatMessage[] = [
+  {
+    id: "msg-mentor-1",
+    from: "Henri Vallon",
+    role: "Ancien Responsable · Mentor",
+    text: "Bienvenue. Je suis Henri. Je reste dans ce chat si tu te perds. On commence par l'atelier.",
+    time: "08:00",
+    mentor: true,
+  },
   {
     id: "msg-1",
     from: "Samir",
@@ -456,29 +676,147 @@ export const exampleRumors: Rumor[] = [
 
 export const examplePersonnages: Personnage[] = [
   {
+    id: "pers-henri",
+    nom: "Henri Vallon",
+    role: "Ancien Responsable · Mentor",
+    avatar: "HV",
+    bio: "22 ans chez Novacier. A connu la crise 2009. Parle peu, explique bien.",
+    phrase: "Le terrain d'abord. Les tableaux ensuite.",
+    isMentor: true,
+    relationConfiance: 70,
+    questions: [
+      {
+        id: "hq1",
+        texte: "Par où je commence vraiment ?",
+        choices: [
+          {
+            id: "hq1a",
+            texte: "Je te fais confiance — guide-moi.",
+            reponse:
+              "Bien. Atelier, Marie, ERP, puis ton premier objectif. Dans cet ordre.",
+            confianceDelta: 8,
+            xp: 15,
+          },
+          {
+            id: "hq1b",
+            texte: "Montre-moi d'abord les chiffres.",
+            reponse:
+              "Les chiffres sont flous ici. Tu verras des ???. On investira pour y voir clair — après le terrain.",
+            confianceDelta: -2,
+            unlockInfo: "Les KPIs démarrent en brouillard volontaire.",
+            xp: 10,
+          },
+        ],
+      },
+      {
+        id: "hq2",
+        texte: "Pourquoi tu restes en mentor ?",
+        choices: [
+          {
+            id: "hq2a",
+            texte: "Parce que Novacier compte pour toi ?",
+            reponse:
+              "Oui. Et parce qu'un nouveau chef seul casse des choses sans le vouloir.",
+            confianceDelta: 6,
+            xp: 10,
+          },
+          {
+            id: "hq2b",
+            texte: "Tu surveilles mes décisions ?",
+            reponse:
+              "Je corrige si tu vas dans le mur. Sinon, tu pilotes.",
+            confianceDelta: 2,
+            xp: 5,
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "pers-marie",
     nom: "Marie Dupont",
     role: "Cheffe d'atelier",
     avatar: "MD",
     bio: "15 ans sur le site. Connaît chaque machine par son bruit.",
+    phrase: "Si ça vibre mal, on arrête. Point.",
+    relationConfiance: 45,
     questions: [
       {
         id: "q1",
         texte: "Que se passe-t-il sur la machine 3 ?",
-        reponse:
-          "Vibration inhabituelle sur le palier. Si on force, on casse. Je recommande un arrêt contrôlé.",
+        choices: [
+          {
+            id: "q1a",
+            texte: "Je te fais confiance — que recommandes-tu ?",
+            reponse:
+              "Arrêt contrôlé. Vibration sur le palier. Si on force, on casse. Merci d'écouter.",
+            confianceDelta: 12,
+            unlockInfo: "Marie confirmera un arrêt plutôt qu'un forçage.",
+            xp: 20,
+          },
+          {
+            id: "q1b",
+            texte: "Montre-moi les chiffres de panne.",
+            reponse:
+              "Les chiffres sont approximatifs. Mon oreille, elle, est précise. Tu verras ~12 % en ESTIMÉ.",
+            confianceDelta: -4,
+            unlockInfo: "Taux de panne machine 3 probablement sous-estimé.",
+            xp: 15,
+          },
+          {
+            id: "q1c",
+            texte: "On force pour Atlas, non ?",
+            reponse:
+              "Atlas préfère un retard honnête à un lot pourri. Tu le sauras vite.",
+            confianceDelta: -10,
+            xp: 5,
+          },
+        ],
       },
       {
         id: "q2",
         texte: "Le moral de l'équipe ?",
-        reponse:
-          "Fatigués mais engagés. Une démission de plus et on bascule.",
+        choices: [
+          {
+            id: "q2a",
+            texte: "Dis-moi franchement.",
+            reponse:
+              "Fatigués mais engagés. Une démission de plus et on bascule.",
+            confianceDelta: 8,
+            xp: 10,
+          },
+          {
+            id: "q2b",
+            texte: "Je veux des solutions, pas des plaintes.",
+            reponse:
+              "Alors investis dans la maintenance et la visibilité. Les slogans, on connaît.",
+            confianceDelta: -6,
+            xp: 5,
+          },
+        ],
       },
       {
         id: "q3",
         texte: "La rumeur Atlas, c'est sérieux ?",
-        reponse:
-          "Je n'ai rien de factuel. Le commercial a l'air tendu depuis lundi.",
+        choices: [
+          {
+            id: "q3a",
+            texte: "Tu as des faits ?",
+            reponse:
+              "Rien de factuel. Thomas a l'air tendu. Vérifie en interview ou dans les mails.",
+            confianceDelta: 4,
+            unlockInfo: "Piste : interviewer Thomas Leroy.",
+            xp: 12,
+          },
+          {
+            id: "q3b",
+            texte: "Ce n'est que du bruit de couloir.",
+            reponse:
+              "Peut-être. Les rumeurs ici ont parfois raison trop tôt.",
+            confianceDelta: 0,
+            xp: 5,
+          },
+        ],
       },
     ],
   },
@@ -488,18 +826,96 @@ export const examplePersonnages: Personnage[] = [
     role: "Commercial senior",
     avatar: "TL",
     bio: "Gère le compte Atlas et les gros contrats.",
+    phrase: "Un délai raté = une porte qui se ferme.",
+    relationConfiance: 40,
     questions: [
       {
-        id: "q1",
+        id: "tq1",
         texte: "Atlas va-t-il partir ?",
-        reponse:
-          "Ils comparent. Si on rate encore un délai, oui. Sinon on tient.",
+        choices: [
+          {
+            id: "tq1a",
+            texte: "Parle-moi franchement.",
+            reponse:
+              "Ils comparent. Si on rate encore un délai, oui. Sinon on tient. La rumeur est… à moitié vraie.",
+            confianceDelta: 10,
+            unlockInfo: "Rumeur Atlas : partiellement fondée.",
+            xp: 20,
+          },
+          {
+            id: "tq1b",
+            texte: "Montre-moi le pipeline.",
+            reponse:
+              "Pipeline tendu. Ils veulent aussi plus de transparence production — d'où les capteurs.",
+            confianceDelta: 4,
+            xp: 12,
+          },
+        ],
       },
+    ],
+  },
+  {
+    id: "pers-samir",
+    nom: "Samir Benali",
+    role: "Opérateur",
+    avatar: "SB",
+    bio: "Équipe de matin, ligne presse et assembleuse.",
+    phrase: "Chef, écoute la machine 3.",
+    relationConfiance: 50,
+    questions: [
       {
-        id: "q2",
-        texte: "Que demande le contrat ?",
-        reponse:
-          "Volume + pénalités. Ils veulent aussi plus de transparence sur la production.",
+        id: "sq1",
+        texte: "Le bruit sur la 3, depuis quand ?",
+        choices: [
+          {
+            id: "sq1a",
+            texte: "Raconte-moi tout.",
+            reponse: "Depuis la nuit. Ça grince puis ça claque. Marie a raison.",
+            confianceDelta: 6,
+            xp: 10,
+          },
+          {
+            id: "sq1b",
+            texte: "Tu exagères peut-être ?",
+            reponse: "Non. Et si ça casse, ce sera pas moi qui invente.",
+            confianceDelta: -8,
+            xp: 0,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "pers-lea",
+    nom: "Léa Martin",
+    role: "Qualité",
+    avatar: "LM",
+    bio: "Contrôle dimensionnel et lots clients sensibles.",
+    phrase: "Trois lots borderline. Je surveille.",
+    relationConfiance: 55,
+    questions: [
+      {
+        id: "lq1",
+        texte: "Les écarts qualité, c'est grave ?",
+        choices: [
+          {
+            id: "lq1a",
+            texte: "Je te fais confiance — ton avis ?",
+            reponse:
+              "Pas encore critique. Mais si on force la 3, ça le devient.",
+            confianceDelta: 8,
+            xp: 12,
+          },
+          {
+            id: "lq1b",
+            texte: "Montre-moi les mesures.",
+            reponse:
+              "Dans l'ERP onglet qualité… enfin, ce qu'on a. Le reste est encore brouillard.",
+            confianceDelta: 2,
+            unlockInfo: "Données qualité partielles sans IoT.",
+            xp: 10,
+          },
+        ],
       },
     ],
   },
@@ -521,6 +937,8 @@ export const exampleDecisions: Decision[] = [
     xpReward: 60,
     timeCostMinutes: 60,
     costEuros: 4500,
+    journalNarration:
+      "Tu as choisi de réparer la machine 3. Marie a souri du coin des lèvres. L'atelier a respiré.",
   },
   {
     id: "dec-force",
@@ -541,6 +959,8 @@ export const exampleDecisions: Decision[] = [
     machineEffects: [{ machineId: "m3", etat: "PANNE" }],
     xpReward: 25,
     timeCostMinutes: 15,
+    journalNarration:
+      "Tu as forcé malgré l'alerte. Les pièces sont sorties. La confiance, elle, a reculé.",
   },
   {
     id: "dec-vis-1",
@@ -556,6 +976,8 @@ export const exampleDecisions: Decision[] = [
     xpReward: 40,
     timeCostMinutes: 30,
     costEuros: 2000,
+    journalNarration:
+      "Tu as investi dans un suivi Excel. Les ??? deviennent des ~estimations. Marie était sceptique, mais les réunions sont moins aveugles.",
   },
   {
     id: "dec-vis-2",
@@ -572,6 +994,8 @@ export const exampleDecisions: Decision[] = [
     xpReward: 90,
     timeCostMinutes: 45,
     costEuros: 15000,
+    journalNarration:
+      "Capteurs IoT installés. L'atelier Live s'est allumé. Pour la première fois, tu vois vraiment.",
   },
   {
     id: "dec-vis-3",
@@ -588,6 +1012,8 @@ export const exampleDecisions: Decision[] = [
     xpReward: 140,
     timeCostMinutes: 60,
     costEuros: 40000,
+    journalNarration:
+      "ERP + analyste : le brouillard tombe. Les dashboards avancés s'ouvrent. Novacier entre dans une autre époque.",
   },
   {
     id: "dec-machine",
@@ -603,6 +1029,8 @@ export const exampleDecisions: Decision[] = [
     xpReward: 100,
     timeCostMinutes: 45,
     costEuros: 28000,
+    journalNarration:
+      "La Ligne Flex 5 a apparu dans l'atelier. Un rectangle de plus — et un symbole : tu investis pour tenir.",
   },
 ];
 
@@ -623,6 +1051,18 @@ export const exampleBadges: Badge[] = [
     id: "badge-atelier",
     titre: "Chef d'atelier",
     description: "Ouvrir la vue Atelier Live.",
+    unlocked: false,
+  },
+  {
+    id: "badge-jour0",
+    titre: "Premier jour",
+    description: "Terminer le parcours mentor Jour 0.",
+    unlocked: false,
+  },
+  {
+    id: "badge-livre",
+    titre: "Mémoire de Novacier",
+    description: "Ouvrir le Livre de l'Entreprise.",
     unlocked: false,
   },
 ];
@@ -701,16 +1141,18 @@ export const skillEvolution = [
   { mois: "Avr", nego: 2, crise: 1, lead: 3, stock: 2 },
 ];
 
+const DAY0_UNLOCKS: GameState["unlockedActions"] = ["CHAT", "VIEW_ATELIER_LIVE"];
+
 export function createInitialGameState(): GameState {
   return {
     mode: null,
     roleId: null,
-    day: 1,
+    day: 0,
     week: 1,
     minutesSinceStart: 0,
     dayLengthMinutes: 8 * 60,
-    xp: 240,
-    level: 2,
+    xp: 40,
+    level: 1,
     tresorerie: 124_350,
     production: 68,
     moral: 57,
@@ -737,8 +1179,18 @@ export function createInitialGameState(): GameState {
       skills.map((s) => [s.id, { niveau: s.niveau, xp: s.xp }])
     ),
     feedbackFlash: null,
+    introSeen: false,
+    onboardingStep: 1,
+    onboardingDone: false,
+    unlockedActions: [...DAY0_UNLOCKS],
+    chapterId: "ch1",
+    chapters: exampleChapters.map((c) => ({ ...c })),
+    journal: [],
+    relations: Object.fromEntries(
+      examplePersonnages.map((p) => [p.id, p.relationConfiance])
+    ),
+    unlockedInfos: [],
   };
 }
 
-/** @deprecated use createInitialGameState */
 export const initialGameState = createInitialGameState();

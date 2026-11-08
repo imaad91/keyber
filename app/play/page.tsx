@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ActionSidebar } from "@/components/ActionSidebar";
 import { AnalyzeView } from "@/components/AnalyzeView";
 import { AtelierLiveView } from "@/components/AtelierLiveView";
@@ -13,8 +15,9 @@ import { FeedbackToast } from "@/components/FeedbackToast";
 import { InterviewView } from "@/components/InterviewView";
 import { KpiBar } from "@/components/KpiBar";
 import { ObjectivePanel } from "@/components/ObjectivePanel";
+import { OnboardingCoach } from "@/components/OnboardingCoach";
 import { VisibilityPanel } from "@/components/VisibilityPanel";
-import { roles } from "@/lib/mock";
+import { exampleActions, roles } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
 
 function ActionWorkspace() {
@@ -31,14 +34,14 @@ function ActionWorkspace() {
     return (
       <div className="view-enter flex h-full max-w-lg flex-col justify-center">
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-          Quotidien
+          Quotidien · Novacier
         </p>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
-          Une journée à piloter
+          Une journée à découvrir
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Ouvre l&apos;ERP, regarde l&apos;atelier live, lis tes emails, investis
-          dans la visibilité — chaque action consomme du temps.
+          Tu viens d&apos;arriver. Suis Henri, ouvre le Livre, débloque les
+          outils — chaque action consomme du temps.
         </p>
       </div>
     );
@@ -62,9 +65,25 @@ function ActionWorkspace() {
   }
 }
 
-export default function PlayPage() {
-  const { gameState } = useGameStore();
+function PlayInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { gameState, setActiveAction } = useGameStore();
   const role = roles.find((r) => r.id === gameState.roleId);
+
+  useEffect(() => {
+    if (gameState.mode === "story" && gameState.roleId && !gameState.introSeen) {
+      router.replace("/intro");
+    }
+  }, [gameState.mode, gameState.roleId, gameState.introSeen, router]);
+
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "interview") {
+      const interview = exampleActions.find((a) => a.type === "INTERVIEW");
+      if (interview) setActiveAction({ ...interview, timeCostMinutes: 0 });
+    }
+  }, [searchParams, setActiveAction]);
 
   return (
     <div className="flex h-screen overflow-hidden atmosphere-play text-foreground">
@@ -82,6 +101,7 @@ export default function PlayPage() {
         <KpiBar />
         <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_300px]">
           <main className="min-h-0 overflow-auto p-4 md:p-6">
+            <OnboardingCoach />
             <ActionWorkspace />
           </main>
           <aside className="hidden min-h-0 space-y-6 overflow-y-auto border-l border-white/10 bg-panel/60 p-4 lg:block">
@@ -93,5 +113,19 @@ export default function PlayPage() {
       <VisibilityPanel />
       <FeedbackToast />
     </div>
+  );
+}
+
+export default function PlayPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center atmosphere-play text-muted">
+          Chargement…
+        </div>
+      }
+    >
+      <PlayInner />
+    </Suspense>
   );
 }

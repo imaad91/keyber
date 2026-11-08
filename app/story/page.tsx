@@ -35,14 +35,13 @@ export default function StoryPage() {
           Accueil
         </Link>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-          Mode Histoire
+          Mode Histoire · Novacier
         </p>
         <h1 className="font-display text-3xl font-semibold md:text-4xl">
           Choisis ton rôle
         </h1>
         <p className="mt-2 max-w-xl text-sm text-muted">
-          Ensuite tu entres dans le quotidien /play avec timeline
-          Jour/Semaine.
+          Ensuite : cinématique d&apos;intro, puis Jour 0 avec le mentor Henri.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -54,7 +53,7 @@ export default function StoryPage() {
                 type="button"
                 onClick={() => {
                   setRole(role.id);
-                  router.push("/play");
+                  router.push("/intro");
                 }}
                 className={cn(
                   "value-enter group rounded-2xl border border-white/10 bg-panel p-6 text-left shadow-soft transition hover:-translate-y-1 hover:border-accent/50 hover:shadow-glow"

@@ -1,9 +1,13 @@
 import type {
+  ActionType,
   Decision,
+  DialogueChoice,
   GameState,
+  JournalEntry,
   Objective,
   VisibilityLevel,
 } from "./types";
+import { onboardingStepsMeta } from "./mock";
 
 const XP_PER_LEVEL = 500;
 
@@ -112,6 +116,10 @@ export function checkObjectives(state: GameState): GameState {
       const m3 = state.machines.find((m) => m.id === "m3");
       if (m3?.etat === "PRODUCTION") progression = obj.cible;
     }
+    if (obj.id === "obj-j0") {
+      progression = Math.min(obj.cible, Math.max(0, state.onboardingStep - 1));
+      if (state.onboardingDone) progression = obj.cible;
+    }
 
     const status =
       progression >= obj.cible ? ("COMPLETE" as const) : obj.status;
@@ -203,6 +211,17 @@ export function applyDecision(
 
   next = addXP(next, decision.xpReward ?? 0);
 
+  const journalEntry: JournalEntry = {
+    id: `j-${decision.id}-${Date.now()}`,
+    day: Math.max(1, next.day),
+    titre: decision.titre,
+    narration:
+      decision.journalNarration ??
+      `Tu as choisi : ${decision.titre}.`,
+    xp: decision.xpReward ?? 0,
+    at: formatGameClock(next.minutesSinceStart),
+  };
+
   next = {
     ...next,
     decisionHistory: [
@@ -214,6 +233,7 @@ export function applyDecision(
       },
       ...next.decisionHistory,
     ],
+    journal: [journalEntry, ...next.journal],
     badges: next.badges.map((b) =>
       b.id === "badge-first" ? { ...b, unlocked: true } : b
     ),
@@ -225,6 +245,225 @@ export function applyDecision(
   };
 
   return checkObjectives(next);
+}
+
+export function applyDialogueChoice(
+  state: GameState,
+  personnageId: string,
+  choice: DialogueChoice
+): GameState {
+  const current = state.relations[personnageId] ?? 50;
+  const relations = {
+    ...state.relations,
+    [personnageId]: clamp(current + choice.confianceDelta, 0, 100),
+  };
+  const unlockedInfos = choice.unlockInfo
+    ? Array.from(new Set([...state.unlockedInfos, choice.unlockInfo]))
+    : state.unlockedInfos;
+
+  let next: GameState = {
+    ...state,
+    relations,
+    unlockedInfos,
+    feedbackFlash:
+      choice.confianceDelta >= 0
+        ? `Confiance +${choice.confianceDelta}`
+        : `Confiance ${choice.confianceDelta}`,
+  };
+
+  if (choice.xp) next = addXP(next, choice.xp);
+
+  next = {
+    ...next,
+    journal: [
+      {
+        id: `j-dlg-${Date.now()}`,
+        day: Math.max(0, next.day),
+        titre: "Choix de dialogue",
+        narration: `Tu as répondu « ${choice.texte} ». ${choice.reponse}${
+          choice.xp ? ` +${choice.xp} XP` : ""
+        }`,
+        xp: choice.xp ?? 0,
+        at: formatGameClock(next.minutesSinceStart),
+      },
+      ...next.journal,
+    ],
+  };
+
+  return next;
+}
+
+export function advanceOnboarding(
+  state: GameState,
+  viaAction: ActionType
+): GameState {
+  if (state.onboardingDone) return state;
+
+  const meta = onboardingStepsMeta.find((s) => s.step === state.onboardingStep);
+  if (!meta) return state;
+  if (meta.actionHint !== viaAction && meta.unlock !== "ALL") {
+    // allow completing step when the hinted action is used
+    if (viaAction !== meta.actionHint) return state;
+  }
+
+  const step = state.onboardingStep;
+  let unlockedActions = [...state.unlockedActions];
+  let messages = [...state.messages];
+  let onboardingStep = step;
+  let onboardingDone = false;
+  let day = state.day;
+  let feedbackFlash = state.feedbackFlash;
+  let badges = state.badges;
+  let journal = state.journal;
+
+  if (step === 1 && viaAction === "VIEW_ATELIER_LIVE") {
+    unlockedActions = uniqueActions([...unlockedActions, "INTERVIEW"]);
+    onboardingStep = 2;
+    messages = [
+      {
+        id: `msg-m-${Date.now()}`,
+        from: "Henri Vallon",
+        role: "Mentor",
+        text: "Bien. Maintenant va voir Marie — interview.",
+        time: formatGameClock(state.minutesSinceStart),
+        mentor: true,
+      },
+      ...messages,
+    ];
+    feedbackFlash = "Étape 1/4 — Atelier découvert";
+    journal = [
+      {
+        id: `j-ob-1-${Date.now()}`,
+        day: 0,
+        titre: "Jour 0 — Atelier",
+        narration:
+          "Henri t'a fait ouvrir l'Atelier Live. Les machines respirent. La 3 clignote déjà rouge.",
+        xp: 15,
+        at: formatGameClock(state.minutesSinceStart),
+      },
+      ...journal,
+    ];
+  } else if (step === 2 && viaAction === "INTERVIEW") {
+    unlockedActions = uniqueActions([...unlockedActions, "OPEN_ERP"]);
+    onboardingStep = 3;
+    messages = [
+      {
+        id: `msg-m-${Date.now()}`,
+        from: "Henri Vallon",
+        role: "Mentor",
+        text: "Marie t'a parlé. Ouvre maintenant l'ERP.",
+        time: formatGameClock(state.minutesSinceStart),
+        mentor: true,
+      },
+      ...messages,
+    ];
+    feedbackFlash = "Étape 2/4 — Marie rencontrée";
+    journal = [
+      {
+        id: `j-ob-2-${Date.now()}`,
+        day: 0,
+        titre: "Jour 0 — Marie",
+        narration:
+          "Tu as rencontré Marie Dupont. La confiance se gagne réponse après réponse.",
+        xp: 15,
+        at: formatGameClock(state.minutesSinceStart),
+      },
+      ...journal,
+    ];
+  } else if (step === 3 && viaAction === "OPEN_ERP") {
+    unlockedActions = uniqueActions([
+      ...unlockedActions,
+      "DECIDE",
+      "EMAILS",
+      "VIEW_DASHBOARD",
+      "ANALYZE_DATA",
+    ]);
+    onboardingStep = 4;
+    messages = [
+      {
+        id: `msg-m-${Date.now()}`,
+        from: "Henri Vallon",
+        role: "Mentor",
+        text: "Dernière étape : ton premier objectif. Stabilise la machine 3 quand tu seras prêt.",
+        time: formatGameClock(state.minutesSinceStart),
+        mentor: true,
+      },
+      ...messages,
+    ];
+    feedbackFlash = "Étape 3/4 — ERP découvert";
+    journal = [
+      {
+        id: `j-ob-3-${Date.now()}`,
+        day: 0,
+        titre: "Jour 0 — ERP",
+        narration:
+          "L'ERP Novacier s'est ouvert. Tables, filtres, réalité administrative.",
+        xp: 15,
+        at: formatGameClock(state.minutesSinceStart),
+      },
+      ...journal,
+    ];
+  } else if (step === 4 && viaAction === "DECIDE") {
+    unlockedActions = uniqueActions([
+      ...unlockedActions,
+      "DECIDE",
+      "EMAILS",
+      "VIEW_DASHBOARD",
+      "ANALYZE_DATA",
+      "INTERVIEW",
+      "OPEN_ERP",
+      "VIEW_ATELIER_LIVE",
+      "CHAT",
+    ]);
+    onboardingStep = 5;
+    onboardingDone = true;
+    day = Math.max(1, day === 0 ? 1 : day);
+    badges = badges.map((b) =>
+      b.id === "badge-jour0" ? { ...b, unlocked: true } : b
+    );
+    feedbackFlash = "Jour 0 terminé — bienvenue dans le quotidien";
+    journal = [
+      {
+        id: `j-ob-4-${Date.now()}`,
+        day: 1,
+        titre: "Fin du Jour 0",
+        narration:
+          "Le mentor s'efface un peu. Les outils sont à toi. Chapitre 1 continue.",
+        xp: 40,
+        at: formatGameClock(state.minutesSinceStart),
+      },
+      ...journal,
+    ];
+  } else {
+    return state;
+  }
+
+  let next: GameState = {
+    ...state,
+    unlockedActions,
+    onboardingStep,
+    onboardingDone,
+    day,
+    messages,
+    badges,
+    journal,
+    feedbackFlash,
+  };
+
+  if (onboardingDone || onboardingStep > step) {
+    next = addXP(next, 15);
+  }
+  if (onboardingDone) next = addXP(next, 40);
+
+  return checkObjectives(next);
+}
+
+export function completeOnboardingStep4(state: GameState): GameState {
+  return advanceOnboarding(state, "DECIDE");
+}
+
+function uniqueActions(list: ActionType[]): ActionType[] {
+  return Array.from(new Set(list));
 }
 
 export function unlockBadge(state: GameState, badgeId: string): GameState {

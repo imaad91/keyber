@@ -19,9 +19,14 @@ export default function LandingPage() {
         <p className="font-display text-xl font-semibold tracking-tight text-accent">
           KEYBER
         </p>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/profil">Profil</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin">Mode Admin</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/profil">Profil</Link>
+          </Button>
+        </div>
       </header>
 
       <main className="relative z-10 mx-auto flex min-h-[75vh] w-full max-w-6xl flex-col justify-center px-6 pb-20">

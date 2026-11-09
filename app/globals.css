@@ -244,3 +244,16 @@ body {
     background: var(--panel-2);
   }
 }
+
+/* Admin / Studio — light Notion-like shell, isolated from game theme */
+.admin-shell {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  color: #0f172a;
+  background: #f8fafc;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+.admin-shell a {
+  text-decoration: none;
+}

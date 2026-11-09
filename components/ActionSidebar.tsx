@@ -13,6 +13,7 @@ import {
   MessagesSquare,
   Package,
   Scale,
+  Settings2,
   Table2,
   User,
   type LucideIcon,
@@ -113,6 +114,13 @@ export function ActionSidebar() {
         >
           <User className="h-4 w-4" />
           Mon profil
+        </Link>
+        <Link
+          href="/admin"
+          className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted transition hover:bg-white/5 hover:text-accent"
+        >
+          <Settings2 className="h-4 w-4" />
+          Mode Admin
         </Link>
       </div>
     </aside>

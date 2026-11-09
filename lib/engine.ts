@@ -8,6 +8,10 @@ import type {
   Objective,
   VisibilityLevel,
 } from "./types";
+import {
+  CHARACTER_META,
+  type CharacterVisualId,
+} from "./characterStyle";
 import { ALL_ACTIONS, createScenarioDayState, onboardingStepsMeta } from "./mock";
 
 const XP_PER_LEVEL = 500;
@@ -605,14 +609,19 @@ export function applyDialogueChoice(
     ? Array.from(new Set([...state.unlockedInfos, choice.unlockInfo]))
     : state.unlockedInfos;
 
+  const shortName =
+    CHARACTER_META[personnageId as CharacterVisualId]?.shortName ??
+    "Confiance";
+  const deltaLabel =
+    choice.confianceDelta >= 0
+      ? `+${choice.confianceDelta}`
+      : `${choice.confianceDelta}`;
+
   let next: GameState = {
     ...state,
     relations,
     unlockedInfos,
-    feedbackFlash:
-      choice.confianceDelta >= 0
-        ? `Confiance +${choice.confianceDelta}`
-        : `Confiance ${choice.confianceDelta}`,
+    feedbackFlash: `Confiance ${shortName} ${deltaLabel}`,
   };
 
   if (choice.xp) next = addXP(next, choice.xp);

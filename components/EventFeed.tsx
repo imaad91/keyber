@@ -1,9 +1,22 @@
 "use client";
 
 import { Building2, HelpCircle } from "lucide-react";
+import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { RumorCard } from "@/components/RumorCard";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+
+function eventAvatarName(kind: string, titre: string): string | null {
+  const blob = `${kind} ${titre}`.toLowerCase();
+  if (blob.includes("marie")) return "Marie";
+  if (blob.includes("karim") || blob.includes("maintenance")) return "Karim";
+  if (blob.includes("laurent") || blob.includes("directeur")) return "Laurent";
+  if (blob.includes("henri") || blob.includes("mentor")) return "Henri";
+  if (blob.includes("machine") || blob.includes("panne")) return "Karim";
+  if (blob.includes("contrat") || blob.includes("autovolt")) return "Laurent";
+  if (blob.includes("rumeur")) return "Marie";
+  return null;
+}
 
 export function EventFeed() {
   const { gameState } = useGameStore();
@@ -24,22 +37,29 @@ export function EventFeed() {
           ) : (
             <article
               key={event.id}
-              className="rounded-xl border border-white/10 bg-panel-2 p-3"
+              className="flex gap-2.5 rounded-xl border border-white/10 bg-panel-2 p-3"
             >
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
-                  {event.kind}
-                </span>
-                <span className="text-[10px] tabular-nums text-muted">
-                  {event.timestamp}
-                </span>
+              <CharacterAvatar
+                name={eventAvatarName(event.kind, event.titre) ?? undefined}
+                size={28}
+                className="mt-0.5"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
+                    {event.kind}
+                  </span>
+                  <span className="text-[10px] tabular-nums text-muted">
+                    {event.timestamp}
+                  </span>
+                </div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  {event.titre}
+                </h3>
+                <p className="mt-1 text-[11px] leading-snug text-muted">
+                  {event.description}
+                </p>
               </div>
-              <h3 className="text-sm font-semibold text-foreground">
-                {event.titre}
-              </h3>
-              <p className="mt-1 text-[11px] leading-snug text-muted">
-                {event.description}
-              </p>
             </article>
           )
         )}

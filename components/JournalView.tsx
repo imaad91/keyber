@@ -2,8 +2,28 @@
 
 import Link from "next/link";
 import { ArrowLeft, BookMarked } from "lucide-react";
+import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { Button } from "@/components/ui/button";
+import { resolveCharacterId } from "@/lib/characterStyle";
 import { useGameStore } from "@/lib/store";
+
+function portraitForEntry(titre: string, narration: string) {
+  return (
+    resolveCharacterId(titre) ??
+    resolveCharacterId(narration) ??
+    resolveCharacterId(
+      /marie/i.test(narration)
+        ? "Marie"
+        : /karim/i.test(narration)
+          ? "Karim"
+          : /laurent/i.test(narration)
+            ? "Laurent"
+            : /henri/i.test(narration)
+              ? "Henri"
+              : null
+    )
+  );
+}
 
 export function JournalView() {
   const { gameState } = useGameStore();
@@ -39,32 +59,44 @@ export function JournalView() {
           </p>
         ) : (
           <ol className="relative space-y-4 border-l border-accent/30 pl-6">
-            {gameState.journal.map((entry) => (
-              <li key={entry.id} className="view-enter relative">
-                <span className="absolute -left-[1.7rem] top-2 h-3 w-3 rounded-full bg-accent shadow-glow" />
-                <article className="rounded-2xl border border-white/10 bg-panel p-5 shadow-soft">
-                  <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-muted">
-                    <span className="font-bold uppercase tracking-wider text-accent">
-                      Jour {entry.day}
-                    </span>
-                    <span>·</span>
-                    <span>{entry.at}</span>
-                    {entry.xp > 0 ? (
-                      <>
+            {gameState.journal.map((entry) => {
+              const who = portraitForEntry(entry.titre, entry.narration);
+              return (
+                <li key={entry.id} className="view-enter relative">
+                  <span className="absolute -left-[1.7rem] top-2 h-3 w-3 rounded-full bg-accent shadow-glow" />
+                  <article className="flex gap-3 rounded-2xl border border-white/10 bg-panel p-5 shadow-soft">
+                    {who ? (
+                      <CharacterAvatar id={who} size={48} className="mt-1" />
+                    ) : (
+                      <CharacterAvatar name="KB" size={48} className="mt-1" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-muted">
+                        <span className="font-bold uppercase tracking-wider text-accent">
+                          Jour {entry.day}
+                        </span>
                         <span>·</span>
-                        <span className="text-accent-warm">+{entry.xp} XP</span>
-                      </>
-                    ) : null}
-                  </div>
-                  <h2 className="font-display text-lg font-semibold">
-                    {entry.titre}
-                  </h2>
-                  <p className="mt-2 text-sm leading-relaxed text-foreground/85">
-                    {entry.narration}
-                  </p>
-                </article>
-              </li>
-            ))}
+                        <span>{entry.at}</span>
+                        {entry.xp > 0 ? (
+                          <>
+                            <span>·</span>
+                            <span className="text-accent-warm">
+                              +{entry.xp} XP
+                            </span>
+                          </>
+                        ) : null}
+                      </div>
+                      <h2 className="font-display text-lg font-semibold">
+                        {entry.titre}
+                      </h2>
+                      <p className="mt-2 text-sm leading-relaxed text-foreground/85">
+                        {entry.narration}
+                      </p>
+                    </div>
+                  </article>
+                </li>
+              );
+            })}
           </ol>
         )}
       </div>

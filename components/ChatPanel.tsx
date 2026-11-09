@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ export function ChatPanel() {
           <div
             key={msg.id}
             className={cn(
-              "reward-pop max-w-[90%] rounded-2xl rounded-tl-md border px-3 py-2",
+              "reward-pop flex max-w-[92%] gap-2 rounded-2xl rounded-tl-md border px-3 py-2",
               msg.mentor
                 ? "border-accent/40 bg-accent/10"
                 : msg.alert
@@ -30,26 +31,31 @@ export function ChatPanel() {
                   : "border-white/10 bg-panel-2"
             )}
           >
-            <div className="mb-1 flex items-baseline gap-2">
-              <span className="text-sm font-semibold text-foreground">
-                {msg.from}
-              </span>
-              <span className="text-[10px] text-muted">{msg.role}</span>
-              <span className="ml-auto text-[10px] tabular-nums text-muted">
-                {msg.time}
-              </span>
+            <CharacterAvatar name={msg.from} size={32} className="mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-baseline gap-2">
+                <span className="text-sm font-semibold text-foreground">
+                  {msg.from}
+                </span>
+                <span className="text-[10px] text-muted">{msg.role}</span>
+                <span className="ml-auto text-[10px] tabular-nums text-muted">
+                  {msg.time}
+                </span>
+              </div>
+              <p className="text-sm leading-snug text-foreground/90">
+                {msg.text}
+              </p>
+              {msg.mentor ? (
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-accent">
+                  Mentor
+                </p>
+              ) : null}
+              {msg.alert ? (
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-danger">
+                  Alerte faible
+                </p>
+              ) : null}
             </div>
-            <p className="text-sm leading-snug text-foreground/90">{msg.text}</p>
-            {msg.mentor ? (
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-accent">
-                Mentor
-              </p>
-            ) : null}
-            {msg.alert ? (
-              <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-danger">
-                Alerte faible
-              </p>
-            ) : null}
           </div>
         ))}
       </div>

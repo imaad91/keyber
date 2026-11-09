@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
+import { CharacterPortrait } from "@/components/characters/CharacterPortrait";
 import { examplePersonnages } from "@/lib/mock";
+import {
+  CHARACTER_META,
+  expressionFromTrust,
+  expressionLabel,
+  type CharacterVisualId,
+} from "@/lib/characterStyle";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type { DialogueChoice } from "@/lib/types";
@@ -16,151 +24,152 @@ export function InterviewView() {
   const personnage =
     examplePersonnages.find((p) => p.id === selectedPersonnageId) ??
     examplePersonnages[0];
+  const visualId = personnage.id as CharacterVisualId;
   const [activeQ, setActiveQ] = useState<string | null>(null);
   const [lastChoice, setLastChoice] = useState<DialogueChoice | null>(null);
-  const trust = gameState.relations[personnage.id] ?? personnage.relationConfiance;
+  const trust =
+    gameState.relations[personnage.id] ?? personnage.relationConfiance;
+  const expression = expressionFromTrust(trust);
   const question = personnage.questions.find((q) => q.id === activeQ);
+  const meta = CHARACTER_META[visualId];
 
   return (
-    <section className="view-enter grid h-full gap-4 md:grid-cols-[280px_1fr]">
-      <aside className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-          Interview
-        </p>
-        {examplePersonnages.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => {
-              setSelectedPersonnageId(p.id);
-              setActiveQ(null);
-              setLastChoice(null);
-            }}
-            className={cn(
-              "flex w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition",
-              p.id === personnage.id
-                ? "border-accent/40 bg-accent/10"
-                : "border-white/10 bg-panel-2 hover:bg-white/5"
-            )}
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy-mid font-display text-sm font-bold text-accent">
-              {p.avatar}
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-foreground">
-                {p.nom}
+    <section className="view-enter flex h-full min-h-[480px] flex-col gap-4">
+      {/* Selector: small round avatars only */}
+      <div className="flex flex-wrap gap-2">
+        {examplePersonnages.map((p) => {
+          const t = gameState.relations[p.id] ?? p.relationConfiance;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => {
+                setSelectedPersonnageId(p.id);
+                setActiveQ(null);
+                setLastChoice(null);
+              }}
+              className={cn(
+                "flex items-center gap-2 rounded-full border px-2 py-1.5 transition",
+                p.id === personnage.id
+                  ? "border-accent bg-accent/15"
+                  : "border-white/10 bg-panel-2 hover:bg-white/5"
+              )}
+              aria-label={p.nom}
+            >
+              <CharacterAvatar
+                id={p.id as CharacterVisualId}
+                trust={t}
+                size={32}
+              />
+              <span className="pr-1 text-xs font-semibold text-foreground">
+                {CHARACTER_META[p.id as CharacterVisualId]?.shortName ?? p.nom}
               </span>
-              <span className="text-[11px] text-muted">{p.role}</span>
-              <span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/10">
-                <span
-                  className="block h-full bg-accent"
-                  style={{
-                    width: `${gameState.relations[p.id] ?? p.relationConfiance}%`,
-                  }}
-                />
-              </span>
-            </span>
-          </button>
-        ))}
-      </aside>
+            </button>
+          );
+        })}
+      </div>
 
-      <div className="flex flex-col rounded-2xl border border-white/10 bg-panel p-5 shadow-soft">
-        <div className="mb-4 flex items-start gap-3 border-b border-white/10 pb-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/15 font-display text-lg font-bold text-accent">
-            {personnage.avatar}
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="font-display text-xl font-semibold text-foreground">
-              {personnage.nom}
+      {/* Visual novel: ONE large portrait + dialogue */}
+      <div className="grid min-h-0 flex-1 gap-6 rounded-3xl border border-white/10 bg-[#F5F1E8] p-5 text-[#0C3B38] shadow-soft md:grid-cols-[minmax(220px,320px)_1fr] md:p-8">
+        <div className="flex flex-col items-center gap-3">
+          <CharacterPortrait
+            id={visualId}
+            trust={trust}
+            size="xl"
+            rounded="2xl"
+            showBadge
+            className="border-[3px] border-[#0C3B38] shadow-sm"
+          />
+          <div className="w-full text-center">
+            <h2 className="font-display text-xl font-semibold">
+              {meta?.displayName ?? personnage.nom}
             </h2>
-            <p className="text-sm text-muted">{personnage.role}</p>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/80">
-              {personnage.bio}
+            <p className="text-xs text-[#6B7280]">
+              {meta?.role ?? personnage.role}
             </p>
-            <div className="mt-3">
-              <div className="mb-1 flex justify-between text-[10px] uppercase tracking-wider text-muted">
-                <span>Confiance</span>
-                <span>{trust}/100</span>
+            <div className="mx-auto mt-3 max-w-[220px]">
+              <div className="mb-1 flex justify-between text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">
+                <span>{expressionLabel(expression)}</span>
+                <span className="tabular-nums">{trust}/100</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-2 overflow-hidden rounded-full bg-[#0C3B38]/15">
                 <div
-                  className="h-full rounded-full bg-accent transition-all duration-500"
+                  className="h-full rounded-full bg-[#2FD67E] transition-all duration-500 ease-out"
                   style={{ width: `${trust}%` }}
                 />
               </div>
             </div>
+            <p className="mt-3 text-sm italic text-[#6B7280]">
+              « {personnage.phrase} »
+            </p>
           </div>
         </div>
 
-        <div className="mb-4 space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
-            Questions
-          </p>
-          {personnage.questions.map((q) => (
-            <button
-              key={q.id}
-              type="button"
-              onClick={() => {
-                setActiveQ(q.id);
-                setLastChoice(null);
-              }}
-              className={cn(
-                "w-full rounded-xl border px-3 py-2.5 text-left text-sm transition",
-                activeQ === q.id
-                  ? "border-accent bg-accent/10 text-foreground"
-                  : "border-white/10 bg-panel-2 text-muted hover:text-foreground"
-              )}
-            >
-              {q.texte}
-            </button>
-          ))}
-        </div>
-
-        {question ? (
-          <div className="mb-4 space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-accent">
-              Tes réponses
+        <div className="flex min-h-0 flex-col gap-4">
+          <div className="rounded-2xl border-2 border-[#0C3B38] bg-white p-4 shadow-sm">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">
+              Dialogue
             </p>
-            {question.choices.map((c) => (
+            <p className="text-sm leading-relaxed text-[#0C3B38]">
+              {lastChoice?.reponse ??
+                personnage.bio ??
+                "Choisis une question pour lancer l'échange."}
+            </p>
+            {lastChoice?.unlockInfo ? (
+              <p className="mt-2 text-xs font-semibold text-[#3B6FB5]">
+                Info : {lastChoice.unlockInfo}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2 overflow-y-auto">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">
+              Questions
+            </p>
+            {personnage.questions.map((q) => (
               <button
-                key={c.id}
+                key={q.id}
                 type="button"
                 onClick={() => {
-                  applyDialogueChoice(personnage.id, c);
-                  setLastChoice(c);
+                  setActiveQ(q.id);
+                  setLastChoice(null);
                 }}
-                className="w-full rounded-xl border border-accent/30 bg-accent/5 px-3 py-2.5 text-left text-sm font-medium text-foreground transition hover:bg-accent/15"
+                className={cn(
+                  "w-full rounded-xl border-2 px-3 py-2.5 text-left text-sm transition",
+                  activeQ === q.id
+                    ? "border-[#0C3B38] bg-[#0C3B38] text-[#F5F1E8]"
+                    : "border-[#0C3B38]/20 bg-white text-[#0C3B38] hover:border-[#2FD67E]"
+                )}
               >
-                {c.texte}
-                <span className="mt-1 block text-[11px] font-normal text-muted">
-                  Confiance {c.confianceDelta >= 0 ? "+" : ""}
-                  {c.confianceDelta}
-                  {c.xp ? ` · +${c.xp} XP` : ""}
-                </span>
+                {q.texte}
               </button>
             ))}
           </div>
-        ) : null}
 
-        <div className="mt-auto rounded-xl border border-dashed border-white/15 bg-panel-2 p-4">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted">
-            Réponse
-          </p>
-          <p className="text-sm leading-relaxed text-foreground">
-            {lastChoice?.reponse ??
-              "Choisis une question, puis une réponse pour faire évoluer la confiance."}
-          </p>
-          {lastChoice?.unlockInfo ? (
-            <p className="mt-2 text-xs font-semibold text-accent-warm">
-              Info débloquée : {lastChoice.unlockInfo}
-            </p>
-          ) : null}
-          {gameState.unlockedInfos.length > 0 ? (
-            <ul className="mt-3 space-y-1 border-t border-white/10 pt-3 text-[11px] text-muted">
-              {gameState.unlockedInfos.map((info) => (
-                <li key={info}>• {info}</li>
+          {question ? (
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#0C3B38]">
+                Tes réponses
+              </p>
+              {question.choices.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    applyDialogueChoice(personnage.id, c);
+                    setLastChoice(c);
+                  }}
+                  className="w-full rounded-xl border-2 border-[#2FD67E] bg-[#E7F8EE] px-3 py-2.5 text-left text-sm font-medium text-[#0C3B38] transition hover:bg-[#2FD67E]/25"
+                >
+                  {c.texte}
+                  <span className="mt-1 block text-[11px] font-normal text-[#6B7280]">
+                    Confiance {c.confianceDelta >= 0 ? "+" : ""}
+                    {c.confianceDelta}
+                    {c.xp ? ` · +${c.xp} XP` : ""}
+                  </span>
+                </button>
               ))}
-            </ul>
+            </div>
           ) : null}
         </div>
       </div>

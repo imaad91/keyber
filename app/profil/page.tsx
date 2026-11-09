@@ -2,10 +2,23 @@
 
 import Link from "next/link";
 import { ArrowLeft, Award, History } from "lucide-react";
+import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
+import { CharacterPortrait } from "@/components/characters/CharacterPortrait";
 import { ProgressionChart } from "@/components/ProgressionChart";
 import { Button } from "@/components/ui/button";
+import {
+  CHARACTER_META,
+  type CharacterVisualId,
+} from "@/lib/characterStyle";
 import { roles, skills } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
+
+const CAST: CharacterVisualId[] = [
+  "pers-marie",
+  "pers-karim",
+  "pers-laurent",
+  "pers-henri",
+];
 
 export default function ProfilPage() {
   const { gameState } = useGameStore();
@@ -24,7 +37,7 @@ export default function ProfilPage() {
 
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/15 font-display text-2xl font-bold text-accent">
+            <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl border-2 border-[#0C3B38] bg-[#F5F1E8] font-display text-xl font-bold text-[#0C3B38]">
               KB
             </div>
             <div>
@@ -43,6 +56,33 @@ export default function ProfilPage() {
             <Link href="/play">Retour au jeu</Link>
           </Button>
         </div>
+
+        <section className="mb-6 rounded-2xl border border-white/10 bg-panel p-5">
+          <h2 className="mb-4 font-display text-sm font-semibold">
+            Relations — cast Novacier
+          </h2>
+          <div className="flex flex-wrap gap-4">
+            {CAST.map((id) => {
+              const trust = gameState.relations[id] ?? 50;
+              return (
+                <div key={id} className="flex w-[110px] flex-col items-center gap-2">
+                  <CharacterPortrait
+                    id={id}
+                    trust={trust}
+                    size={88}
+                    rounded="2xl"
+                    showBadge
+                    className="border-2 border-[#0C3B38]"
+                  />
+                  <p className="text-center text-xs font-semibold">
+                    {CHARACTER_META[id].shortName}
+                  </p>
+                  <p className="text-[10px] tabular-nums text-muted">{trust}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
         <div className="mb-6 rounded-2xl border border-white/10 bg-panel p-5">
           <div className="mb-2 flex justify-between text-sm">
@@ -104,9 +144,14 @@ export default function ProfilPage() {
                 {gameState.decisionHistory.slice(0, 8).map((d) => (
                   <li
                     key={d.id}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-panel-2 px-3 py-2 text-sm"
+                    className="flex items-center gap-2 rounded-lg bg-panel-2 px-3 py-2 text-sm"
                   >
-                    <span>{d.titre}</span>
+                    <CharacterAvatar
+                      id="pers-marie"
+                      size={28}
+                      trust={gameState.relations["pers-marie"] ?? 30}
+                    />
+                    <span className="min-w-0 flex-1 truncate">{d.titre}</span>
                     <span className="shrink-0 text-xs text-muted">
                       {d.at} · +{d.xp} XP
                     </span>

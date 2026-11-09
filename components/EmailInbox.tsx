@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Mail, MailOpen } from "lucide-react";
+import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,7 @@ export function EmailInbox() {
         </span>
       </header>
 
-      <div className="grid min-h-0 flex-1 md:grid-cols-[280px_1fr]">
+      <div className="grid min-h-0 flex-1 md:grid-cols-[300px_1fr]">
         <ul className="overflow-y-auto border-b border-white/10 md:border-b-0 md:border-r">
           {gameState.emails.map((email) => (
             <li key={email.id}>
@@ -31,36 +32,39 @@ export function EmailInbox() {
                   markEmailRead(email.id);
                 }}
                 className={cn(
-                  "flex w-full flex-col gap-0.5 border-b border-white/5 px-4 py-3 text-left transition hover:bg-white/5",
+                  "flex w-full items-start gap-3 border-b border-white/5 px-4 py-3 text-left transition hover:bg-white/5",
                   selectedId === email.id && "bg-accent/10",
                   !email.read && "bg-white/[0.03]"
                 )}
               >
-                <div className="flex items-center justify-between gap-2">
+                <CharacterAvatar name={email.from} size={36} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <span
+                      className={cn(
+                        "truncate text-sm",
+                        email.read
+                          ? "font-medium text-muted"
+                          : "font-semibold text-foreground"
+                      )}
+                    >
+                      {email.from}
+                    </span>
+                    <span className="shrink-0 text-[10px] tabular-nums text-muted">
+                      {email.time}
+                    </span>
+                  </span>
                   <span
                     className={cn(
-                      "truncate text-sm",
-                      email.read
-                        ? "font-medium text-muted"
-                        : "font-semibold text-foreground"
+                      "mt-0.5 block truncate text-sm",
+                      email.urgent ? "text-danger" : "text-foreground"
                     )}
                   >
-                    {email.from}
+                    {email.subject}
                   </span>
-                  <span className="shrink-0 text-[10px] tabular-nums text-muted">
-                    {email.time}
+                  <span className="mt-0.5 block truncate text-[11px] text-muted">
+                    {email.preview}
                   </span>
-                </div>
-                <span
-                  className={cn(
-                    "truncate text-sm",
-                    email.urgent ? "text-danger" : "text-foreground"
-                  )}
-                >
-                  {email.subject}
-                </span>
-                <span className="truncate text-[11px] text-muted">
-                  {email.preview}
                 </span>
               </button>
             </li>
@@ -75,11 +79,18 @@ export function EmailInbox() {
             </div>
           ) : (
             <article className="reward-pop">
-              <p className="text-xs text-muted">{selected.from}</p>
-              <h3 className="mt-1 font-display text-xl font-semibold text-foreground">
+              <div className="mb-3 flex items-center gap-3">
+                <CharacterAvatar name={selected.from} size={44} />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {selected.from}
+                  </p>
+                  <p className="text-xs text-muted">{selected.time}</p>
+                </div>
+              </div>
+              <h3 className="font-display text-xl font-semibold text-foreground">
                 {selected.subject}
               </h3>
-              <p className="mt-1 text-xs text-muted">{selected.time}</p>
               <pre className="mt-5 whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground/90">
                 {selected.body}
               </pre>

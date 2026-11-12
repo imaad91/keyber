@@ -4,68 +4,97 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { dashboardSeries } from "@/lib/mock";
+import { useGameStore } from "@/lib/store";
 
-const EXAMPLE_DATA = [
-  { name: "S1", valeur: 42 },
-  { name: "S2", valeur: 58 },
-  { name: "S3", valeur: 51 },
-  { name: "S4", valeur: 67 },
-  { name: "S5", valeur: 62 },
-];
+export function DashboardView() {
+  const { gameState } = useGameStore();
+  const advanced = gameState.visibilityLevel >= 3;
 
-type DashboardViewProps = {
-  title?: string;
-};
-
-export function DashboardView({
-  title = "Tableau de bord",
-}: DashboardViewProps) {
   return (
-    <section className="view-enter flex h-full flex-col gap-6">
+    <section className="view-enter flex h-full flex-col gap-4">
       <header>
-        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
           Dashboard
         </p>
-        <h2 className="font-display text-2xl font-semibold text-navy">
-          {title}
+        <h2 className="font-display text-2xl font-semibold text-foreground">
+          Pilotage opérationnel
         </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Graphique d&apos;exemple — données fictives.
+        <p className="mt-1 text-sm text-muted">
+          {advanced
+            ? "Mode avancé — prédictions débloquées (ERP + Analyste)."
+            : "Graphiques d'exemple. Niveau 3 de visibilité pour les prédictions."}
         </p>
       </header>
 
-      <div className="flex min-h-[280px] flex-1 flex-col rounded-xl border border-slate-200 bg-white p-5">
-        <p className="mb-4 text-sm font-medium text-slate-600">
-          Indicateur exemple
-        </p>
-        <div className="h-[240px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={EXAMPLE_DATA}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: "#64748b", fontSize: 12 }}
-                axisLine={{ stroke: "#e2e8f0" }}
-              />
-              <YAxis
-                tick={{ fill: "#64748b", fontSize: 12 }}
-                axisLine={{ stroke: "#e2e8f0" }}
-              />
-              <Tooltip
-                contentStyle={{
-                  borderRadius: 8,
-                  border: "1px solid #e2e8f0",
-                  fontSize: 12,
-                }}
-              />
-              <Bar dataKey="valeur" fill="#1e3a5f" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-white/10 bg-panel p-4 shadow-soft">
+          <p className="mb-3 text-sm font-medium text-muted">Production hebdo</p>
+          <div className="h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dashboardSeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#243552" />
+                <XAxis dataKey="name" tick={{ fill: "#8aa0b8", fontSize: 12 }} />
+                <YAxis tick={{ fill: "#8aa0b8", fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    background: "#121c2e",
+                    border: "1px solid #243552",
+                    borderRadius: 8,
+                  }}
+                />
+                <Bar dataKey="prod" fill="#3dd6c6" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-panel p-4 shadow-soft">
+          <p className="mb-3 text-sm font-medium text-muted">
+            Pannes {advanced ? "+ tendance" : ""}
+          </p>
+          <div className="h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dashboardSeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#243552" />
+                <XAxis dataKey="name" tick={{ fill: "#8aa0b8", fontSize: 12 }} />
+                <YAxis tick={{ fill: "#8aa0b8", fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    background: "#121c2e",
+                    border: "1px solid #243552",
+                    borderRadius: 8,
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="panne"
+                  stroke="#f07178"
+                  strokeWidth={2}
+                  name="Pannes %"
+                />
+                {advanced ? (
+                  <Line
+                    type="monotone"
+                    dataKey="prod"
+                    stroke="#f0a05a"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    name="Signal prod"
+                  />
+                ) : null}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
     </section>

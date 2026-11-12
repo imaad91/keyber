@@ -2,8 +2,8 @@
 
 import { Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { decisionForDay } from "@/data/scenarioNovacier";
 import { exampleActions, visibilityInvestments } from "@/lib/mock";
+import { getPlayDecisionForDay } from "@/lib/playContent";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +19,7 @@ export function VisibilityPanel() {
 
   if (!showVisibilityPanel) return null;
 
-  const day1 = decisionForDay(1);
+  const day1 = getPlayDecisionForDay(1);
   const capteur = day1?.choix.find((c) => c.id === "d1-capteur");
 
   return (

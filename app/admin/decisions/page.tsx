@@ -111,7 +111,7 @@ export default function AdminDecisionsPage() {
     <div>
       <PageHeader
         title="Décisions & événements"
-        subtitle="Dilemmes, choix avec conséquences, et timeline jour par jour."
+        subtitle="Dilemmes, choix avec conséquences, et timeline jour par jour. Les valeurs enregistrées ici pilotent le Mode Joueur (localement dans ce navigateur)."
         actions={
           <>
             <AdminButton
@@ -413,9 +413,9 @@ function ChoiceEditor({
         Conséquences (ex. Trésorerie -5000, Moral -10, Confiance Marie +10)
       </p>
       {choice.consequences.map((cons, ki) => (
-        <div key={ki} className="mb-1 flex gap-2">
+        <div key={ki} className="mb-1 flex flex-wrap gap-2">
           <input
-            className={inputClass}
+            className={`${inputClass} min-w-[8rem] flex-1`}
             placeholder="Métrique"
             value={cons.metric}
             onChange={(e) => {
@@ -438,6 +438,23 @@ function ChoiceEditor({
               onChange({ ...choice, consequences });
             }}
           />
+          <select
+            className={`${selectClass} w-28`}
+            value={cons.mode ?? "add"}
+            onChange={(e) => {
+              const mode = e.target.value as "add" | "set";
+              const consequences = choice.consequences.map((x, j) =>
+                j === ki
+                  ? { ...x, mode: mode === "add" ? undefined : mode }
+                  : x
+              );
+              onChange({ ...choice, consequences });
+            }}
+            title="add = delta, set = valeur absolue"
+          >
+            <option value="add">add</option>
+            <option value="set">set</option>
+          </select>
         </div>
       ))}
       <AdminButton

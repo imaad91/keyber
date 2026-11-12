@@ -119,6 +119,8 @@ function seedDecisions(): AdminDecision[] {
       consequences: c.consequences.map((x) => ({
         metric: x.cible,
         delta: x.valeur,
+        ...(x.mode ? { mode: x.mode } : {}),
+        ...(typeof x.setValeur === "string" ? { setValeur: x.setValeur } : {}),
       })),
     })),
     order: idx + 1,

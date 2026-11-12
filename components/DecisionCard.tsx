@@ -1,8 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { decisionForDay, dayTitles } from "@/data/scenarioNovacier";
+import { dayTitles } from "@/data/scenarioNovacier";
 import { choixDisponibles } from "@/lib/engine";
+import {
+  adminOverridesActive,
+  getPlayDecisionForDay,
+} from "@/lib/playContent";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -16,11 +21,25 @@ export function DecisionCard() {
     rawState,
   } = useGameStore();
 
+  const [studioTick, setStudioTick] = useState(0);
+  useEffect(() => {
+    const bump = () => setStudioTick((t) => t + 1);
+    window.addEventListener("focus", bump);
+    window.addEventListener("storage", bump);
+    window.addEventListener("keyber-admin-updated", bump);
+    bump();
+    return () => {
+      window.removeEventListener("focus", bump);
+      window.removeEventListener("storage", bump);
+      window.removeEventListener("keyber-admin-updated", bump);
+    };
+  }, []);
+
   const day = Math.min(5, Math.max(1, gameState.day || 1));
-  const decision = decisionForDay(day);
-  const choix = decision
-    ? choixDisponibles(rawState, decision)
-    : [];
+  void studioTick; // re-read Admin localStorage after Studio saves / focus
+  const decision = getPlayDecisionForDay(day);
+  const fromStudio = adminOverridesActive();
+  const choix = decision ? choixDisponibles(rawState, decision) : [];
 
   const selected =
     choix.find((c) => c.id === selectedDecisionId) ?? choix[0];
@@ -40,12 +59,22 @@ export function DecisionCard() {
     .filter((c) => c.cible === "tresorerie" && c.valeur < 0)
     .reduce((s, c) => s + Math.abs(c.valeur), 0);
 
+  const impacts =
+    fromStudio || !selected.impacts?.length
+      ? consequencesAsImpacts(selected.consequences)
+      : selected.impacts;
+
   return (
     <section className="view-enter grid h-full gap-4 lg:grid-cols-[280px_1fr]">
       <aside className="space-y-3 overflow-y-auto">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
           {dayTitles[day] ?? `Jour ${day}`}
         </p>
+        {fromStudio ? (
+          <p className="rounded-md bg-accent/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent">
+            Paramétrage Studio actif
+          </p>
+        ) : null}
         <p className="text-sm leading-relaxed text-muted">{decision.dilemme}</p>
         <div className="space-y-1.5">
           {choix.map((c) => (
@@ -89,7 +118,7 @@ export function DecisionCard() {
         </p>
 
         <div className="mt-6 grid gap-2 sm:grid-cols-3">
-          {(selected.impacts ?? []).map((impact) => (
+          {impacts.map((impact) => (
             <div
               key={impact.label}
               className={cn(
@@ -114,7 +143,9 @@ export function DecisionCard() {
             Qualité semaine : {gameState.piecesQualiteSemaine}/500 · Éthique :{" "}
             {gameState.ethique} · Cash :{" "}
             {gameState.tresorerie.toLocaleString("fr-FR")} €
-            {cashCost ? ` · Coût choix ${cashCost.toLocaleString("fr-FR")} €` : ""}
+            {cashCost
+              ? ` · Coût choix ${cashCost.toLocaleString("fr-FR")} €`
+              : ""}
             {timeCost ? ` · ${timeCost} min` : ""}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -138,6 +169,25 @@ export function DecisionCard() {
   );
 }
 
+function consequencesAsImpacts(
+  consequences: { cible: string; valeur: number; mode?: string }[]
+) {
+  return consequences
+    .filter((c) => c.cible !== "temps" && c.cible !== "xp")
+    .slice(0, 6)
+    .map((c) => ({
+      label: c.cible,
+      value:
+        c.mode === "set"
+          ? `= ${c.valeur}`
+          : `${c.valeur > 0 ? "+" : ""}${c.valeur.toLocaleString("fr-FR")}`,
+      tone: (c.valeur > 0 ? "pos" : c.valeur < 0 ? "neg" : "neu") as
+        | "pos"
+        | "neg"
+        | "neu",
+    }));
+}
+
 function timeCostFor(c: {
   consequences: { cible: string; valeur: number; mode?: string }[];
 }) {
@@ -146,9 +196,7 @@ function timeCostFor(c: {
     .reduce((s, x) => s + (x.mode === "set" ? 0 : x.valeur), 0);
 }
 
-function cashFor(c: {
-  consequences: { cible: string; valeur: number }[];
-}) {
+function cashFor(c: { consequences: { cible: string; valeur: number }[] }) {
   const v = c.consequences
     .filter((x) => x.cible === "tresorerie" && x.valeur < 0)
     .reduce((s, x) => s + Math.abs(x.valeur), 0);

@@ -54,6 +54,9 @@ export const AVATAR_STYLES = [
 export type AdminConsequence = {
   metric: string;
   delta: number;
+  /** Preserved from engine data so Studio edits keep set vs add semantics. */
+  mode?: "add" | "set";
+  setValeur?: string;
 };
 
 export type AdminChoice = {

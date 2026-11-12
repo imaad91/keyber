@@ -56,6 +56,7 @@ function persist(next: AdminState) {
   if (typeof window !== "undefined") {
     const rest = { ...next, toast: null };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
+    window.dispatchEvent(new Event("keyber-admin-updated"));
   }
   emit();
 }
@@ -67,7 +68,16 @@ function toast(message: string) {
 function ensureHydrated() {
   if (hydrated || typeof window === "undefined") return;
   hydrated = true;
+  const hadRaw = Boolean(window.localStorage.getItem(STORAGE_KEY));
   state = loadState();
+  // First Studio visit writes seed so Mode Joueur can read the same source.
+  if (!hadRaw) {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...state, toast: null })
+    );
+    window.dispatchEvent(new Event("keyber-admin-updated"));
+  }
 }
 
 function patch(partial: Partial<AdminState>) {
@@ -204,7 +214,7 @@ export function updateDecision(id: string, data: Partial<AdminDecision>) {
       d.id === id ? { ...d, ...data } : d
     ),
   });
-  toast("Décision enregistrée");
+  toast("Décision enregistrée — appliquée dans Décider (Mode Joueur)");
 }
 
 export function deleteDecision(id: string) {

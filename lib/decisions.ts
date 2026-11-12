@@ -30,8 +30,10 @@ export type DecisionChoix = {
   consequences: Consequence[];
   /** Soft unlock / bonus conditions evaluated after base consequences */
   conditions?: DecisionCondition[];
-  /** Hard gate: choice hidden/disabled unless all pass against current state */
+  /** Hard gate: choice disabled unless all pass against current state */
   requis?: Omit<DecisionCondition, "alorsEffetSupplementaire">[];
+  /** Shown when requis fail — e.g. skill gate copy */
+  messageVerrouillage?: string;
   feedbackTexte: string;
   impacts?: { label: string; value: string; tone: "pos" | "neg" | "neu" }[];
 };
@@ -46,6 +48,8 @@ export type Decision = {
   /** If true, engine banks daily production into weekly quality after the choice */
   bankProduction?: boolean;
   categorie?: string;
+  /** When set, this decision is a Mode Compétence training drill */
+  competenceId?: string;
 };
 
 export type ScenarioDecisions = Decision[];

@@ -8,8 +8,11 @@ import type {
 } from "./types";
 import type { GameState } from "./gameState";
 import { syncMetaClock } from "./gameState";
-import { createNovacierInitialState } from "@/data/scenarioNovacier";
-import { novacierDecisions } from "@/data/scenarioNovacier";
+import {
+  createNovacierInitialState,
+  novacierDecisions,
+  SCENARIO_ID,
+} from "@/data/scenarioNovacier";
 import {
   emailsForDay,
   eventsForDay,
@@ -418,8 +421,21 @@ const ALL_ACTIONS: GameState["world"]["unlockedActions"] = [
 
 export function createInitialGameState(): GameState {
   const base = createNovacierInitialState();
+  const skillProgress = Object.fromEntries(
+    skills.map((s) => [s.id, { niveau: s.niveau, xp: s.xp }])
+  );
+  const competences = Object.fromEntries(
+    skills.map((s) => [s.id, s.niveau])
+  );
   return syncMetaClock({
     ...base,
+    modeActuel: base.modeActuel ?? null,
+    scenarioCompetenceId: base.scenarioCompetenceId ?? null,
+    scenarioHistoireId: base.scenarioHistoireId ?? SCENARIO_ID,
+    progression: {
+      ...base.progression,
+      competences: { ...base.progression.competences, ...competences },
+    },
     flags: { ...base.flags, tauxPanne: 5 },
     world: {
       ...base.world,
@@ -430,9 +446,10 @@ export function createInitialGameState(): GameState {
       messages: messagesForDay(1),
       rumors: [{ ...scenarioRumor }],
       badges: exampleBadges.map((b) => ({ ...b })),
-      skillProgress: Object.fromEntries(
-        skills.map((s) => [s.id, { niveau: s.niveau, xp: s.xp }])
-      ),
+      skillProgress,
+      trainingsCompleted: base.world.trainingsCompleted ?? [],
+      histoiresCompleted: base.world.histoiresCompleted ?? [],
+      trainingPrompt: null,
       chapters: scenarioChapters.map((c) => ({ ...c })),
       unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
     },

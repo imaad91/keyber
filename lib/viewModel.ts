@@ -15,6 +15,7 @@ export type GameView = {
   raw: GameState;
   // flat compat fields (old GameState shape)
   mode: GameState["world"]["mode"];
+  modeActuel: GameState["modeActuel"];
   roleId: string | null;
   day: number;
   week: number;
@@ -62,6 +63,9 @@ export type GameView = {
   }[];
   badges: GameState["world"]["badges"];
   skillProgress: GameState["world"]["skillProgress"];
+  trainingsCompleted: GameState["world"]["trainingsCompleted"];
+  histoiresCompleted: GameState["world"]["histoiresCompleted"];
+  trainingPrompt: GameState["world"]["trainingPrompt"];
   feedbackFlash: string | null;
   introSeen: boolean;
   onboardingStep: GameState["world"]["onboardingStep"];
@@ -112,6 +116,7 @@ export function toGameView(state: GameState): GameView {
   return {
     raw: state,
     mode: state.world.mode,
+    modeActuel: state.modeActuel ?? null,
     roleId: state.meta.roleId,
     day: state.meta.jourActuel,
     week: state.meta.week,
@@ -153,12 +158,15 @@ export function toGameView(state: GameState): GameView {
     rumors: state.world.rumors,
     decisionHistory: state.historique.decisionsPrises.map((d) => ({
       id: `${d.decisionId}-${d.choixId}`,
-      titre: d.choixId,
+      titre: d.label ?? d.choixId,
       at: d.heure,
       xp: 0,
     })),
     badges: state.world.badges,
     skillProgress: state.world.skillProgress,
+    trainingsCompleted: state.world.trainingsCompleted ?? [],
+    histoiresCompleted: state.world.histoiresCompleted ?? [],
+    trainingPrompt: state.world.trainingPrompt ?? null,
     feedbackFlash: state.world.feedbackFlash,
     introSeen: state.world.introSeen,
     onboardingStep: state.world.onboardingStep,

@@ -372,19 +372,26 @@ export const novacierDecisions: Decision[] = [
         ],
       },
       {
-        id: "d5-nego-prix",
-        label: "Proposer un geste prix pour sauver le volume",
-        description: "Marge en moins, contrat peut-être sauvé.",
-        feedbackTexte: "Geste prix de 20 k€. AutoVolt apprécie le signal.",
+        id: "d5-nego-agressive",
+        label: "Négociation agressive",
+        description:
+          "Pousser AutoVolt au maximum : volume + prix. Exige Négociation Niveau 2.",
+        feedbackTexte:
+          "Tu as mené une négociation agressive. AutoVolt cède du terrain — au prix d'une tension nette.",
+        messageVerrouillage:
+          "Nécessite Négociation Niveau 2 — Va t'entraîner en Mode Compétence",
+        requis: [{ si: "competence.negociation", superieurA: 1 }],
         impacts: [
-          { label: "Trésorerie", value: "-20 000 €", tone: "neg" },
-          { label: "AutoVolt", value: "+8", tone: "pos" },
+          { label: "AutoVolt", value: "+12", tone: "pos" },
+          { label: "Trésorerie", value: "+8 000 €", tone: "pos" },
+          { label: "Relation", value: "Tendue", tone: "neg" },
         ],
         consequences: [
-          { cible: "tresorerie", valeur: -20000 },
-          { cible: "confianceClient", valeur: 8 },
-          { cible: "temps", valeur: 40 },
-          { cible: "xp", valeur: 35 },
+          { cible: "confianceClient", valeur: 12 },
+          { cible: "tresorerie", valeur: 8000 },
+          { cible: "moral", valeur: -5 },
+          { cible: "temps", valeur: 45 },
+          { cible: "xp", valeur: 90 },
         ],
       },
     ],
@@ -398,6 +405,9 @@ export function createNovacierInitialState(): GameState {
   const dayLength = NOVACIER_RULES.dayLengthMinutes;
   const minutesSinceStart = 0;
   return {
+    modeActuel: null,
+    scenarioCompetenceId: null,
+    scenarioHistoireId: SCENARIO_ID,
     meta: {
       scenarioId: SCENARIO_ID,
       entrepriseId: ENTREPRISE_ID,
@@ -438,7 +448,7 @@ export function createNovacierInitialState(): GameState {
       xp: 0,
       niveau: 1,
       competences: {
-        negotiation: 1,
+        negociation: 1,
         crise: 1,
         leadership: 1,
         stock: 1,
@@ -487,6 +497,9 @@ export function createNovacierInitialState(): GameState {
       rumors: [],
       unlockedInfos: [],
       skillProgress: {},
+      trainingsCompleted: [],
+      histoiresCompleted: [],
+      trainingPrompt: null,
     },
   };
 }

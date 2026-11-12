@@ -7,11 +7,17 @@ export type VisibilityTier = 0 | 1 | 2 | 3; // 0 Inconnu · 1 Estimé · 2 Préc
 
 export type EndingKind = "VICTOIRE" | "PARTIELLE" | "ECHEC" | null;
 
+/** Shared play mode — competence drills & story scenarios share one progression. */
+export type ModeJeu = "competence" | "histoire";
+
 export type DecisionRecord = {
   decisionId: string;
   jour: number;
   choixId: string;
   heure: string;
+  mode?: ModeJeu;
+  competenceId?: string;
+  label?: string;
 };
 
 export type EndingRuleBand = {
@@ -149,6 +155,31 @@ export type JournalEntryState = {
   narration: string;
   xp: number;
   at: string;
+  mode?: ModeJeu;
+  /** e.g. "Novacier Jour 3" or "Négociation" */
+  modeLabel?: string;
+};
+
+export type TrainingPrompt = {
+  competenceId: string;
+  competenceNom: string;
+  raison: string;
+};
+
+export type TrainingCompletion = {
+  competenceId: string;
+  decisionId: string;
+  choixId: string;
+  label: string;
+  at: string;
+  xp: number;
+};
+
+export type HistoireCompletion = {
+  scenarioId: string;
+  titre: string;
+  ending: EndingKind;
+  at: string;
 };
 
 export type ChapitreState = {
@@ -161,7 +192,8 @@ export type ChapitreState = {
   status: "VERROUILLE" | "ACTIF" | "TERMINE";
 };
 
-export type GameMode = "skills" | "story" | null;
+/** @deprecated Prefer ModeJeu — kept for transitional UI ("skills"/"story"). */
+export type GameMode = ModeJeu | "skills" | "story" | null;
 
 export type ActionType =
   | "ACCESS_COMPUTER"
@@ -174,6 +206,10 @@ export type ActionType =
  * Core blocks match the decision-engine charter; `world` holds runtime content.
  */
 export type GameState = {
+  /** Active play mode — competence drills & histoire share progression. */
+  modeActuel: ModeJeu | null;
+  scenarioCompetenceId: string | null;
+  scenarioHistoireId: string | null;
   meta: GameMeta;
   finance: GameFinance;
   humain: GameHumain;
@@ -184,6 +220,7 @@ export type GameState = {
   historique: GameHistorique;
   flags: GameFlags;
   world: {
+    /** Mirrors modeActuel for older UI (skills↔competence, story↔histoire). */
     mode: GameMode;
     ending: EndingKind;
     showDebrief: boolean;
@@ -207,8 +244,23 @@ export type GameState = {
     rumors: RumorState[];
     unlockedInfos: string[];
     skillProgress: Record<string, { niveau: number; xp: number }>;
+    trainingsCompleted: TrainingCompletion[];
+    histoiresCompleted: HistoireCompletion[];
+    trainingPrompt: TrainingPrompt | null;
   };
 };
+
+export function toModeJeu(mode: GameMode | ModeJeu | null | undefined): ModeJeu | null {
+  if (mode === "competence" || mode === "skills") return "competence";
+  if (mode === "histoire" || mode === "story") return "histoire";
+  return null;
+}
+
+export function legacyModeFrom(mode: ModeJeu | null): GameMode {
+  if (mode === "competence") return "skills";
+  if (mode === "histoire") return "story";
+  return null;
+}
 
 export function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));

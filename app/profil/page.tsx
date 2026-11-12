@@ -133,15 +133,57 @@ export default function ProfilPage() {
           <section className="rounded-2xl border border-white/10 bg-panel p-5">
             <div className="mb-3 flex items-center gap-2">
               <History className="h-4 w-4 text-accent" />
-              <h2 className="font-display font-semibold">Historique décisions</h2>
+              <h2 className="font-display font-semibold">
+                Entraînements Compétence
+              </h2>
             </div>
-            {gameState.decisionHistory.length === 0 ? (
+            {gameState.trainingsCompleted.length === 0 ? (
               <p className="text-sm text-muted">
-                Aucune décision validée pour l&apos;instant.
+                Aucun entraînement terminé. Même XP que l&apos;Histoire.
               </p>
             ) : (
               <ul className="space-y-2">
-                {gameState.decisionHistory.slice(0, 8).map((d) => (
+                {gameState.trainingsCompleted.slice(0, 8).map((t, i) => (
+                  <li
+                    key={`${t.decisionId}-${i}`}
+                    className="rounded-lg bg-panel-2 px-3 py-2 text-sm"
+                  >
+                    <p className="font-semibold">{t.label}</p>
+                    <p className="text-[11px] text-muted">
+                      {t.competenceId} · +{t.xp} XP
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-white/10 bg-panel p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <History className="h-4 w-4 text-accent-warm" />
+              <h2 className="font-display font-semibold">
+                Histoires / décisions
+              </h2>
+            </div>
+            {gameState.histoiresCompleted.length === 0 &&
+            gameState.decisionHistory.length === 0 ? (
+              <p className="text-sm text-muted">
+                Aucune histoire terminée pour l&apos;instant.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {gameState.histoiresCompleted.slice(0, 4).map((h, i) => (
+                  <li
+                    key={`${h.scenarioId}-${i}`}
+                    className="rounded-lg bg-panel-2 px-3 py-2 text-sm"
+                  >
+                    <p className="font-semibold">{h.titre}</p>
+                    <p className="text-[11px] text-muted">
+                      Fin : {h.ending ?? "—"}
+                    </p>
+                  </li>
+                ))}
+                {gameState.decisionHistory.slice(0, 6).map((d) => (
                   <li
                     key={d.id}
                     className="flex items-center gap-2 rounded-lg bg-panel-2 px-3 py-2 text-sm"
@@ -152,37 +194,35 @@ export default function ProfilPage() {
                       trust={gameState.relations["pers-marie"] ?? 30}
                     />
                     <span className="min-w-0 flex-1 truncate">{d.titre}</span>
-                    <span className="shrink-0 text-xs text-muted">
-                      {d.at} · +{d.xp} XP
-                    </span>
+                    <span className="shrink-0 text-xs text-muted">{d.at}</span>
                   </li>
                 ))}
               </ul>
             )}
           </section>
-
-          <section className="rounded-2xl border border-white/10 bg-panel p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <Award className="h-4 w-4 text-accent-warm" />
-              <h2 className="font-display font-semibold">Badges</h2>
-            </div>
-            <ul className="space-y-2">
-              {gameState.badges.map((b) => (
-                <li
-                  key={b.id}
-                  className={`rounded-lg border px-3 py-2 text-sm ${
-                    b.unlocked
-                      ? "border-ok/40 bg-ok/10 text-foreground"
-                      : "border-white/10 bg-panel-2 text-muted"
-                  }`}
-                >
-                  <p className="font-semibold">{b.titre}</p>
-                  <p className="text-[11px] opacity-80">{b.description}</p>
-                </li>
-              ))}
-            </ul>
-          </section>
         </div>
+
+        <section className="mt-6 rounded-2xl border border-white/10 bg-panel p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Award className="h-4 w-4 text-accent-warm" />
+            <h2 className="font-display font-semibold">Badges</h2>
+          </div>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {gameState.badges.map((b) => (
+              <li
+                key={b.id}
+                className={`rounded-lg border px-3 py-2 text-sm ${
+                  b.unlocked
+                    ? "border-ok/40 bg-ok/10 text-foreground"
+                    : "border-white/10 bg-panel-2 text-muted"
+                }`}
+              >
+                <p className="font-semibold">{b.titre}</p>
+                <p className="text-[11px] opacity-80">{b.description}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </div>
   );

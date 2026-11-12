@@ -72,8 +72,12 @@ export function JournalView() {
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-muted">
-                        <span className="font-bold uppercase tracking-wider text-accent">
-                          Jour {entry.day}
+                        <span className="rounded-md bg-accent/15 px-1.5 py-0.5 font-bold uppercase tracking-wider text-accent">
+                          {entry.mode === "competence"
+                            ? `[Compétence — ${entry.modeLabel ?? "Entraînement"}]`
+                            : entry.mode === "histoire" || entry.day > 0
+                              ? `[Histoire — ${entry.modeLabel ?? `Novacier Jour ${entry.day}`}]`
+                              : `Jour ${entry.day}`}
                         </span>
                         <span>·</span>
                         <span>{entry.at}</span>

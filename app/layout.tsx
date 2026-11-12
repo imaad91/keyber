@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { AppChrome } from "@/components/AppChrome";
 import "./globals.css";
 
 const body = localFont({
@@ -32,7 +33,7 @@ export default function RootLayout({
       <body
         className={`${body.variable} ${display.variable} font-sans antialiased`}
       >
-        {children}
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   );

@@ -23,6 +23,14 @@ import {
   completeOnboardingStep4,
   startScenarioWeek,
 } from "./runtime";
+import {
+  getActiveSlot,
+  prepareNewGameState,
+  saveSlotAndProgression,
+  setActiveSlot as persistActiveSlot,
+  type SavesBundle,
+} from "./saveStore";
+import type { SlotNumber } from "./sauvegarde";
 import type {
   Action,
   ComputerAppId,
@@ -41,6 +49,8 @@ type StoreSnapshot = {
   selectedPersonnageId: string | null;
   showVisibilityPanel: boolean;
   livreOpened: boolean;
+  lastSavedAt: string | null;
+  activeSlot: SlotNumber | null;
 };
 
 let snapshot: StoreSnapshot = {
@@ -52,7 +62,19 @@ let snapshot: StoreSnapshot = {
   selectedPersonnageId: "pers-marie",
   showVisibilityPanel: false,
   livreOpened: false,
+  lastSavedAt: null,
+  activeSlot: null,
 };
+
+function autoSave(state: GameState) {
+  const slot = snapshot.activeSlot ?? getActiveSlot();
+  if (!slot) return;
+  const { sauvegarde } = saveSlotAndProgression(slot, state);
+  setSnapshot({
+    lastSavedAt: sauvegarde.dateDerniereSauvegarde,
+    activeSlot: slot,
+  });
+}
 
 const listeners = new Set<() => void>();
 
@@ -79,6 +101,9 @@ export function setMode(mode: GameMode | ModeJeu) {
 }
 
 export function setRole(roleId: string) {
+  if (!snapshot.activeSlot && !getActiveSlot()) {
+    ensureActiveSlot(1);
+  }
   patchState((s) => ({
     ...s,
     modeActuel: "histoire",
@@ -99,6 +124,7 @@ export function setRole(roleId: string) {
     ...s,
     meta: { ...s.meta, jourActuel: 0 },
   }));
+  autoSave(snapshot.state);
 }
 
 export function startCompetenceTraining(competenceId: string) {
@@ -117,6 +143,7 @@ export function startCompetenceTraining(competenceId: string) {
 
 export function applyCompetenceTraining(decision: Decision, choixId: string) {
   patchState((s) => engineApplyTraining(s, decision, choixId));
+  autoSave(snapshot.state);
 }
 
 export function clearTrainingPrompt() {
@@ -146,6 +173,49 @@ export function markIntroSeen() {
     };
     return startScenarioWeek(withIntro);
   });
+  autoSave(snapshot.state);
+}
+
+export function loadGameFromSave(state: GameState, slot: SlotNumber) {
+  persistActiveSlot(slot);
+  setSnapshot({
+    state,
+    activeSlot: slot,
+    activeAction: null,
+    playTab: "workspace",
+    computerApp: null,
+    selectedDecisionId: null,
+    selectedPersonnageId: "pers-marie",
+    showVisibilityPanel: false,
+    livreOpened: false,
+    lastSavedAt: new Date().toISOString(),
+  });
+}
+
+export function startNewGameInSlot(slot: SlotNumber) {
+  persistActiveSlot(slot);
+  const fresh = prepareNewGameState(createInitialGameState());
+  setSnapshot({
+    state: fresh,
+    activeSlot: slot,
+    activeAction: null,
+    playTab: "workspace",
+    computerApp: null,
+    selectedDecisionId: null,
+    selectedPersonnageId: "pers-marie",
+    showVisibilityPanel: false,
+    livreOpened: false,
+    lastSavedAt: null,
+  });
+  const { sauvegarde } = saveSlotAndProgression(slot, fresh);
+  setSnapshot({ lastSavedAt: sauvegarde.dateDerniereSauvegarde });
+}
+
+export function ensureActiveSlot(slot?: SlotNumber) {
+  const s = slot ?? getActiveSlot() ?? 1;
+  persistActiveSlot(s);
+  setSnapshot({ activeSlot: s });
+  return s;
 }
 
 export function setActiveAction(action: Action | null) {
@@ -298,10 +368,12 @@ export function applyDecision(decision: Decision, choixId: string) {
     }
     return next;
   });
+  autoSave(snapshot.state);
 }
 
 export function advanceDay() {
   patchState((s) => advanceScenarioDay(s));
+  autoSave(snapshot.state);
 }
 
 export function applyDialogueChoice(
@@ -331,8 +403,9 @@ export function clearFeedback() {
 }
 
 export function resetState() {
+  const slot = snapshot.activeSlot ?? getActiveSlot();
   setSnapshot({
-    state: createInitialGameState(),
+    state: prepareNewGameState(createInitialGameState()),
     activeAction: null,
     playTab: "workspace",
     computerApp: null,
@@ -340,6 +413,8 @@ export function resetState() {
     selectedPersonnageId: "pers-marie",
     showVisibilityPanel: false,
     livreOpened: false,
+    lastSavedAt: null,
+    activeSlot: slot,
   });
 }
 
@@ -366,6 +441,8 @@ export function useGameStore() {
     selectedPersonnageId: current.selectedPersonnageId,
     showVisibilityPanel: current.showVisibilityPanel,
     livreOpened: current.livreOpened,
+    lastSavedAt: current.lastSavedAt,
+    activeSlot: current.activeSlot,
     setMode,
     setRole,
     startCompetenceTraining,
@@ -388,5 +465,10 @@ export function useGameStore() {
     finishOnboarding,
     clearFeedback,
     resetState,
+    loadGameFromSave,
+    startNewGameInSlot,
+    ensureActiveSlot,
   };
 }
+
+export type { SavesBundle };

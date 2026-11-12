@@ -4,17 +4,13 @@ import Link from "next/link";
 import {
   BookMarked,
   BookOpen,
-  Database,
   Factory,
-  LayoutDashboard,
   Lock,
-  Mail,
-  MessageCircle,
   MessagesSquare,
+  Monitor,
   Package,
   Scale,
   Settings2,
-  Table2,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -25,14 +21,10 @@ import { cn } from "@/lib/utils";
 import type { Action } from "@/lib/types";
 
 const ICONS: Record<string, LucideIcon> = {
-  Database,
-  LayoutDashboard,
-  Table2,
+  Monitor,
   MessagesSquare,
   Scale,
   Factory,
-  Mail,
-  MessageCircle,
   Package,
 };
 

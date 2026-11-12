@@ -7,14 +7,19 @@ export type ObjectiveStatus = "EN_COURS" | "COMPLETE" | "ECHOUE";
 export type MachineEtat = "PRODUCTION" | "PANNE" | "ARRET";
 
 export type ActionType =
-  | "OPEN_ERP"
-  | "VIEW_DASHBOARD"
-  | "ANALYZE_DATA"
+  | "ACCESS_COMPUTER"
   | "INTERVIEW"
   | "DECIDE"
-  | "VIEW_ATELIER_LIVE"
-  | "EMAILS"
-  | "CHAT";
+  | "VIEW_ATELIER_LIVE";
+
+/** Apps inside Accès Ordinateur desktop */
+export type ComputerAppId =
+  | "erp"
+  | "mail"
+  | "dashboard"
+  | "documents"
+  | "chat"
+  | "browser";
 
 export type EventKind =
   | "CLIENT"

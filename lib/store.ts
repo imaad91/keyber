@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { COMPUTER_APP_TIME } from "./computerData";
 import {
   advanceOnboarding,
   advanceScenarioDay,
@@ -17,6 +18,7 @@ import {
 import { createInitialGameState } from "./mock";
 import type {
   Action,
+  ComputerAppId,
   Decision,
   DialogueChoice,
   GameMode,
@@ -28,6 +30,7 @@ type StoreSnapshot = {
   gameState: GameState;
   activeAction: Action | null;
   playTab: PlayTab;
+  computerApp: ComputerAppId | null;
   selectedDecisionId: string | null;
   selectedPersonnageId: string | null;
   showVisibilityPanel: boolean;
@@ -38,6 +41,7 @@ let snapshot: StoreSnapshot = {
   gameState: createInitialGameState(),
   activeAction: null,
   playTab: "workspace",
+  computerApp: null,
   selectedDecisionId: null,
   selectedPersonnageId: "pers-marie",
   showVisibilityPanel: false,
@@ -72,7 +76,7 @@ export function setRole(roleId: string) {
     day: 0,
     onboardingDone: false,
     onboardingStep: 1,
-    unlockedActions: ["CHAT", "VIEW_ATELIER_LIVE"],
+    unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
     feedbackFlash: "Rôle sélectionné — lit l'intro.",
   }));
 }
@@ -95,7 +99,6 @@ export function markIntroSeen() {
         ...s.journal,
       ],
     };
-    // POC: jump into Day 1 with tools unlocked for a 25–30 min run
     return startScenarioWeek(withIntro);
   });
 }
@@ -130,17 +133,48 @@ export function setActiveAction(action: Action | null) {
     setSnapshot({
       gameState: next,
       activeAction: action,
-      playTab:
-        action.type === "EMAILS"
-          ? "emails"
-          : action.type === "CHAT"
-            ? "chat"
-            : "workspace",
+      computerApp: null,
+      playTab: "workspace",
     });
     return;
   }
 
-  setSnapshot({ activeAction: null });
+  setSnapshot({ activeAction: null, computerApp: null });
+}
+
+export function openComputerApp(app: ComputerAppId) {
+  const cost = COMPUTER_APP_TIME[app] ?? 10;
+  if (!canSpendTime(snapshot.gameState, cost)) {
+    patchGame((s) => ({
+      ...s,
+      feedbackFlash: "Pas assez de temps restant aujourd'hui.",
+    }));
+    return;
+  }
+  const next = advanceTime(snapshot.gameState, cost);
+  setSnapshot({
+    gameState: {
+      ...next,
+      feedbackFlash: `+${cost} min — session ${appLabel(app)}`,
+    },
+    computerApp: app,
+  });
+}
+
+export function closeComputerApp() {
+  setSnapshot({ computerApp: null });
+}
+
+function appLabel(app: ComputerAppId) {
+  const map: Record<ComputerAppId, string> = {
+    erp: "ERP",
+    mail: "Boîte Mail",
+    dashboard: "Dashboard",
+    documents: "Documents",
+    chat: "Chat",
+    browser: "Navigateur",
+  };
+  return map[app];
 }
 
 export function setPlayTab(tab: PlayTab) {
@@ -239,6 +273,7 @@ export function resetState() {
     gameState: createInitialGameState(),
     activeAction: null,
     playTab: "workspace",
+    computerApp: null,
     selectedDecisionId: null,
     selectedPersonnageId: "pers-marie",
     showVisibilityPanel: false,
@@ -264,6 +299,8 @@ export function useGameStore() {
     setRole,
     markIntroSeen,
     setActiveAction,
+    openComputerApp,
+    closeComputerApp,
     setPlayTab,
     setSelectedDecisionId,
     setSelectedPersonnageId,

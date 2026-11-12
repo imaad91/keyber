@@ -728,14 +728,14 @@ export function advanceOnboarding(
       ...journal,
     ];
   } else if (step === 2 && viaAction === "INTERVIEW") {
-    unlockedActions = uniqueActions([...unlockedActions, "OPEN_ERP"]);
+    unlockedActions = uniqueActions([...unlockedActions, "ACCESS_COMPUTER"]);
     onboardingStep = 3;
     messages = [
       {
         id: `msg-m-${Date.now()}`,
         from: "Henri Vallon",
         role: "Mentor",
-        text: "Marie t'a parlé. Ouvre maintenant l'ERP.",
+        text: "Marie t'a parlé. Ouvre maintenant l'ordinateur — ERP et mails sont dessus.",
         time: formatGameClock(state.minutesSinceStart),
         mentor: true,
       },
@@ -748,20 +748,14 @@ export function advanceOnboarding(
         day: 0,
         titre: "Jour 0 — Marie",
         narration:
-          "Tu as rencontré Marie Dupont. La confiance se gagne réponse après réponse.",
+          "Tu as rencontré Marie Dubois. La confiance se gagne réponse après réponse.",
         xp: 15,
         at: formatGameClock(state.minutesSinceStart),
       },
       ...journal,
     ];
-  } else if (step === 3 && viaAction === "OPEN_ERP") {
-    unlockedActions = uniqueActions([
-      ...unlockedActions,
-      "DECIDE",
-      "EMAILS",
-      "VIEW_DASHBOARD",
-      "ANALYZE_DATA",
-    ]);
+  } else if (step === 3 && viaAction === "ACCESS_COMPUTER") {
+    unlockedActions = uniqueActions([...unlockedActions, "DECIDE"]);
     onboardingStep = 4;
     messages = [
       {
@@ -774,14 +768,14 @@ export function advanceOnboarding(
       },
       ...messages,
     ];
-    feedbackFlash = "Étape 3/4 — ERP découvert";
+    feedbackFlash = "Étape 3/4 — Ordinateur découvert";
     journal = [
       {
         id: `j-ob-3-${Date.now()}`,
         day: 0,
-        titre: "Jour 0 — ERP",
+        titre: "Jour 0 — Ordinateur",
         narration:
-          "L'ERP Novacier s'est ouvert. Tables, filtres, réalité administrative.",
+          "Tu as ouvert l'ordinateur Novacier. ERP, mails, chat : tout passe par là.",
         xp: 15,
         at: formatGameClock(state.minutesSinceStart),
       },
@@ -791,13 +785,9 @@ export function advanceOnboarding(
     unlockedActions = uniqueActions([
       ...unlockedActions,
       "DECIDE",
-      "EMAILS",
-      "VIEW_DASHBOARD",
-      "ANALYZE_DATA",
+      "ACCESS_COMPUTER",
       "INTERVIEW",
-      "OPEN_ERP",
       "VIEW_ATELIER_LIVE",
-      "CHAT",
     ]);
     onboardingStep = 5;
     onboardingDone = true;

@@ -674,6 +674,24 @@ export function emailsForDay(day: number): Email[] {
       read: false,
       urgent: true,
     });
+    common.push({
+      id: "em-d1-com",
+      from: "Commercial AutoVolt (interne)",
+      subject: "Tout va bien avec AutoVolt",
+      preview: "Relation saine, pas d'inquiétude à remonter…",
+      body: "Hello,\n\nPour info : tout va bien avec AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+      time: "08:40",
+      read: false,
+    });
+    common.push({
+      id: "em-d1-metalpro",
+      from: "MétalPro — Logistique",
+      subject: "Retard livraison acier",
+      preview: "Coil 2mm : retard probable 48–72 h sur votre commande…",
+      body: "Bonjour Novacier,\n\nNous accusons un retard sur votre coil acier 2mm (réf. AC-2MM).\nLivraison initiale décalée de 48 à 72 h.\n\nNous vous tiendrons informés.\n\nMétalPro Logistique",
+      time: "08:55",
+      read: false,
+    });
   }
   if (day >= 2) {
     common.push({

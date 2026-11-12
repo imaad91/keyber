@@ -3,13 +3,9 @@
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ActionSidebar } from "@/components/ActionSidebar";
-import { AnalyzeView } from "@/components/AnalyzeView";
 import { AtelierLiveView } from "@/components/AtelierLiveView";
-import { ChatPanel } from "@/components/ChatPanel";
-import { DashboardView } from "@/components/DashboardView";
+import { ComputerDesktop } from "@/components/computer/ComputerDesktop";
 import { DecisionCard } from "@/components/DecisionCard";
-import { EmailInbox } from "@/components/EmailInbox";
-import { ErpTable } from "@/components/ErpTable";
 import { EventFeed } from "@/components/EventFeed";
 import { FeedbackToast } from "@/components/FeedbackToast";
 import { InterviewView } from "@/components/InterviewView";
@@ -23,17 +19,10 @@ import { exampleActions, roles } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
 
 function ActionWorkspace() {
-  const { activeAction, playTab, gameState } = useGameStore();
+  const { activeAction, gameState } = useGameStore();
 
   if (gameState.showDebrief) {
     return <DebriefView />;
-  }
-
-  if (playTab === "emails" || activeAction?.type === "EMAILS") {
-    return <EmailInbox />;
-  }
-  if (playTab === "chat" || activeAction?.type === "CHAT") {
-    return <ChatPanel />;
   }
 
   if (!activeAction) {
@@ -46,21 +35,17 @@ function ActionWorkspace() {
           La Semaine Qui Décide De Tout
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Lis tes emails, interroge Karim et Marie, ouvre l&apos;atelier, puis
-          prends la décision du jour. Objectif : 500 pièces qualité avant
-          vendredi 16h.
+          Ouvre l&apos;ordinateur pour l&apos;ERP, les mails et le chat.
+          Interroge Karim et Marie, visite l&apos;atelier, puis prends la
+          décision du jour. Objectif : 500 pièces qualité avant vendredi 16h.
         </p>
       </div>
     );
   }
 
   switch (activeAction.type) {
-    case "OPEN_ERP":
-      return <ErpTable embedded />;
-    case "VIEW_DASHBOARD":
-      return <DashboardView />;
-    case "ANALYZE_DATA":
-      return <AnalyzeView />;
+    case "ACCESS_COMPUTER":
+      return <ComputerDesktop />;
     case "INTERVIEW":
       return <InterviewView />;
     case "DECIDE":
@@ -76,7 +61,9 @@ function PlayInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { gameState, setActiveAction } = useGameStore();
+  const { activeAction } = useGameStore();
   const role = roles.find((r) => r.id === gameState.roleId);
+  const computerOpen = activeAction?.type === "ACCESS_COMPUTER";
 
   useEffect(() => {
     if (gameState.mode === "story" && gameState.roleId && !gameState.introSeen) {
@@ -105,17 +92,31 @@ function PlayInner() {
             XP {gameState.xp}/500
           </span>
         </div>
-        <KpiBar />
-        <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_300px]">
-          <main className="min-h-0 overflow-auto p-4 md:p-6">
-            <OnboardingCoach />
-            <ScenarioDayBanner />
+        {!computerOpen ? <KpiBar /> : null}
+        <div
+          className={
+            computerOpen
+              ? "grid min-h-0 flex-1"
+              : "grid min-h-0 flex-1 lg:grid-cols-[1fr_300px]"
+          }
+        >
+          <main
+            className={
+              computerOpen
+                ? "min-h-0 overflow-hidden p-3 md:p-4"
+                : "min-h-0 overflow-auto p-4 md:p-6"
+            }
+          >
+            {!computerOpen ? <OnboardingCoach /> : null}
+            {!computerOpen ? <ScenarioDayBanner /> : null}
             <ActionWorkspace />
           </main>
-          <aside className="hidden min-h-0 space-y-6 overflow-y-auto border-l border-white/10 bg-panel/60 p-4 lg:block">
-            <ObjectivePanel />
-            <EventFeed />
-          </aside>
+          {!computerOpen ? (
+            <aside className="hidden min-h-0 space-y-6 overflow-y-auto border-l border-white/10 bg-panel/60 p-4 lg:block">
+              <ObjectivePanel />
+              <EventFeed />
+            </aside>
+          ) : null}
         </div>
       </div>
       <VisibilityPanel />

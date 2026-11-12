@@ -210,28 +210,12 @@ export const visibilityInvestments: VisibilityInvestment[] = [
 
 export const exampleActions: Action[] = [
   {
-    id: "act-erp",
-    type: "OPEN_ERP",
-    titre: "Ouvrir l'ERP",
-    icone: "Database",
-    description: "Stock, commandes…",
-    timeCostMinutes: 20,
-  },
-  {
-    id: "act-dashboard",
-    type: "VIEW_DASHBOARD",
-    titre: "Dashboard",
-    icone: "LayoutDashboard",
-    description: "KPIs et graphiques",
-    timeCostMinutes: 15,
-  },
-  {
-    id: "act-analyze",
-    type: "ANALYZE_DATA",
-    titre: "Analyser",
-    icone: "Table2",
-    description: "Comparer les périodes",
-    timeCostMinutes: 25,
+    id: "act-computer",
+    type: "ACCESS_COMPUTER",
+    titre: "Accès Ordinateur",
+    icone: "Monitor",
+    description: "ERP, mails, chat…",
+    timeCostMinutes: 5,
   },
   {
     id: "act-interview",
@@ -257,22 +241,6 @@ export const exampleActions: Action[] = [
     description: "Vue 2D machines",
     timeCostMinutes: 10,
   },
-  {
-    id: "act-emails",
-    type: "EMAILS",
-    titre: "Emails",
-    icone: "Mail",
-    description: "Boîte Laurent & cie",
-    timeCostMinutes: 10,
-  },
-  {
-    id: "act-chat",
-    type: "CHAT",
-    titre: "Chat interne",
-    icone: "MessageCircle",
-    description: "Karim en douce…",
-    timeCostMinutes: 5,
-  },
 ];
 
 export const onboardingStepsMeta = [
@@ -292,10 +260,11 @@ export const onboardingStepsMeta = [
   },
   {
     step: 3 as const,
-    titre: "ERP Novacier",
-    mentorLine: "Ouvre l'ERP — stocks et commandes AutoVolt.",
-    unlock: "OPEN_ERP" as const,
-    actionHint: "OPEN_ERP" as const,
+    titre: "Accès Ordinateur",
+    mentorLine:
+      "Ouvre l'ordinateur — ERP Novacier, mails et chat sont dessus.",
+    unlock: "ACCESS_COMPUTER" as const,
+    actionHint: "ACCESS_COMPUTER" as const,
   },
   {
     step: 4 as const,
@@ -442,14 +411,10 @@ export const skillEvolution = [
 ];
 
 const ALL_ACTIONS: GameState["unlockedActions"] = [
-  "OPEN_ERP",
-  "VIEW_DASHBOARD",
-  "ANALYZE_DATA",
+  "ACCESS_COMPUTER",
   "INTERVIEW",
   "DECIDE",
   "VIEW_ATELIER_LIVE",
-  "EMAILS",
-  "CHAT",
 ];
 
 export function createInitialGameState(): GameState {
@@ -503,7 +468,7 @@ export function createInitialGameState(): GameState {
     introSeen: false,
     onboardingStep: 1,
     onboardingDone: false,
-    unlockedActions: ["CHAT", "VIEW_ATELIER_LIVE"],
+    unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
     chapterId: "ch-semaine",
     chapters: scenarioChapters.map((c) => ({ ...c })),
     journal: [],

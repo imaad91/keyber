@@ -7,11 +7,11 @@ import { ArrowLeft } from "lucide-react";
 import {
   AdminButton,
   Field,
-  PageHeader,
   inputClass,
   selectClass,
   textareaClass,
 } from "@/components/admin/AdminPrimitives";
+import { ScenarioWorkspaceNav } from "@/components/admin/ScenarioWorkspaceNav";
 import { useAdminStore } from "@/lib/adminStore";
 import {
   ADMIN_NIVEAUX,
@@ -58,28 +58,21 @@ export default function AdminScenarioEditPage() {
         <ArrowLeft className="h-4 w-4" />
         Scénarios
       </Link>
-      <PageHeader
-        title={form.titre || "Scénario"}
-        subtitle="Formulaire de paramétrage — n'affecte pas la partie en cours du joueur."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={`/admin/scenarios/${form.id}/decisions`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
-            >
-              CŒUR / Graphique
-            </Link>
-            <AdminButton
-              onClick={() => {
-                updateScenario(form.id, form);
-                router.push("/admin/scenarios");
-              }}
-            >
-              Enregistrer
-            </AdminButton>
-          </div>
-        }
-      />
+      <ScenarioWorkspaceNav scenarioId={form.id} titre={form.titre || "Scénario"} />
+      <div className="mb-4 flex justify-end">
+        <AdminButton
+          onClick={() => {
+            updateScenario(form.id, form);
+            router.push("/admin/scenarios");
+          }}
+        >
+          Enregistrer la fiche
+        </AdminButton>
+      </div>
+      <p className="mb-4 text-sm text-slate-500">
+        Fiche Scénario — voie autorisée pour générer / ajuster le Cœur (pas
+        d&apos;édition JSON directe).
+      </p>
 
       <div className="grid gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-2">
         <Field label="Titre">

@@ -171,6 +171,12 @@ export type AdminState = {
   events: AdminEvent[];
   /** Single source of truth for decisions & events per scenario. */
   coeurs: AdminCoeurMap;
+  /** Versions, audit, highlights per scenario. */
+  coeurMeta: import("./coeurHistory").CoeurMetaMap;
+  /** Global agent profiles (pilot the CŒUR). */
+  agents: import("./agents").AgentProfile[];
+  /** Last multi-agent run reports (global). */
+  agentReports: import("./agents").AgentRunReport[];
   consultants: AdminConsultantSubmission[];
   toast: string | null;
 };

@@ -67,13 +67,18 @@ export default function AdminDashboardPage() {
       />
 
       <div className="mb-4 rounded-xl border border-slate-200 bg-slate-900 px-4 py-3 text-white shadow-sm">
-        <p className="text-sm font-semibold">Vue CŒUR / Vue Graphique</p>
+        <p className="text-sm font-semibold">Logique · Cœur · Agents</p>
         <p className="mt-1 text-xs text-slate-300">
-          Ouvrez{" "}
-          <Link href="/admin/decisions" className="underline decoration-white/40 underline-offset-2 hover:decoration-white">
-            Décisions & événements
+          Menu{" "}
+          <Link
+            href="/admin/decisions"
+            className="underline decoration-white/40 underline-offset-2 hover:decoration-white"
+          >
+            Logique
           </Link>{" "}
-          dans le menu de gauche pour voir et éditer le scénario.
+          → schéma lecture seule. Onglet{" "}
+          <strong>Cœur</strong> → JSON verrouillé + Agents (seul pilotage
+          modifiable).
         </p>
       </div>
 

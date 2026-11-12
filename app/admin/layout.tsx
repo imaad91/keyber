@@ -16,7 +16,7 @@ export default function AdminLayout({
     <div className="admin-shell flex min-h-screen bg-slate-50 text-slate-900">
       <AdminSidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-6xl px-6 py-8">{children}</div>
+        <div className="mx-auto w-full max-w-7xl px-6 py-8">{children}</div>
       </main>
       <AdminToast />
     </div>

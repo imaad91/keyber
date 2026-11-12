@@ -68,6 +68,9 @@ function readAdminState(): AdminState | null {
       decisions: parsed.decisions ?? seed.decisions,
       events: parsed.events ?? seed.events,
       coeurs: parsed.coeurs ?? seed.coeurs,
+      coeurMeta: parsed.coeurMeta ?? seed.coeurMeta,
+      agents: parsed.agents ?? seed.agents,
+      agentReports: parsed.agentReports ?? [],
       consultants: parsed.consultants ?? [],
       toast: null,
     };

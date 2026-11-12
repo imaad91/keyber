@@ -3,13 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: #f4f6f9;
-  --foreground: #0f1c2e;
-  --navy: #1e3a5f;
-  --navy-light: #2a4a73;
-  --accent: #e85d04;
-  --accent-dark: #d14f00;
-  --canvas: #f4f6f9;
+  --background: #071f1d;
+  --foreground: #e8f6f1;
+  --navy: #0c3b38;
+  --navy-light: #14524d;
+  --navy-mid: #1a5f59;
+  --accent: #2fd67e;
+  --accent-dark: #24b86a;
+  --accent-warm: #e8b86d;
+  --canvas: #071f1d;
+  --panel: #0c3b38;
+  --panel-2: #0f4743;
+  --erp: #ffffff;
+  --danger: #f07178;
+  --ok: #2fd67e;
+  --muted: #9bc4bb;
 }
 
 body {
@@ -17,11 +25,23 @@ body {
   background: var(--canvas);
 }
 
-.atmosphere {
+.atmosphere-landing {
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(30, 58, 95, 0.07), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(232, 93, 4, 0.06), transparent 50%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f7 45%, #f4f6f9 100%);
+    radial-gradient(ellipse 70% 50% at 15% 10%, rgba(47, 214, 126, 0.14), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 0%, rgba(232, 184, 109, 0.1), transparent 50%),
+    linear-gradient(165deg, #071f1d 0%, #0c3b38 45%, #062422 100%);
+}
+
+.atmosphere-play {
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(47, 214, 126, 0.07), transparent 55%),
+    linear-gradient(180deg, #071f1d 0%, #0a2e2b 100%);
+}
+
+.livre-paper {
+  background:
+    radial-gradient(ellipse at top, rgba(47, 214, 126, 0.06), transparent 40%),
+    linear-gradient(180deg, #ffffff 0%, #f4faf7 100%);
 }
 
 @keyframes fade-up {
@@ -38,17 +58,103 @@ body {
 @keyframes soft-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(232, 93, 4, 0.35);
+    box-shadow: 0 0 0 0 rgba(47, 214, 126, 0.35);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(232, 93, 4, 0);
+    box-shadow: 0 0 0 10px rgba(47, 214, 126, 0);
   }
 }
 
-@keyframes kpi-in {
+@keyframes machine-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.03);
+    filter: brightness(1.15);
+  }
+}
+
+@keyframes machine-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes conveyor {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(48px);
+  }
+}
+
+@keyframes operator-walk {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(18px, -8px);
+  }
+  50% {
+    transform: translate(36px, 4px);
+  }
+  75% {
+    transform: translate(12px, 14px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes kpi-tick {
+  from {
+    opacity: 0.4;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reward-pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes flash-in {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes type-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -61,7 +167,7 @@ body {
 }
 
 .value-enter {
-  animation: fade-up 0.6s ease-out both;
+  animation: fade-up 0.55s ease-out both;
 }
 
 .view-enter {
@@ -72,20 +178,82 @@ body {
   animation: soft-pulse 2.4s ease-in-out infinite;
 }
 
-.kpi-card {
-  animation: kpi-in 0.4s ease-out both;
+.kpi-tick {
+  animation: kpi-tick 0.35s ease-out both;
 }
 
-.kpi-card:nth-child(2) {
-  animation-delay: 60ms;
+.reward-pop {
+  animation: reward-pop 0.35s ease-out both;
 }
 
-.kpi-card:nth-child(3) {
-  animation-delay: 120ms;
+.flash-banner {
+  animation: flash-in 0.3s ease-out both;
+}
+
+.intro-line {
+  animation: type-in 0.7s ease-out both;
+}
+
+.machine-prod {
+  animation: machine-pulse 1.8s ease-in-out infinite;
+}
+
+.machine-fault {
+  animation: machine-blink 0.9s ease-in-out infinite;
+}
+
+.conveyor-belt {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #1a5f59 0 20px,
+    #0f4743 20px 40px
+  );
+}
+
+.conveyor-parts {
+  animation: conveyor 1.6s linear infinite;
+}
+
+.operator-dot {
+  animation: operator-walk 6s ease-in-out infinite;
+}
+
+.operator-dot:nth-child(2) {
+  animation-delay: -2s;
+  animation-duration: 7.5s;
+}
+
+.operator-dot:nth-child(3) {
+  animation-delay: -4s;
+  animation-duration: 5.5s;
+}
+
+.erp-surface {
+  background: var(--erp);
+  color: #0c3b38;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  .panel {
+    background: var(--panel);
+  }
+  .panel-2 {
+    background: var(--panel-2);
+  }
+}
+
+/* Admin / Studio — light Notion-like shell, isolated from game theme */
+.admin-shell {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  color: #0f172a;
+  background: #f8fafc;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+.admin-shell a {
+  text-decoration: none;
 }

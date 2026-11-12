@@ -5,6 +5,34 @@
 
 export type AgentExigence = "tolerant" | "normal" | "strict";
 
+/** Lucide icon id stored on the agent profile. */
+export type AgentIconId =
+  | "target"
+  | "factory"
+  | "graduation-cap"
+  | "link"
+  | "message-circle"
+  | "eye"
+  | "shield"
+  | "zap"
+  | "database"
+  | "book-open"
+  | "gamepad-2";
+
+export const AGENT_ICON_OPTIONS: AgentIconId[] = [
+  "target",
+  "factory",
+  "graduation-cap",
+  "link",
+  "message-circle",
+  "eye",
+  "shield",
+  "zap",
+  "database",
+  "book-open",
+  "gamepad-2",
+];
+
 export type AgentProfile = {
   id: string;
   nom: string;
@@ -14,6 +42,8 @@ export type AgentProfile = {
   sortieAttendue: string;
   niveauExigence: AgentExigence;
   actif: boolean;
+  /** Lucide icon name, e.g. "target" */
+  icone: AgentIconId | string;
 };
 
 export type AgentReportIssue = {
@@ -32,6 +62,28 @@ export type AgentRunReport = {
   ranAt: string;
 };
 
+export type AgentIconTheme = {
+  box: string;
+  icon: string;
+};
+
+/** Visual theme for known default agents; others get a neutral square. */
+export function agentIconTheme(agent: Pick<AgentProfile, "id" | "icone">): AgentIconTheme {
+  if (agent.id === "agent-testeur" || agent.icone === "target") {
+    return { box: "bg-black", icon: "text-[#D6F94C]" };
+  }
+  if (agent.id === "agent-metier" || agent.icone === "factory") {
+    return { box: "bg-slate-100", icon: "text-black" };
+  }
+  if (agent.id === "agent-pedagogue" || agent.icone === "graduation-cap") {
+    return { box: "bg-[#D6F94C]", icon: "text-black" };
+  }
+  if (agent.id === "agent-coherence-erp" || agent.icone === "link") {
+    return { box: "border-2 border-black bg-white", icon: "text-black" };
+  }
+  return { box: "bg-slate-900", icon: "text-[#D6F94C]" };
+}
+
 export const DEFAULT_AGENTS: AgentProfile[] = [
   {
     id: "agent-testeur",
@@ -44,6 +96,7 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
       "Rapport de jouabilité : score 0-100, liste des frictions par jour, propositions concrètes (réduire coût, clarifier label, ajouter feedback).",
     niveauExigence: "normal",
     actif: true,
+    icone: "target",
   },
   {
     id: "agent-metier",
@@ -56,6 +109,7 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
       "Rapport réalisme : anomalies chiffrées (ex. machine 80k€ disproportionnée vs capteur), suggestions d'ajustement des conséquences.",
     niveauExigence: "strict",
     actif: true,
+    icone: "factory",
   },
   {
     id: "agent-pedagogue",
@@ -68,6 +122,7 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
       "Rapport pédagogique : compétences couvertes / manquantes, qualité des feedbackTexte, propositions de renforcement XP ou de dilemmes.",
     niveauExigence: "normal",
     actif: true,
+    icone: "graduation-cap",
   },
   {
     id: "agent-coherence-erp",
@@ -80,6 +135,7 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
       "Rapport cohérence : cibles invalides, types faux, mapping ERP manquant, correctifs proposés au format CŒUR.",
     niveauExigence: "strict",
     actif: true,
+    icone: "link",
   },
 ];
 
@@ -88,6 +144,22 @@ export function cloneDefaultAgents(): AgentProfile[] {
     ...a,
     competences: [...a.competences],
   }));
+}
+
+/** Ensure legacy localStorage agents without `icone` get a default. */
+export function normalizeAgent(a: Partial<AgentProfile> & { id: string }): AgentProfile {
+  const seed = DEFAULT_AGENTS.find((d) => d.id === a.id);
+  return {
+    id: a.id,
+    nom: a.nom ?? seed?.nom ?? "Agent",
+    role: a.role ?? seed?.role ?? "",
+    competences: a.competences ?? seed?.competences ?? [],
+    mission: a.mission ?? seed?.mission ?? "",
+    sortieAttendue: a.sortieAttendue ?? seed?.sortieAttendue ?? "",
+    niveauExigence: a.niveauExigence ?? seed?.niveauExigence ?? "normal",
+    actif: a.actif ?? true,
+    icone: a.icone ?? seed?.icone ?? "target",
+  };
 }
 
 export const EXIGENCE_LABELS: Record<AgentExigence, string> = {

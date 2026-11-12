@@ -1,7 +1,11 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { type AgentProfile, type AgentRunReport } from "./agents";
+import {
+  normalizeAgent,
+  type AgentProfile,
+  type AgentRunReport,
+} from "./agents";
 import {
   buildCoeurFromAdminState,
   coeurToAdminSlices,
@@ -96,7 +100,9 @@ function loadState(): AdminState {
       events: parsed.events ?? seed.events,
       coeurs,
       coeurMeta,
-      agents: parsed.agents?.length ? parsed.agents : seed.agents,
+      agents: parsed.agents?.length
+        ? parsed.agents.map((a) => normalizeAgent(a))
+        : seed.agents,
       agentReports: parsed.agentReports ?? [],
       consultants: parsed.consultants ?? [],
       toast: null,
@@ -597,6 +603,7 @@ export function duplicateAgent(id: string) {
     id: `agent-${Date.now().toString(36)}`,
     nom: `${src.nom} (copie)`,
     competences: [...src.competences],
+    icone: src.icone ?? "target",
   };
   patch({ agents: [...state.agents, copy] });
   toast("Agent dupliqué");
@@ -614,6 +621,7 @@ export function createAgent() {
     sortieAttendue: "",
     niveauExigence: "normal",
     actif: true,
+    icone: "target",
   };
   patch({ agents: [...state.agents, a] });
   toast("Agent créé — vous modifiez le pilotage du Cœur, pas le Cœur lui-même.");

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
+import { AgentIconBadge } from "@/components/admin/AgentIconBadge";
 import {
   AdminButton,
   PageHeader,
@@ -43,28 +44,31 @@ export default function AgentsListPage() {
           <Link
             key={a.id}
             href={`/admin/coeur/agents/${a.id}`}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-400"
+            className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-400"
           >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2 className="font-semibold text-slate-900">{a.nom}</h2>
-                <p className="text-sm text-slate-500">{a.role}</p>
+            <AgentIconBadge agent={a} size="lg" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="font-semibold text-slate-900">{a.nom}</h2>
+                  <p className="text-sm text-slate-500">{a.role}</p>
+                </div>
+                <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
               </div>
-              <ArrowRight className="h-4 w-4 text-slate-400" />
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-              <span className="rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
-                {EXIGENCE_LABELS[a.niveauExigence]}
-              </span>
-              <span
-                className={`rounded-md px-2 py-0.5 font-semibold ${
-                  a.actif
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-slate-100 text-slate-500"
-                }`}
-              >
-                {a.actif ? "Actif" : "Inactif"}
-              </span>
+              <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+                <span className="rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
+                  {EXIGENCE_LABELS[a.niveauExigence]}
+                </span>
+                <span
+                  className={`rounded-md px-2 py-0.5 font-semibold ${
+                    a.actif
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  {a.actif ? "Actif" : "Inactif"}
+                </span>
+              </div>
             </div>
           </Link>
         ))}

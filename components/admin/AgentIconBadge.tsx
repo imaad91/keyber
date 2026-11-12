@@ -14,7 +14,7 @@ import {
   Target,
   Zap,
 } from "lucide-react";
-import { agentIconTheme, type AgentProfile } from "@/lib/agents";
+import { agentIconThemeKey, type AgentProfile } from "@/lib/agents";
 import { cn } from "@/lib/utils";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -31,6 +31,30 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "gamepad-2": Gamepad2,
 };
 
+/** Class strings must live here so Tailwind content scan keeps them. */
+const THEME_CLASSES = {
+  testeur: {
+    box: "bg-black",
+    icon: "text-[#D6F94C]",
+  },
+  metier: {
+    box: "bg-slate-100",
+    icon: "text-black",
+  },
+  pedagogue: {
+    box: "bg-[#D6F94C]",
+    icon: "text-black",
+  },
+  erp: {
+    box: "border-2 border-black bg-white",
+    icon: "text-black",
+  },
+  default: {
+    box: "bg-slate-900",
+    icon: "text-[#D6F94C]",
+  },
+} as const;
+
 export function resolveAgentLucide(icone: string): LucideIcon {
   return ICON_MAP[icone] ?? Target;
 }
@@ -45,7 +69,7 @@ export function AgentIconBadge({
   className?: string;
 }) {
   const Icon = resolveAgentLucide(agent.icone);
-  const theme = agentIconTheme(agent);
+  const theme = THEME_CLASSES[agentIconThemeKey(agent)];
   const box =
     size === "sm"
       ? "h-8 w-8 rounded-md"

@@ -62,26 +62,23 @@ export type AgentRunReport = {
   ranAt: string;
 };
 
-export type AgentIconTheme = {
-  box: string;
-  icon: string;
-};
+export type AgentIconThemeKey =
+  | "testeur"
+  | "metier"
+  | "pedagogue"
+  | "erp"
+  | "default";
 
-/** Visual theme for known default agents; others get a neutral square. */
-export function agentIconTheme(agent: Pick<AgentProfile, "id" | "icone">): AgentIconTheme {
-  if (agent.id === "agent-testeur" || agent.icone === "target") {
-    return { box: "bg-black", icon: "text-[#D6F94C]" };
-  }
-  if (agent.id === "agent-metier" || agent.icone === "factory") {
-    return { box: "bg-slate-100", icon: "text-black" };
-  }
-  if (agent.id === "agent-pedagogue" || agent.icone === "graduation-cap") {
-    return { box: "bg-[#D6F94C]", icon: "text-black" };
-  }
-  if (agent.id === "agent-coherence-erp" || agent.icone === "link") {
-    return { box: "border-2 border-black bg-white", icon: "text-black" };
-  }
-  return { box: "bg-slate-900", icon: "text-[#D6F94C]" };
+/** Theme key for known default agents (styles live in AgentIconBadge). */
+export function agentIconThemeKey(
+  agent: Pick<AgentProfile, "id" | "icone">
+): AgentIconThemeKey {
+  if (agent.id === "agent-testeur" || agent.icone === "target") return "testeur";
+  if (agent.id === "agent-metier" || agent.icone === "factory") return "metier";
+  if (agent.id === "agent-pedagogue" || agent.icone === "graduation-cap")
+    return "pedagogue";
+  if (agent.id === "agent-coherence-erp" || agent.icone === "link") return "erp";
+  return "default";
 }
 
 export const DEFAULT_AGENTS: AgentProfile[] = [

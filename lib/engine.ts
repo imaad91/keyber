@@ -12,6 +12,7 @@ import type {
 import type {
   EndingKind,
   GameState,
+  ModeJeu,
   VisibilityTier,
 } from "./gameState";
 import {
@@ -21,8 +22,10 @@ import {
   maxVisibility,
   setPath,
   syncMetaClock,
+  toModeJeu,
 } from "./gameState";
 import { RELATION_ALIASES } from "./gameState";
+import { addSkillXp, skillLabel } from "./progression";
 
 const XP_PER_LEVEL = 500;
 
@@ -87,6 +90,33 @@ export function choixDisponibles(
   return decision.choix.filter((c) => {
     if (!c.requis || c.requis.length === 0) return true;
     return c.requis.every((r) => conditionPasses(state, r));
+  });
+}
+
+export type ChoixAnnoté = {
+  choix: DecisionChoix;
+  unlocked: boolean;
+  lockMessage: string | null;
+};
+
+/** All choices with lock state — locked ones stay visible (greyed). */
+export function annotateChoix(
+  state: GameState,
+  decision: Decision
+): ChoixAnnoté[] {
+  return decision.choix.map((choix) => {
+    const unlocked =
+      !choix.requis ||
+      choix.requis.length === 0 ||
+      choix.requis.every((r) => conditionPasses(state, r));
+    return {
+      choix,
+      unlocked,
+      lockMessage: unlocked
+        ? null
+        : choix.messageVerrouillage ??
+          "Conditions non remplies — entraîne-toi en Mode Compétence",
+    };
   });
 }
 
@@ -375,6 +405,17 @@ export function applyDecision(
       .filter((c) => c.cible === "xp" || c.cible === "progression.xp")
       .reduce((s, c) => s + c.valeur, 0) || decision.xpGagne;
 
+  const mode: ModeJeu =
+    toModeJeu(next.modeActuel) ??
+    toModeJeu(next.world.mode) ??
+    "histoire";
+  const modeLabel =
+    mode === "histoire"
+      ? `Novacier Jour ${Math.max(1, next.meta.jourActuel)}`
+      : decision.competenceId
+        ? skillLabel(decision.competenceId)
+        : "Entraînement";
+
   const journal = journalHas
     ? next.world.journal
     : [
@@ -385,13 +426,46 @@ export function applyDecision(
           narration: choix.feedbackTexte,
           xp: xpGagne,
           at: heure,
+          mode,
+          modeLabel,
         },
         ...next.world.journal,
       ];
 
+  const historiqueTagged = {
+    ...historique,
+    decisionsPrises: historique.decisionsPrises.map((d) =>
+      d.decisionId === decision.id && d.choixId === choixId
+        ? { ...d, mode, label: choix.label }
+        : d
+    ),
+  };
+
+  const cashLoss = choix.consequences
+    .filter((c) => c.cible === "tresorerie" && c.valeur < -5000)
+    .reduce((s, c) => s + Math.abs(c.valeur), 0);
+  const trustHit = choix.consequences
+    .filter(
+      (c) =>
+        (c.cible === "confianceClient" || c.cible === "ethique") &&
+        c.valeur <= -10
+    )
+    .reduce((s, c) => s + Math.abs(c.valeur), 0);
+  const failedHard = cashLoss >= 15000 || trustHit >= 15;
+  const failedSkill =
+    decision.jour === 5
+      ? "negociation"
+      : decision.jour === 3
+        ? "crise"
+        : decision.jour === 4
+          ? "leadership"
+          : decision.categorie?.toLowerCase().includes("négociation")
+            ? "negociation"
+            : "crise";
+
   next = {
     ...next,
-    historique,
+    historique: historiqueTagged,
     world: {
       ...next.world,
       dayDecisionId: choixId,
@@ -400,6 +474,13 @@ export function applyDecision(
       badges: next.world.badges.map((b) =>
         b.id === "badge-first" ? { ...b, unlocked: true } : b
       ),
+      trainingPrompt: failedHard
+        ? {
+            competenceId: failedSkill,
+            competenceNom: skillLabel(failedSkill),
+            raison: `Tu as échoué en ${skillLabel(failedSkill)}. Veux-tu t'entraîner ?`,
+          }
+        : next.world.trainingPrompt,
     },
   };
 
@@ -408,6 +489,128 @@ export function applyDecision(
   }
 
   return checkObjectives(next);
+}
+
+/**
+ * Mode Compétence — apply a training Decision without the story day lock.
+ * Awards skill XP on the trained competence (shared progression).
+ */
+export function applyCompetenceTraining(
+  gameState: GameState,
+  decision: Decision,
+  choixId: string
+): GameState {
+  const competenceId = decision.competenceId;
+  if (!competenceId) {
+    return {
+      ...gameState,
+      world: {
+        ...gameState.world,
+        feedbackFlash: "Entraînement sans compétence associée.",
+      },
+    };
+  }
+
+  const choix = decision.choix.find((c) => c.id === choixId);
+  if (!choix) {
+    return {
+      ...gameState,
+      world: { ...gameState.world, feedbackFlash: "Choix invalide." },
+    };
+  }
+
+  let next: GameState = {
+    ...gameState,
+    modeActuel: "competence",
+    scenarioCompetenceId: competenceId,
+    world: {
+      ...gameState.world,
+      mode: "skills",
+      dayDecisionId: null,
+    },
+  };
+
+  for (const cons of choix.consequences) {
+    if (
+      cons.cible === "temps" ||
+      cons.cible === "meta.minutesSinceStart" ||
+      cons.cible === "xp" ||
+      cons.cible === "progression.xp"
+    ) {
+      continue; // time/xp handled by skill progression, not story clock
+    }
+    next = applyConsequence(next, cons);
+  }
+
+  const xpFromChoice =
+    choix.consequences
+      .filter((c) => c.cible === "xp" || c.cible === "progression.xp")
+      .reduce((s, c) => s + c.valeur, 0) || decision.xpGagne;
+
+  // Skill XP: enough that one solid drill can push Niveau 2 from the seed bar
+  const skillXpGain = Math.max(60, xpFromChoice);
+  next = addSkillXp(next, competenceId, skillXpGain);
+  next = normalizeXp(next);
+
+  const heure = next.meta.heureActuelle;
+  const modeLabel = skillLabel(competenceId);
+
+  next = {
+    ...next,
+    historique: {
+      ...next.historique,
+      decisionsPrises: [
+        ...next.historique.decisionsPrises,
+        {
+          decisionId: decision.id,
+          jour: 0,
+          choixId,
+          heure,
+          mode: "competence",
+          competenceId,
+          label: choix.label,
+        },
+      ],
+    },
+    world: {
+      ...next.world,
+      feedbackFlash: choix.feedbackTexte,
+      journal: [
+        {
+          id: `j-train-${decision.id}-${Date.now()}`,
+          day: 0,
+          titre: choix.label,
+          narration: choix.feedbackTexte,
+          xp: skillXpGain,
+          at: heure,
+          mode: "competence",
+          modeLabel,
+        },
+        ...next.world.journal,
+      ],
+      trainingsCompleted: [
+        {
+          competenceId,
+          decisionId: decision.id,
+          choixId,
+          label: choix.label,
+          at: new Date().toISOString(),
+          xp: skillXpGain,
+        },
+        ...next.world.trainingsCompleted,
+      ],
+      trainingPrompt: null,
+    },
+  };
+
+  return next;
+}
+
+export function clearTrainingPrompt(state: GameState): GameState {
+  return {
+    ...state,
+    world: { ...state.world, trainingPrompt: null },
+  };
 }
 
 export function addXP(state: GameState, amount: number): GameState {

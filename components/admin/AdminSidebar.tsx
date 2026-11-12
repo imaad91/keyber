@@ -3,23 +3,42 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Building2,
+  BookOpen,
   ClipboardList,
   LayoutDashboard,
+  Network,
   Play,
   ScrollText,
-  Users,
-  UserCheck,
+  Settings,
+  Shield,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  children?: { href: string; label: string; icon?: typeof Bot }[];
+};
+
+const NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/scenarios", label: "Scénarios", icon: ScrollText },
-  { href: "/admin/entreprises", label: "Entreprises", icon: Building2 },
-  { href: "/admin/personnages", label: "Personnages", icon: Users },
-  { href: "/admin/decisions", label: "Décisions & événements", icon: ClipboardList },
-  { href: "/admin/consultants", label: "Consultants", icon: UserCheck },
+  { href: "/admin/logique", label: "Logique", icon: Network },
+  {
+    href: "/admin/coeur",
+    label: "Cœur",
+    icon: Shield,
+    children: [
+      { href: "/admin/coeur/langage", label: "Langage Cœur" },
+      { href: "/admin/coeur/agents", label: "Agents", icon: Bot },
+      { href: "/admin/coeur/rapport", label: "Rapport", icon: ClipboardList },
+    ],
+  },
+  { href: "/admin/bibliotheque", label: "Bibliothèque", icon: BookOpen },
+  { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -43,19 +62,45 @@ export function AdminSidebar() {
             : pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
-                active
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0 opacity-80" />
-              {item.label}
-            </Link>
+            <div key={item.href}>
+              <Link
+                href={item.children?.[0]?.href ?? item.href}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
+                  active
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0 opacity-80" />
+                {item.label}
+              </Link>
+              {item.children && active ? (
+                <div className="mb-1 ml-4 mt-0.5 space-y-0.5 border-l border-slate-200 pl-3">
+                  {item.children.map((child) => {
+                    const childActive =
+                      pathname === child.href ||
+                      pathname.startsWith(child.href + "/");
+                    const ChildIcon = child.icon;
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium transition",
+                          childActive
+                            ? "bg-slate-100 text-slate-900"
+                            : "text-slate-500 hover:text-slate-800"
+                        )}
+                      >
+                        {ChildIcon ? <ChildIcon className="h-3 w-3" /> : null}
+                        {child.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
           );
         })}
       </nav>

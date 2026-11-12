@@ -5,13 +5,16 @@ import { COMPUTER_APP_TIME } from "./computerData";
 import type { Decision } from "./decisions";
 import {
   advanceTime,
+  applyCompetenceTraining as engineApplyTraining,
   applyDecision as engineApplyDecision,
   canSpendTime,
+  clearTrainingPrompt as engineClearTrainingPrompt,
   markEmailRead as engineMarkEmailRead,
   resolveRumor as engineResolveRumor,
   unlockBadge,
 } from "./engine";
-import type { GameState } from "./gameState";
+import type { GameState, ModeJeu } from "./gameState";
+import { legacyModeFrom, toModeJeu } from "./gameState";
 import { createInitialGameState } from "./mock";
 import {
   advanceOnboarding,
@@ -66,16 +69,20 @@ function patchState(updater: (s: GameState) => GameState) {
   setSnapshot({ state: updater(snapshot.state) });
 }
 
-export function setMode(mode: GameMode) {
+export function setMode(mode: GameMode | ModeJeu) {
+  const modeJeu = toModeJeu(mode);
   patchState((s) => ({
     ...s,
-    world: { ...s.world, mode },
+    modeActuel: modeJeu,
+    world: { ...s.world, mode: legacyModeFrom(modeJeu) ?? mode },
   }));
 }
 
 export function setRole(roleId: string) {
   patchState((s) => ({
     ...s,
+    modeActuel: "histoire",
+    scenarioHistoireId: s.scenarioHistoireId ?? s.meta.scenarioId,
     meta: { ...s.meta, roleId },
     world: {
       ...s.world,
@@ -85,12 +92,35 @@ export function setRole(roleId: string) {
       onboardingStep: 1,
       unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
       feedbackFlash: "Rôle sélectionné — lit l'intro.",
+      trainingPrompt: null,
     },
   }));
   patchState((s) => ({
     ...s,
     meta: { ...s.meta, jourActuel: 0 },
   }));
+}
+
+export function startCompetenceTraining(competenceId: string) {
+  patchState((s) => ({
+    ...s,
+    modeActuel: "competence",
+    scenarioCompetenceId: competenceId,
+    world: {
+      ...s.world,
+      mode: "skills",
+      feedbackFlash: null,
+      trainingPrompt: null,
+    },
+  }));
+}
+
+export function applyCompetenceTraining(decision: Decision, choixId: string) {
+  patchState((s) => engineApplyTraining(s, decision, choixId));
+}
+
+export function clearTrainingPrompt() {
+  patchState((s) => engineClearTrainingPrompt(s));
 }
 
 export function markIntroSeen() {
@@ -254,7 +284,15 @@ export function markLivreOpened() {
 
 export function applyDecision(decision: Decision, choixId: string) {
   patchState((s) => {
-    let next = engineApplyDecision(s, decision, choixId);
+    let next = engineApplyDecision(
+      {
+        ...s,
+        modeActuel: s.modeActuel ?? "histoire",
+        world: { ...s.world, mode: s.world.mode ?? "story" },
+      },
+      decision,
+      choixId
+    );
     if (!next.world.onboardingDone && next.world.onboardingStep === 4) {
       next = completeOnboardingStep4(next);
     }
@@ -330,6 +368,9 @@ export function useGameStore() {
     livreOpened: current.livreOpened,
     setMode,
     setRole,
+    startCompetenceTraining,
+    applyCompetenceTraining,
+    clearTrainingPrompt,
     markIntroSeen,
     setActiveAction,
     openComputerApp,

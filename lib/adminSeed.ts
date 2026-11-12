@@ -1,4 +1,7 @@
 import { novacierDecisions } from "@/data/scenarioNovacier";
+import { cloneDefaultAgents } from "./agents";
+import { novacierCoeur } from "./adminCoeur";
+import { appendVersion, emptyCoeurMeta } from "./coeurHistory";
 import {
   livreNovacier,
   SCENARIO_ID,
@@ -194,12 +197,26 @@ function seedEvents(): AdminEvent[] {
 }
 
 export function createAdminSeed(): AdminState {
+  const coeur = novacierCoeur();
+  const meta = appendVersion(
+    emptyCoeurMeta(),
+    coeur,
+    "seed",
+    "Système",
+    "CŒUR Novacier initial"
+  );
+  // Seed highlights as already seen so Logique starts clean
+  meta.highlights = meta.highlights.map((h) => ({ ...h, seen: true }));
   return {
     scenarios: [seedScenario()],
     entreprises: [seedEntreprise()],
     personnages: seedPersonnages(),
     decisions: seedDecisions(),
     events: seedEvents(),
+    coeurs: { [SCENARIO_ID]: coeur },
+    coeurMeta: { [SCENARIO_ID]: meta },
+    agents: cloneDefaultAgents(),
+    agentReports: [],
     consultants: [],
     toast: null,
   };

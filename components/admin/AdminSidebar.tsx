@@ -18,7 +18,7 @@ const NAV = [
   { href: "/admin/scenarios", label: "Scénarios", icon: ScrollText },
   { href: "/admin/entreprises", label: "Entreprises", icon: Building2 },
   { href: "/admin/personnages", label: "Personnages", icon: Users },
-  { href: "/admin/decisions", label: "Décisions & événements", icon: ClipboardList },
+  { href: "/admin/decisions", label: "CŒUR / Graphique", icon: ClipboardList },
   { href: "/admin/consultants", label: "Consultants", icon: UserCheck },
 ];
 

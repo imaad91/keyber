@@ -1,86 +1,69 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ScenarioCoeurDualView } from "@/components/admin/ScenarioCoeurDualView";
 import {
   Field,
   PageHeader,
-  StatusBadge,
-  inputClass,
+  selectClass,
 } from "@/components/admin/AdminPrimitives";
 import { useAdminStore } from "@/lib/adminStore";
+import { SCENARIO_ID } from "@/data/scenarioNovacier";
 
 /**
- * Hub Décisions & événements → dual views (CŒUR / Graphique) per scenario.
- * Legacy timeline editor replaced by /admin/scenarios/[id]/decisions.
+ * Décisions & événements — Vue Graphique + Vue CŒUR directement ici.
  */
 export default function AdminDecisionsHubPage() {
-  const { scenarios, coeurs } = useAdminStore();
-  const [q, setQ] = useState("");
+  const { scenarios } = useAdminStore();
+  const sorted = useMemo(
+    () => [...scenarios].sort((a, b) => a.order - b.order),
+    [scenarios]
+  );
 
-  const list = useMemo(() => {
-    return [...scenarios]
-      .filter((s) =>
-        q ? s.titre.toLowerCase().includes(q.toLowerCase()) : true
-      )
-      .sort((a, b) => a.order - b.order);
-  }, [scenarios, q]);
+  const defaultId =
+    sorted.find((s) => s.id === SCENARIO_ID)?.id ?? sorted[0]?.id ?? "";
+
+  const [scenarioId, setScenarioId] = useState(defaultId);
+
+  useEffect(() => {
+    if (!scenarioId && defaultId) setScenarioId(defaultId);
+    if (scenarioId && !sorted.some((s) => s.id === scenarioId) && defaultId) {
+      setScenarioId(defaultId);
+    }
+  }, [scenarioId, defaultId, sorted]);
 
   return (
     <div>
       <PageHeader
         title="Décisions & événements"
-        subtitle="Choisissez un scénario pour ouvrir la Vue Graphique et la Vue CŒUR (une seule source de vérité)."
+        subtitle="Onglets Vue Graphique et Vue CŒUR — une seule source de vérité par scénario."
       />
 
-      <div className="mb-4 max-w-md">
-        <Field label="Rechercher un scénario">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              className={`${inputClass} pl-9`}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Novacier…"
-            />
-          </div>
+      <div className="mb-5 max-w-xl rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <Field label="Scénario">
+          <select
+            className={selectClass}
+            value={scenarioId}
+            onChange={(e) => setScenarioId(e.target.value)}
+          >
+            {sorted.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.titre}
+              </option>
+            ))}
+          </select>
         </Field>
+        <p className="mt-2 text-xs text-slate-500">
+          Les vues ci-dessous s’ouvrent ici, dans cet onglet Admin — pas dans le
+          Mode Joueur.
+        </p>
       </div>
 
-      <div className="space-y-2">
-        {list.map((s) => {
-          const coeur = coeurs[s.id];
-          const nDec = coeur?.decisions.length ?? 0;
-          const nEv = coeur?.evenements.length ?? 0;
-          return (
-            <Link
-              key={s.id}
-              href={`/admin/scenarios/${s.id}/decisions`}
-              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-            >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-slate-900">{s.titre}</p>
-                  <StatusBadge status={s.statut} />
-                </div>
-                <p className="mt-1 text-xs text-slate-500">
-                  {nDec} décision{nDec === 1 ? "" : "s"} · {nEv} événement
-                  {nEv === 1 ? "" : "s"} · CŒUR{" "}
-                  {coeur ? "prêt" : "à générer"}
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-700">
-                Ouvrir CŒUR / Graphique
-                <ArrowRight className="h-4 w-4" />
-              </span>
-            </Link>
-          );
-        })}
-        {list.length === 0 ? (
-          <p className="text-sm text-slate-500">Aucun scénario.</p>
-        ) : null}
-      </div>
+      {scenarioId ? (
+        <ScenarioCoeurDualView scenarioId={scenarioId} />
+      ) : (
+        <p className="text-sm text-slate-500">Aucun scénario disponible.</p>
+      )}
     </div>
   );
 }

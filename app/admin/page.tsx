@@ -1,155 +1,79 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, Plus, ScrollText, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Network, ScrollText, Shield, Bot } from "lucide-react";
 import {
-  AdminButton,
   PageHeader,
   StatCard,
-  StatusBadge,
 } from "@/components/admin/AdminPrimitives";
 import { useAdminStore } from "@/lib/adminStore";
-import { niveauLabel } from "@/lib/adminTypes";
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
-  const {
-    scenarios,
-    entreprises,
-    personnages,
-    decisions,
-    createScenario,
-    createEntreprise,
-    createPersonnage,
-  } = useAdminStore();
-
-  const sorted = [...scenarios].sort((a, b) => a.order - b.order);
+  const { scenarios, agents, entreprises, personnages } = useAdminStore();
 
   return (
     <div>
       <PageHeader
         title="Dashboard"
-        subtitle="Vue d'ensemble du contenu Keyber Studio."
-        actions={
-          <>
-            <AdminButton
-              onClick={() => {
-                const id = createScenario();
-                router.push(`/admin/scenarios/${id}`);
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Nouveau Scénario
-            </AdminButton>
-            <AdminButton
-              variant="secondary"
-              onClick={() => {
-                const id = createEntreprise();
-                router.push(`/admin/entreprises/${id}`);
-              }}
-            >
-              <Building2 className="h-4 w-4" />
-              Nouvelle Entreprise
-            </AdminButton>
-            <AdminButton
-              variant="secondary"
-              onClick={() => {
-                const id = createPersonnage();
-                router.push(`/admin/personnages/${id}`);
-              }}
-            >
-              <Users className="h-4 w-4" />
-              Nouveau Personnage
-            </AdminButton>
-          </>
-        }
+        subtitle="Liste → clic → page plein écran. Jamais de double panneau."
       />
-
-      <div className="mb-4 rounded-xl border border-slate-200 bg-slate-900 px-4 py-3 text-white shadow-sm">
-        <p className="text-sm font-semibold">Logique · Cœur · Agents</p>
-        <p className="mt-1 text-xs text-slate-300">
-          Menu{" "}
-          <Link
-            href="/admin/decisions"
-            className="underline decoration-white/40 underline-offset-2 hover:decoration-white"
-          >
-            Logique
-          </Link>{" "}
-          → schéma lecture seule. Onglet{" "}
-          <strong>Cœur</strong> → JSON verrouillé + Agents (seul pilotage
-          modifiable).
-        </p>
-      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Scénarios" value={scenarios.length} />
+        <StatCard label="Agents" value={agents.length} />
         <StatCard label="Entreprises" value={entreprises.length} />
         <StatCard label="Personnages" value={personnages.length} />
-        <StatCard label="Décisions" value={decisions.length} />
       </div>
 
-      <section className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Scénarios
-          </h2>
-          <Link
-            href="/admin/scenarios"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900"
-          >
-            Tout voir
-          </Link>
-        </div>
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3 font-medium">Nom</th>
-                <th className="px-4 py-3 font-medium">Secteur</th>
-                <th className="px-4 py-3 font-medium">Statut</th>
-                <th className="px-4 py-3 font-medium">Compétence</th>
-                <th className="px-4 py-3 font-medium">Niveau</th>
-                <th className="px-4 py-3 font-medium">Durée</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((s) => (
-                <tr
-                  key={s.id}
-                  className="border-b border-slate-50 last:border-0 hover:bg-slate-50/80"
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/scenarios/${s.id}`}
-                      className="font-medium text-slate-900 hover:underline"
-                    >
-                      <span className="mr-2 inline-flex items-center gap-1 text-slate-400">
-                        <ScrollText className="h-3.5 w-3.5" />
-                        #{s.order}
-                      </span>
-                      {s.titre}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{s.secteur}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={s.statut} />
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {s.competence || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {niveauLabel(s.niveau)}
-                  </td>
-                  <td className="px-4 py-3 tabular-nums text-slate-600">
-                    {s.dureeJours} j
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <DashLink
+          href="/admin/scenarios"
+          icon={ScrollText}
+          title="Scénarios"
+          hint="Liste des fiches"
+        />
+        <DashLink
+          href="/admin/logique"
+          icon={Network}
+          title="Logique"
+          hint="Liste → schéma BPMN"
+        />
+        <DashLink
+          href="/admin/coeur/langage"
+          icon={Shield}
+          title="Langage Cœur"
+          hint="Liste → JSON verrouillé"
+        />
+        <DashLink
+          href="/admin/coeur/agents"
+          icon={Bot}
+          title="Agents"
+          hint="Liste → code agent"
+        />
+      </div>
     </div>
+  );
+}
+
+function DashLink({
+  href,
+  icon: Icon,
+  title,
+  hint,
+}: {
+  href: string;
+  icon: typeof ScrollText;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-400"
+    >
+      <Icon className="mb-3 h-5 w-5 text-slate-700" />
+      <h2 className="font-semibold text-slate-900">{title}</h2>
+      <p className="mt-1 text-sm text-slate-500">{hint}</p>
+    </Link>
   );
 }

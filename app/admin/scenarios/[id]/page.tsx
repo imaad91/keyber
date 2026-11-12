@@ -62,14 +62,22 @@ export default function AdminScenarioEditPage() {
         title={form.titre || "Scénario"}
         subtitle="Formulaire de paramétrage — n'affecte pas la partie en cours du joueur."
         actions={
-          <AdminButton
-            onClick={() => {
-              updateScenario(form.id, form);
-              router.push("/admin/scenarios");
-            }}
-          >
-            Enregistrer
-          </AdminButton>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/admin/scenarios/${form.id}/decisions`}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
+            >
+              CŒUR / Graphique
+            </Link>
+            <AdminButton
+              onClick={() => {
+                updateScenario(form.id, form);
+                router.push("/admin/scenarios");
+              }}
+            >
+              Enregistrer
+            </AdminButton>
+          </div>
         }
       />
 

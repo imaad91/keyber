@@ -1,4 +1,5 @@
 import { novacierDecisions } from "@/data/scenarioNovacier";
+import { novacierCoeur } from "./adminCoeur";
 import {
   livreNovacier,
   SCENARIO_ID,
@@ -194,12 +195,14 @@ function seedEvents(): AdminEvent[] {
 }
 
 export function createAdminSeed(): AdminState {
+  const coeur = novacierCoeur();
   return {
     scenarios: [seedScenario()],
     entreprises: [seedEntreprise()],
     personnages: seedPersonnages(),
     decisions: seedDecisions(),
     events: seedEvents(),
+    coeurs: { [SCENARIO_ID]: coeur },
     consultants: [],
     toast: null,
   };

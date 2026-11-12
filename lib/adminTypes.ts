@@ -160,12 +160,17 @@ export type AdminConsultantSubmission = {
   notes?: string;
 };
 
+/** Per-scenario CŒUR documents (Admin Studio source of truth). */
+export type AdminCoeurMap = Record<string, import("./adminCoeur").ScenarioCoeur>;
+
 export type AdminState = {
   scenarios: AdminScenario[];
   entreprises: AdminEntreprise[];
   personnages: AdminPersonnage[];
   decisions: AdminDecision[];
   events: AdminEvent[];
+  /** Single source of truth for decisions & events per scenario. */
+  coeurs: AdminCoeurMap;
   consultants: AdminConsultantSubmission[];
   toast: string | null;
 };

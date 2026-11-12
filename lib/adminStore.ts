@@ -2,6 +2,12 @@
 
 import { useSyncExternalStore } from "react";
 import {
+  buildCoeurFromAdminState,
+  coeurToAdminSlices,
+  emptyCoeur,
+  type ScenarioCoeur,
+} from "./adminCoeur";
+import {
   createAdminSeed,
   emptyDecision,
   emptyEntreprise,
@@ -21,6 +27,30 @@ import type {
 
 const STORAGE_KEY = "keyber-admin-v1";
 
+function migrateCoeurs(
+  partial: Partial<AdminState>,
+  seed: AdminState
+): AdminState["coeurs"] {
+  const base = { ...seed.coeurs, ...(partial.coeurs ?? {}) };
+  const scenarios = partial.scenarios ?? seed.scenarios;
+  const draft: AdminState = {
+    scenarios,
+    entreprises: partial.entreprises ?? seed.entreprises,
+    personnages: partial.personnages ?? seed.personnages,
+    decisions: partial.decisions ?? seed.decisions,
+    events: partial.events ?? seed.events,
+    coeurs: base,
+    consultants: partial.consultants ?? [],
+    toast: null,
+  };
+  for (const s of scenarios) {
+    if (!base[s.id]) {
+      base[s.id] = buildCoeurFromAdminState(draft, s.id);
+    }
+  }
+  return base;
+}
+
 function loadState(): AdminState {
   if (typeof window === "undefined") return createAdminSeed();
   try {
@@ -34,6 +64,7 @@ function loadState(): AdminState {
       personnages: parsed.personnages ?? seed.personnages,
       decisions: parsed.decisions ?? seed.decisions,
       events: parsed.events ?? seed.events,
+      coeurs: migrateCoeurs(parsed, seed),
       consultants: parsed.consultants ?? [],
       toast: null,
     };
@@ -84,11 +115,63 @@ function patch(partial: Partial<AdminState>) {
   persist({ ...state, ...partial });
 }
 
+function syncSlicesFromCoeur(coeur: ScenarioCoeur, base: AdminState): AdminState {
+  const { scenarioPatch, decisions, events } = coeurToAdminSlices(coeur);
+  const sid = coeur.scenario.id;
+  return {
+    ...base,
+    scenarios: base.scenarios.map((s) =>
+      s.id === sid ? { ...s, ...scenarioPatch } : s
+    ),
+    decisions: [
+      ...base.decisions.filter((d) => d.scenarioId !== sid),
+      ...decisions,
+    ],
+    events: [...base.events.filter((e) => e.scenarioId !== sid), ...events],
+    coeurs: { ...base.coeurs, [sid]: coeur },
+  };
+}
+
+function rebuildCoeurFromSlices(scenarioId: string) {
+  const coeur = buildCoeurFromAdminState(state, scenarioId);
+  persist({
+    ...state,
+    coeurs: { ...state.coeurs, [scenarioId]: coeur },
+  });
+}
+
+/** Read the CŒUR for a scenario (source of truth). */
+export function getScenarioCoeur(scenarioId: string): ScenarioCoeur {
+  ensureHydrated();
+  return (
+    state.coeurs[scenarioId] ?? buildCoeurFromAdminState(state, scenarioId)
+  );
+}
+
+/**
+ * Persist a validated CŒUR and mirror decisions/events for legacy Studio pages.
+ */
+export function applyScenarioCoeur(
+  coeur: ScenarioCoeur,
+  opts?: { silent?: boolean; message?: string }
+) {
+  ensureHydrated();
+  const next = syncSlicesFromCoeur(coeur, state);
+  persist(next);
+  if (!opts?.silent) {
+    toast(opts?.message ?? "CŒUR validé — Vue Graphique synchronisée");
+  }
+}
+
 /* —— Scenarios —— */
 export function createScenario() {
   ensureHydrated();
   const s = emptyScenario(state.scenarios.length + 1);
-  patch({ scenarios: [...state.scenarios, s] });
+  const coeur = emptyCoeur(s);
+  patch({
+    scenarios: [...state.scenarios, s],
+    coeurs: { ...state.coeurs, [s.id]: coeur },
+  });
   toast("Scénario créé");
   return s.id;
 }
@@ -128,10 +211,20 @@ export function duplicateScenario(id: string) {
       id: `evt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 5)}`,
       scenarioId: copy.id,
     }));
+  const srcCoeur = getScenarioCoeur(id);
+  const copyCoeur: ScenarioCoeur = {
+    ...JSON.parse(JSON.stringify(srcCoeur)),
+    scenario: {
+      id: copy.id,
+      titre: copy.titre,
+      entrepriseId: copy.entrepriseId ?? "",
+    },
+  };
   patch({
     scenarios: [...state.scenarios, copy],
     decisions: [...state.decisions, ...decisions],
     events: [...state.events, ...events],
+    coeurs: { ...state.coeurs, [copy.id]: copyCoeur },
   });
   toast("Scénario dupliqué");
   return copy.id;
@@ -203,23 +296,28 @@ export function createDecision(scenarioId: string) {
     state.decisions.filter((d) => d.scenarioId === scenarioId).length + 1;
   const d = emptyDecision(scenarioId, order);
   patch({ decisions: [...state.decisions, d] });
+  rebuildCoeurFromSlices(scenarioId);
   toast("Décision créée");
   return d.id;
 }
 
 export function updateDecision(id: string, data: Partial<AdminDecision>) {
   ensureHydrated();
+  const prev = state.decisions.find((d) => d.id === id);
   patch({
     decisions: state.decisions.map((d) =>
       d.id === id ? { ...d, ...data } : d
     ),
   });
+  if (prev) rebuildCoeurFromSlices(prev.scenarioId);
   toast("Décision enregistrée — appliquée dans Décider (Mode Joueur)");
 }
 
 export function deleteDecision(id: string) {
   ensureHydrated();
+  const prev = state.decisions.find((d) => d.id === id);
   patch({ decisions: state.decisions.filter((d) => d.id !== id) });
+  if (prev) rebuildCoeurFromSlices(prev.scenarioId);
   toast("Décision supprimée");
 }
 
@@ -229,21 +327,26 @@ export function createEvent(scenarioId: string) {
     state.events.filter((e) => e.scenarioId === scenarioId).length + 1;
   const e = emptyEvent(scenarioId, order);
   patch({ events: [...state.events, e] });
+  rebuildCoeurFromSlices(scenarioId);
   toast("Événement créé");
   return e.id;
 }
 
 export function updateEvent(id: string, data: Partial<AdminEvent>) {
   ensureHydrated();
+  const prev = state.events.find((e) => e.id === id);
   patch({
     events: state.events.map((e) => (e.id === id ? { ...e, ...data } : e)),
   });
+  if (prev) rebuildCoeurFromSlices(prev.scenarioId);
   toast("Événement enregistré");
 }
 
 export function deleteEvent(id: string) {
   ensureHydrated();
+  const prev = state.events.find((e) => e.id === id);
   patch({ events: state.events.filter((e) => e.id !== id) });
+  if (prev) rebuildCoeurFromSlices(prev.scenarioId);
   toast("Événement supprimé");
 }
 
@@ -380,6 +483,8 @@ export function useAdminStore() {
     updateConsultantPercent,
     clearAdminToast,
     resetAdminData,
+    getScenarioCoeur,
+    applyScenarioCoeur,
   };
 }
 

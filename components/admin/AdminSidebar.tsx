@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BookOpen,
+  ClipboardList,
   LayoutDashboard,
   Network,
   Play,
@@ -19,7 +20,7 @@ type NavItem = {
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
-  children?: { href: string; label: string }[];
+  children?: { href: string; label: string; icon?: typeof Bot }[];
 };
 
 const NAV: NavItem[] = [
@@ -32,7 +33,8 @@ const NAV: NavItem[] = [
     icon: Shield,
     children: [
       { href: "/admin/coeur/langage", label: "Langage Cœur" },
-      { href: "/admin/coeur/agents", label: "Agents" },
+      { href: "/admin/coeur/agents", label: "Agents", icon: Bot },
+      { href: "/admin/coeur/rapport", label: "Rapport", icon: ClipboardList },
     ],
   },
   { href: "/admin/bibliotheque", label: "Bibliothèque", icon: BookOpen },
@@ -79,6 +81,7 @@ export function AdminSidebar() {
                     const childActive =
                       pathname === child.href ||
                       pathname.startsWith(child.href + "/");
+                    const ChildIcon = child.icon;
                     return (
                       <Link
                         key={child.href}
@@ -90,9 +93,7 @@ export function AdminSidebar() {
                             : "text-slate-500 hover:text-slate-800"
                         )}
                       >
-                        {child.label === "Agents" ? (
-                          <Bot className="h-3 w-3" />
-                        ) : null}
+                        {ChildIcon ? <ChildIcon className="h-3 w-3" /> : null}
                         {child.label}
                       </Link>
                     );

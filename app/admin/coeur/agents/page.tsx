@@ -19,23 +19,31 @@ export default function AgentsListPage() {
     <div>
       <PageHeader
         title="Cœur — Agents"
-        subtitle="Liste des agents de pilotage. Cliquez pour ouvrir le code d'un agent en plein écran."
+        subtitle="Définitions (code source) des agents. Pour lancer et lire les rapports → Cœur / Rapport."
         actions={
-          <AdminButton
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Vous modifiez le pilotage du Cœur, pas le Cœur lui-même. Continuer ?"
-                )
-              ) {
-                const id = createAgent();
-                router.push(`/admin/coeur/agents/${id}`);
-              }
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Ajouter un agent
-          </AdminButton>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/admin/coeur/rapport"
+              className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
+            >
+              Ouvrir Rapport →
+            </Link>
+            <AdminButton
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Vous modifiez le pilotage du Cœur, pas le Cœur lui-même. Continuer ?"
+                  )
+                ) {
+                  const id = createAgent();
+                  router.push(`/admin/coeur/agents/${id}`);
+                }
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter un agent
+            </AdminButton>
+          </div>
         }
       />
 

@@ -18,7 +18,6 @@ import {
 } from "@/lib/agents";
 import { highlightJson } from "@/lib/adminCoeur";
 import { useAdminStore } from "@/lib/adminStore";
-import { SCENARIO_ID } from "@/data/scenarioNovacier";
 
 function agentToEditableJson(a: AgentProfile) {
   return {
@@ -35,16 +34,8 @@ function agentToEditableJson(a: AgentProfile) {
 
 export default function AgentDetailPage() {
   const { agentId } = useParams<{ agentId: string }>();
-  const {
-    agents,
-    scenarios,
-    updateAgent,
-    runAgentsOnScenario,
-    agentReports,
-  } = useAdminStore();
+  const { agents, updateAgent } = useAdminStore();
   const agent = agents.find((a) => a.id === agentId);
-  const defaultScenario =
-    scenarios.find((s) => s.id === SCENARIO_ID)?.id ?? scenarios[0]?.id ?? "";
 
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -75,8 +66,6 @@ export default function AgentDetailPage() {
   );
 
   const previewHtml = useMemo(() => highlightJson(draft), [draft]);
-
-  const report = agentReports.find((r) => r.agentId === agentId);
 
   if (!agent) {
     return (
@@ -151,8 +140,15 @@ export default function AgentDetailPage() {
       </div>
 
       <div className="mb-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950">
-        Vous modifiez le <strong>pilotage</strong> du Cœur, pas le Cœur
-        lui-même. Niveau : {EXIGENCE_LABELS[agent.niveauExigence]}.
+        Définition de l&apos;agent uniquement (code source). Pour lancer et
+        lire les rapports, ouvrez{" "}
+        <Link
+          href="/admin/coeur/rapport"
+          className="font-semibold underline"
+        >
+          Cœur → Rapport
+        </Link>
+        . Niveau : {EXIGENCE_LABELS[agent.niveauExigence]}.
       </div>
 
       <div className="mb-4 max-w-xs">
@@ -185,22 +181,6 @@ export default function AgentDetailPage() {
           {editing ? "Aperçu" : "Modifier le JSON"}
         </AdminButton>
         <AdminButton onClick={save}>Sauvegarder cet agent</AdminButton>
-        <AdminButton
-          variant="secondary"
-          onClick={() =>
-            defaultScenario && runAgentsOnScenario(defaultScenario, agentId)
-          }
-        >
-          Lancer cet agent
-        </AdminButton>
-        <AdminButton
-          variant="secondary"
-          onClick={() =>
-            defaultScenario && runAgentsOnScenario(defaultScenario)
-          }
-        >
-          Lancer tous les agents
-        </AdminButton>
       </div>
 
       {error ? (
@@ -235,52 +215,6 @@ export default function AgentDetailPage() {
       `,
         }}
       />
-
-      <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-4">
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <AgentIconBadge agent={previewAgent} size="sm" />
-          Rapport de l&apos;agent
-        </h2>
-        {!report ? (
-          <p className="mt-2 text-sm text-slate-500">
-            Aucun rapport — lancez l&apos;agent sur un scénario.
-          </p>
-        ) : (
-          <div className="mt-3">
-            <div className="mb-2 flex items-center gap-2">
-              <AgentIconBadge agent={previewAgent} size="sm" />
-              <p className="text-sm font-semibold text-slate-800">{agent.nom}</p>
-              <p className="text-2xl font-bold tabular-nums">
-                {report.score}
-                <span className="text-sm font-normal text-slate-500">
-                  /100
-                </span>
-              </p>
-            </div>
-            <ul className="mt-3 space-y-2">
-              {report.issues.map((issue, i) => (
-                <li
-                  key={i}
-                  className="flex gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs"
-                >
-                  <AgentIconBadge agent={previewAgent} size="sm" />
-                  <div>
-                    <span className="font-semibold uppercase text-slate-500">
-                      [{issue.priorite}]
-                    </span>{" "}
-                    <strong>{issue.titre}</strong> — {issue.detail}
-                    <br />
-                    <span className="text-emerald-700">→ {issue.solution}</span>
-                  </div>
-                </li>
-              ))}
-              {report.issues.length === 0 ? (
-                <li className="text-xs text-emerald-700">Aucun problème</li>
-              ) : null}
-            </ul>
-          </div>
-        )}
-      </section>
     </div>
   );
 }

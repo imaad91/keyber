@@ -1,5 +1,5 @@
+import { novacierDecisions } from "@/data/scenarioNovacier";
 import {
-  dayDecisions,
   livreNovacier,
   SCENARIO_ID,
   SCENARIO_TITLE,
@@ -104,31 +104,25 @@ function seedPersonnages(): AdminPersonnage[] {
   });
 }
 
-/** Group dayDecisions into dilemma rows (one per day). */
+/** Seed admin CMS from declarative Novacier decisions. */
 function seedDecisions(): AdminDecision[] {
-  return Object.entries(dayDecisions).map(([dayStr, options], idx) => {
-    const day = Number(dayStr);
-    const first = options[0];
-    return {
-      id: `dec-day-${day}`,
-      scenarioId: SCENARIO_ID,
-      titre: first?.categorie?.replace(/^Jour\s+\d+[^\—–-]*[—–-]?\s*/i, "") || `Décision jour ${day}`,
-      jour: day,
-      heure: day === 3 ? "10:00" : day === 1 ? "12:00" : "09:00",
-      dilemme:
-        first?.description ||
-        `Choisis parmi les options du jour ${day}.`,
-      choix: options.slice(0, 3).map((d) => ({
-        id: d.id,
-        texte: d.titre,
-        consequences: Object.entries(d.deltas ?? {}).map(([metric, delta]) => ({
-          metric,
-          delta: delta as number,
-        })),
+  return novacierDecisions.map((d, idx) => ({
+    id: d.id,
+    scenarioId: SCENARIO_ID,
+    titre: d.titre,
+    jour: d.jour,
+    heure: d.jour === 3 ? "10:00" : d.jour === 1 ? "12:00" : "09:00",
+    dilemme: d.dilemme,
+    choix: d.choix.slice(0, 3).map((c) => ({
+      id: c.id,
+      texte: c.label,
+      consequences: c.consequences.map((x) => ({
+        metric: x.cible,
+        delta: x.valeur,
       })),
-      order: idx + 1,
-    };
-  });
+    })),
+    order: idx + 1,
+  }));
 }
 
 function seedEvents(): AdminEvent[] {

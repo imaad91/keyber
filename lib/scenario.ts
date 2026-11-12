@@ -2,7 +2,7 @@ import type {
   Chapitre,
   ChatMessage,
   CompanyEvent,
-  Decision,
+  LegacyDecisionOption,
   Email,
   LivreEntreprise,
   Machine,
@@ -406,8 +406,8 @@ export const scenarioObjectives: Objective[] = [
   },
 ];
 
-/** Decisions keyed by scenario day */
-export const dayDecisions: Record<number, Decision[]> = {
+/** @deprecated Prefer novacierDecisions in /data — legacy shape for admin seed */
+export const dayDecisions: Record<number, LegacyDecisionOption[]> = {
   1: [
     {
       id: "d1-machine",

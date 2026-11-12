@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { dayDecisions } from "@/lib/mock";
-import { dayTitles } from "@/lib/scenario";
+import { decisionForDay, dayTitles } from "@/data/scenarioNovacier";
+import { choixDisponibles } from "@/lib/engine";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -13,27 +13,32 @@ export function DecisionCard() {
     applyDecision,
     advanceDay,
     gameState,
+    rawState,
   } = useGameStore();
 
   const day = Math.min(5, Math.max(1, gameState.day || 1));
-  let decisions = dayDecisions[day] ?? [];
-
-  // Marie reorg only if trust > 60
-  const marieTrust = gameState.relations["pers-marie"] ?? 0;
-  decisions = decisions.filter((d) => {
-    if (d.id === "d2-marie-reorg") return marieTrust > 60;
-    return true;
-  });
+  const decision = decisionForDay(day);
+  const choix = decision
+    ? choixDisponibles(rawState, decision)
+    : [];
 
   const selected =
-    decisions.find((d) => d.id === selectedDecisionId) ?? decisions[0];
+    choix.find((c) => c.id === selectedDecisionId) ?? choix[0];
   const already = Boolean(gameState.dayDecisionId);
 
-  if (!selected) {
+  if (!decision || !selected) {
     return (
       <p className="text-sm text-muted">Aucune décision pour ce jour.</p>
     );
   }
+
+  const timeCost =
+    selected.consequences
+      .filter((c) => c.cible === "temps")
+      .reduce((s, c) => s + (c.mode === "set" ? 0 : c.valeur), 0) || 0;
+  const cashCost = selected.consequences
+    .filter((c) => c.cible === "tresorerie" && c.valeur < 0)
+    .reduce((s, c) => s + Math.abs(c.valeur), 0);
 
   return (
     <section className="view-enter grid h-full gap-4 lg:grid-cols-[280px_1fr]">
@@ -41,29 +46,30 @@ export function DecisionCard() {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
           {dayTitles[day] ?? `Jour ${day}`}
         </p>
+        <p className="text-sm leading-relaxed text-muted">{decision.dilemme}</p>
         <div className="space-y-1.5">
-          {decisions.map((d) => (
+          {choix.map((c) => (
             <button
-              key={d.id}
+              key={c.id}
               type="button"
               disabled={already}
-              onClick={() => setSelectedDecisionId(d.id)}
+              onClick={() => setSelectedDecisionId(c.id)}
               className={cn(
                 "w-full rounded-xl border px-3 py-2.5 text-left transition",
-                selected.id === d.id
+                selected.id === c.id
                   ? "border-accent/50 bg-accent/10"
                   : "border-white/10 bg-panel-2 hover:bg-white/5",
-                already && gameState.dayDecisionId === d.id && "ring-1 ring-ok",
+                already && gameState.dayDecisionId === c.id && "ring-1 ring-ok",
                 already && "opacity-70"
               )}
             >
               <span className="block text-sm font-semibold text-foreground">
-                {d.titre}
+                {c.label}
               </span>
               <span className="text-[11px] text-muted">
-                {d.timeCostMinutes} min
-                {d.costEuros
-                  ? ` · ${d.costEuros.toLocaleString("fr-FR")} €`
+                {timeCostFor(c)} min
+                {cashFor(c)
+                  ? ` · ${cashFor(c)!.toLocaleString("fr-FR")} €`
                   : ""}
               </span>
             </button>
@@ -73,17 +79,17 @@ export function DecisionCard() {
 
       <article className="reward-pop flex flex-col rounded-2xl border border-white/10 bg-panel p-6 shadow-soft">
         <p className="text-[10px] font-bold uppercase tracking-wider text-accent">
-          {selected.categorie}
+          {decision.categorie ?? `Jour ${decision.jour}`}
         </p>
         <h2 className="mt-1 font-display text-2xl font-semibold text-foreground">
-          {selected.titre}
+          {selected.label}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
           {selected.description}
         </p>
 
         <div className="mt-6 grid gap-2 sm:grid-cols-3">
-          {selected.impacts.map((impact) => (
+          {(selected.impacts ?? []).map((impact) => (
             <div
               key={impact.label}
               className={cn(
@@ -108,21 +114,21 @@ export function DecisionCard() {
             Qualité semaine : {gameState.piecesQualiteSemaine}/500 · Éthique :{" "}
             {gameState.ethique} · Cash :{" "}
             {gameState.tresorerie.toLocaleString("fr-FR")} €
+            {cashCost ? ` · Coût choix ${cashCost.toLocaleString("fr-FR")} €` : ""}
+            {timeCost ? ` · ${timeCost} min` : ""}
           </p>
           <div className="flex flex-wrap gap-2">
             {!already ? (
               <Button
                 size="lg"
                 className="cta-pulse"
-                onClick={() => applyDecision(selected)}
+                onClick={() => applyDecision(decision, selected.id)}
               >
                 Valider la décision
               </Button>
             ) : (
               <Button size="lg" variant="accent" onClick={() => advanceDay()}>
-                {gameState.day >= 5
-                  ? "Voir le débrief 16h"
-                  : `Passer au Jour ${gameState.day + 1}`}
+                {day >= 5 ? "Voir le débrief" : "Jour suivant"}
               </Button>
             )}
           </div>
@@ -130,4 +136,21 @@ export function DecisionCard() {
       </article>
     </section>
   );
+}
+
+function timeCostFor(c: {
+  consequences: { cible: string; valeur: number; mode?: string }[];
+}) {
+  return c.consequences
+    .filter((x) => x.cible === "temps")
+    .reduce((s, x) => s + (x.mode === "set" ? 0 : x.valeur), 0);
+}
+
+function cashFor(c: {
+  consequences: { cible: string; valeur: number }[];
+}) {
+  const v = c.consequences
+    .filter((x) => x.cible === "tresorerie" && x.valeur < 0)
+    .reduce((s, x) => s + Math.abs(x.valeur), 0);
+  return v || null;
 }

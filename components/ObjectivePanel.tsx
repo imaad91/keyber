@@ -36,7 +36,7 @@ export function ObjectivePanel() {
             >
               <div className="mb-1 flex items-center justify-between gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
-                  {LABELS[obj.type]}
+                  {LABELS[obj.type as keyof typeof LABELS] ?? obj.type}
                 </span>
                 <span className="text-[10px] text-muted">+{obj.xp} XP</span>
               </div>

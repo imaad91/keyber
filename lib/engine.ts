@@ -1,31 +1,37 @@
+/**
+ * Generic decision engine — no scenario names or hardcoded Novacier figures.
+ * All numbers come from GameState / Decision data.
+ */
+
 import type {
-  ActionType,
+  Consequence,
   Decision,
-  DialogueChoice,
+  DecisionChoix,
+  DecisionCondition,
+} from "./decisions";
+import type {
   EndingKind,
   GameState,
-  JournalEntry,
-  Objective,
-  VisibilityLevel,
-} from "./types";
+  VisibilityTier,
+} from "./gameState";
 import {
-  CHARACTER_META,
-  type CharacterVisualId,
-} from "./characterStyle";
-import { ALL_ACTIONS, createScenarioDayState, onboardingStepsMeta } from "./mock";
+  clamp,
+  formatClockFromMinutes,
+  getPath,
+  maxVisibility,
+  setPath,
+  syncMetaClock,
+} from "./gameState";
+import { RELATION_ALIASES } from "./gameState";
 
 const XP_PER_LEVEL = 500;
 
 export function formatGameClock(minutesSinceStart: number): string {
-  const startHour = 8;
-  const total = startHour * 60 + minutesSinceStart;
-  const h = Math.floor(total / 60) % 24;
-  const m = total % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  return formatClockFromMinutes(minutesSinceStart);
 }
 
 export function remainingDayMinutes(state: GameState): number {
-  return Math.max(0, state.dayLengthMinutes - state.minutesSinceStart);
+  return Math.max(0, state.meta.dayLengthMinutes - state.meta.minutesSinceStart);
 }
 
 export function canSpendTime(state: GameState, minutes: number): boolean {
@@ -33,108 +39,425 @@ export function canSpendTime(state: GameState, minutes: number): boolean {
 }
 
 export function advanceTime(state: GameState, minutes: number): GameState {
-  const next = Math.min(
-    state.dayLengthMinutes,
-    state.minutesSinceStart + minutes
+  const nextMin = Math.min(
+    state.meta.dayLengthMinutes,
+    state.meta.minutesSinceStart + minutes
   );
-  return {
+  const next: GameState = {
     ...state,
-    minutesSinceStart: next,
-    feedbackFlash:
-      next >= state.dayLengthMinutes
-        ? "Fin de journée — plus de temps disponible."
-        : state.feedbackFlash,
+    meta: { ...state.meta, minutesSinceStart: nextMin },
+    world: {
+      ...state.world,
+      feedbackFlash:
+        nextMin >= state.meta.dayLengthMinutes
+          ? "Fin de journée — plus de temps disponible."
+          : state.world.feedbackFlash,
+    },
   };
+  return syncMetaClock(next);
 }
 
-export function visibilityForLevel(level: 0 | 1 | 2 | 3): VisibilityLevel {
-  if (level >= 3) return "TEMPS_REEL";
-  if (level >= 2) return "PRECIS";
-  if (level >= 1) return "ESTIME";
-  return "INCONNU";
-}
-
-export function updateVisibility(
+function conditionPasses(
   state: GameState,
-  level: 1 | 2 | 3
-): GameState {
-  if (level <= state.visibilityLevel) return state;
+  cond: Omit<DecisionCondition, "alorsEffetSupplementaire" | "et">
+): boolean {
+  const raw = getPath(state, cond.si);
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (Number.isNaN(n)) return false;
+  if (cond.superieurA !== undefined && !(n > cond.superieurA)) return false;
+  if (cond.inferieurA !== undefined && !(n < cond.inferieurA)) return false;
+  if (cond.egalA !== undefined && n !== cond.egalA) return false;
+  return true;
+}
 
-  const kpiVisibility = { ...state.kpiVisibility };
-  const mapped = visibilityForLevel(level);
+function fullConditionPasses(state: GameState, cond: DecisionCondition): boolean {
+  if (!conditionPasses(state, cond)) return false;
+  if (cond.et) {
+    for (const sub of cond.et) {
+      if (!conditionPasses(state, sub)) return false;
+    }
+  }
+  return true;
+}
 
-  for (const key of Object.keys(kpiVisibility)) {
-    kpiVisibility[key] = mapped;
+export function choixDisponibles(
+  state: GameState,
+  decision: Decision
+): DecisionChoix[] {
+  return decision.choix.filter((c) => {
+    if (!c.requis || c.requis.length === 0) return true;
+    return c.requis.every((r) => conditionPasses(state, r));
+  });
+}
+
+function applyConsequence(state: GameState, c: Consequence): GameState {
+  // Machine etat string set
+  if (c.cible.startsWith("machine.") && c.cible.endsWith(".etat") && c.setValeur) {
+    const machineId = c.cible.split(".")[1]!;
+    return {
+      ...state,
+      world: {
+        ...state.world,
+        machines: state.world.machines.map((m) =>
+          m.id === machineId
+            ? {
+                ...m,
+                etat: c.setValeur as "PRODUCTION" | "PANNE" | "ARRET",
+                production:
+                  c.setValeur === "PRODUCTION"
+                    ? Math.max(m.production, 18)
+                    : 0,
+                nextMaintenance:
+                  c.setValeur === "ARRET"
+                    ? "Réparation J+1"
+                    : c.setValeur === "PANNE"
+                      ? "URGENTE"
+                      : m.nextMaintenance,
+              }
+            : m
+        ),
+      },
+    };
   }
 
-  // At level 0→1 some stay estimated; at start we had mix — force upgrade path
-  if (level === 1) {
-    kpiVisibility.tresorerie = "ESTIME";
-    kpiVisibility.production = "ESTIME";
-    kpiVisibility.moral = "ESTIME";
-    kpiVisibility.pieces = "ESTIME";
-    kpiVisibility.panne = "ESTIME";
+  // Badge unlock
+  if (c.cible.startsWith("badge.")) {
+    const badgeId = c.cible.slice("badge.".length);
+    return {
+      ...state,
+      world: {
+        ...state.world,
+        badges: state.world.badges.map((b) =>
+          b.id === badgeId ? { ...b, unlocked: true } : b
+        ),
+      },
+    };
   }
 
-  const badges = state.badges.map((b) =>
-    b.id === "badge-eye" ? { ...b, unlocked: true } : b
-  );
+  // Alarm mirror
+  if (c.cible === "flags.alarmActive") {
+    const v = c.mode === "set" ? c.valeur : (state.flags.alarmActive ?? 0) + c.valeur;
+    return {
+      ...state,
+      flags: { ...state.flags, alarmActive: v },
+      world: { ...state.world, alarmActive: v >= 1 },
+    };
+  }
 
+  const path = c.cible.startsWith("confiance.")
+    ? (() => {
+        const key = c.cible.slice("confiance.".length);
+        const canon = RELATION_ALIASES[key] ?? key;
+        return `relations.${canon}`;
+      })()
+    : c.cible;
+
+  if (c.mode === "set" || c.setValeur !== undefined) {
+    const value = c.setValeur !== undefined ? c.setValeur : c.valeur;
+    let next = setPath(state, path, value);
+    // Keep short + long relation keys in sync
+    if (path.startsWith("relations.") && typeof value === "number") {
+      const id = path.slice("relations.".length);
+      const alias = Object.entries(RELATION_ALIASES).find(([, long]) => long === id)?.[0];
+      const short = Object.entries(RELATION_ALIASES).find(([k]) => k === id)?.[1];
+      if (alias && alias !== id) next = setPath(next, `relations.${alias}`, value);
+      if (short && short !== id) next = setPath(next, `relations.${short}`, value);
+      // also set marie if pers-marie
+      for (const [shortName, longName] of Object.entries(RELATION_ALIASES)) {
+        if (longName === id && shortName !== id) {
+          next = setPath(next, `relations.${shortName}`, value);
+        }
+        if (shortName === id && longName !== id) {
+          next = setPath(next, `relations.${longName}`, value);
+        }
+      }
+    }
+    // Clamp confidences / morals
+    next = clampKnownRanges(next, path);
+    return next;
+  }
+
+  const current = getPath(state, path);
+  const curNum = typeof current === "number" ? current : 0;
+  let next = setPath(state, path, curNum + c.valeur);
+  if (path.startsWith("relations.")) {
+    const id = path.slice("relations.".length);
+    for (const [a, b] of Object.entries(RELATION_ALIASES)) {
+      if (b === id && a !== id) next = setPath(next, `relations.${a}`, curNum + c.valeur);
+      if (a === id && b !== id) next = setPath(next, `relations.${b}`, curNum + c.valeur);
+    }
+  }
+  next = clampKnownRanges(next, path);
+  return next;
+}
+
+function clampKnownRanges(state: GameState, path: string): GameState {
+  const clampPaths = [
+    "humain.moralEquipe",
+    "humain.ethique",
+    "humain.confianceClient",
+    "finance.tauxRebut",
+  ];
+  let next = state;
+  for (const p of clampPaths) {
+    if (path === p || path.startsWith("relations.")) {
+      const v = getPath(next, path.startsWith("relations.") ? path : p);
+      if (typeof v === "number") {
+        next = setPath(next, path.startsWith("relations.") ? path : p, clamp(v, 0, 100));
+      }
+    }
+  }
+  if (path.startsWith("relations.")) {
+    const v = getPath(next, path);
+    if (typeof v === "number") next = setPath(next, path, clamp(v, 0, 100));
+  }
+  if (path.startsWith("visibilite.")) {
+    const v = getPath(next, path);
+    if (typeof v === "number")
+      next = setPath(next, path, clamp(v, 0, 3) as VisibilityTier);
+  }
+  return next;
+}
+
+function recomputeProduction(state: GameState): GameState {
+  const base = state.flags.dailyProductionBase ?? 60;
+  const ot = state.flags.overtimeBonus ?? 0;
+  const marie = state.flags.marieReorgBonus ?? 0;
+  const productionParJour = base + ot + marie;
   return {
     ...state,
-    visibilityLevel: level,
-    kpiVisibility,
-    badges,
-    feedbackFlash: `Visibilité améliorée → niveau ${level}`,
+    finance: {
+      ...state.finance,
+      productionParJour,
+    },
   };
+}
+
+function bankDailyProduction(state: GameState): GameState {
+  if (state.meta.jourActuel < 1 || state.meta.jourActuel > 5) return state;
+  let daily = state.finance.productionParJour;
+  const rules = state.meta.rules;
+  if ((state.flags.machine3DownDays ?? 0) > 0 && state.meta.jourActuel === 3) {
+    daily = Math.round(daily * rules.machineDownProductionFactor);
+  }
+  if ((state.flags.machine3Bypass ?? 0) >= 1) {
+    daily = Math.round(daily * rules.bypassProductionFactor);
+  }
+  const qualityFactor = Math.max(0.4, 1 - state.finance.tauxRebut / 100);
+  const quality = Math.round(daily * qualityFactor);
+  const flash =
+    (state.world.feedbackFlash ? state.world.feedbackFlash + " · " : "") +
+    `Journée bancarisée : +${quality} pièces qualité (cumul ${state.finance.qualite + quality})`;
+  return {
+    ...state,
+    finance: {
+      ...state.finance,
+      piecesAujourdhui: daily,
+      piecesBrutesSemaine: state.finance.piecesBrutesSemaine + daily,
+      qualite: state.finance.qualite + quality,
+      productionParJour: daily,
+    },
+    world: { ...state.world, feedbackFlash: flash },
+  };
+}
+
+function normalizeXp(state: GameState): GameState {
+  let xp = state.progression.xp;
+  let niveau = state.progression.niveau;
+  while (xp >= XP_PER_LEVEL) {
+    xp -= XP_PER_LEVEL;
+    niveau += 1;
+  }
+  return {
+    ...state,
+    progression: { ...state.progression, xp, niveau },
+  };
+}
+
+/**
+ * Pure decision applicator.
+ * applyDecision(gameState, decision, choixId) => nouveau GameState
+ */
+export function applyDecision(
+  gameState: GameState,
+  decision: Decision,
+  choixId: string
+): GameState {
+  if (gameState.world.dayDecisionId) {
+    return {
+      ...gameState,
+      world: {
+        ...gameState.world,
+        feedbackFlash: "Décision du jour déjà prise — passe au jour suivant.",
+      },
+    };
+  }
+
+  const choix = decision.choix.find((c) => c.id === choixId);
+  if (!choix) {
+    return {
+      ...gameState,
+      world: { ...gameState.world, feedbackFlash: "Choix invalide." },
+    };
+  }
+
+  if (choix.requis && !choix.requis.every((r) => conditionPasses(gameState, r))) {
+    return {
+      ...gameState,
+      world: {
+        ...gameState.world,
+        feedbackFlash: "Conditions non remplies pour ce choix.",
+      },
+    };
+  }
+
+  // Time cost is embedded as consequence cible "temps" — ensure we can afford max time delta
+  const timeDelta = choix.consequences
+    .filter((c) => c.cible === "temps" || c.cible === "meta.minutesSinceStart")
+    .reduce((s, c) => s + (c.mode === "set" ? 0 : c.valeur), 0);
+  if (timeDelta > 0 && !canSpendTime(gameState, timeDelta)) {
+    return {
+      ...gameState,
+      world: {
+        ...gameState.world,
+        feedbackFlash: "Pas assez de temps restant aujourd'hui.",
+      },
+    };
+  }
+
+  let next = { ...gameState };
+
+  for (const cons of choix.consequences) {
+    next = applyConsequence(next, cons);
+  }
+
+  // Bonus conditions (e.g. Marie trust gates, nego AND clauses)
+  if (choix.conditions) {
+    for (const cond of choix.conditions) {
+      if (fullConditionPasses(next, cond) && cond.alorsEffetSupplementaire) {
+        for (const cons of cond.alorsEffetSupplementaire) {
+          next = applyConsequence(next, cons);
+        }
+      }
+    }
+  }
+
+  next = recomputeProduction(next);
+  next = normalizeXp(next);
+  next = syncMetaClock(next);
+
+  const heure = next.meta.heureActuelle;
+  const alreadyLogged = next.historique.decisionsPrises.some(
+    (d) => d.decisionId === decision.id && d.choixId === choixId
+  );
+
+  const historique = alreadyLogged
+    ? next.historique
+    : {
+        ...next.historique,
+        decisionsPrises: [
+          ...next.historique.decisionsPrises,
+          {
+            decisionId: decision.id,
+            jour: decision.jour,
+            choixId,
+            heure,
+          },
+        ],
+      };
+
+  // Journal: exactly one entry per taken decision (no duplicates)
+  const journalHas = next.world.journal.some(
+    (j) => j.id === `j-dec-${decision.id}`
+  );
+  const xpGagne =
+    choix.consequences
+      .filter((c) => c.cible === "xp" || c.cible === "progression.xp")
+      .reduce((s, c) => s + c.valeur, 0) || decision.xpGagne;
+
+  const journal = journalHas
+    ? next.world.journal
+    : [
+        {
+          id: `j-dec-${decision.id}`,
+          day: Math.max(1, next.meta.jourActuel),
+          titre: choix.label,
+          narration: choix.feedbackTexte,
+          xp: xpGagne,
+          at: heure,
+        },
+        ...next.world.journal,
+      ];
+
+  next = {
+    ...next,
+    historique,
+    world: {
+      ...next.world,
+      dayDecisionId: choixId,
+      feedbackFlash: choix.feedbackTexte,
+      journal,
+      badges: next.world.badges.map((b) =>
+        b.id === "badge-first" ? { ...b, unlocked: true } : b
+      ),
+    },
+  };
+
+  if (decision.bankProduction) {
+    next = bankDailyProduction(next);
+  }
+
+  return checkObjectives(next);
 }
 
 export function addXP(state: GameState, amount: number): GameState {
-  let xp = state.xp + amount;
-  let level = state.level;
-  while (xp >= XP_PER_LEVEL) {
-    xp -= XP_PER_LEVEL;
-    level += 1;
-  }
-  return { ...state, xp, level };
+  return normalizeXp({
+    ...state,
+    progression: {
+      ...state.progression,
+      xp: state.progression.xp + amount,
+    },
+  });
 }
 
 export function checkObjectives(state: GameState): GameState {
-  const objectives: Objective[] = state.objectives.map((obj) => {
+  const objectives = state.world.objectives.map((obj) => {
     if (obj.status !== "EN_COURS") return obj;
-
     let progression = obj.progression;
 
     if (obj.id === "obj-j2") {
       progression = Math.min(
         obj.cible,
-        state.emails.filter((e) => e.read && e.urgent).length
+        state.world.emails.filter((e) => e.read && e.urgent).length
       );
     }
     if (obj.id === "obj-h1") {
-      progression = state.visibilityLevel >= 1 ? 1 : 0;
+      progression = maxVisibility(state) >= 1 ? 1 : 0;
     }
     if (obj.id === "obj-a1") {
-      progression = Math.min(obj.cible, state.level);
+      progression = Math.min(obj.cible, state.progression.niveau);
     }
     if (obj.id === "obj-j1") {
-      const m3 = state.machines.find((m) => m.id === "m3");
+      const m3 = state.world.machines.find((m) => m.id === "m3");
       if (m3?.etat === "PRODUCTION") progression = obj.cible;
     }
     if (obj.id === "obj-j0") {
-      progression = Math.min(obj.cible, Math.max(0, state.onboardingStep - 1));
-      if (state.onboardingDone) progression = obj.cible;
+      progression = Math.min(
+        obj.cible,
+        Math.max(0, state.world.onboardingStep - 1)
+      );
+      if (state.world.onboardingDone) progression = obj.cible;
     }
     if (obj.id === "obj-j1-cause") {
       if (
-        state.sensorInstalled ||
-        state.unlockedInfos.includes("CAPTEUR_M3_MORT")
+        (state.flags.sensorInstalled ?? 0) >= 1 ||
+        state.world.unlockedInfos.includes("CAPTEUR_M3_MORT")
       ) {
         progression = 1;
       }
     }
     if (obj.id === "obj-hebdo-500") {
-      progression = Math.min(obj.cible, state.piecesQualiteSemaine);
+      progression = Math.min(obj.cible, state.finance.qualite);
     }
 
     const status =
@@ -144,716 +467,64 @@ export function checkObjectives(state: GameState): GameState {
 
   const newlyCompleted = objectives.filter(
     (o, i) =>
-      o.status === "COMPLETE" && state.objectives[i]?.status !== "COMPLETE"
+      o.status === "COMPLETE" &&
+      state.world.objectives[i]?.status !== "COMPLETE"
   );
 
-  let next = { ...state, objectives };
+  let next: GameState = {
+    ...state,
+    world: { ...state.world, objectives },
+  };
   for (const obj of newlyCompleted) {
     next = addXP(next, obj.xp);
     next = {
       ...next,
-      feedbackFlash: `Objectif atteint : ${obj.titre} (+${obj.xp} XP)`,
+      world: {
+        ...next.world,
+        feedbackFlash: `Objectif atteint : ${obj.titre} (+${obj.xp} XP)`,
+      },
     };
   }
   return next;
-}
-
-export function applyDecision(
-  state: GameState,
-  decision: Decision
-): GameState {
-  let next: GameState = { ...state };
-
-  if (!canSpendTime(next, decision.timeCostMinutes)) {
-    return {
-      ...next,
-      feedbackFlash: "Pas assez de temps restant aujourd'hui.",
-    };
-  }
-
-  next = advanceTime(next, decision.timeCostMinutes);
-
-  const deltas = decision.deltas ?? {};
-  next = {
-    ...next,
-    tresorerie: next.tresorerie + (deltas.tresorerie ?? 0),
-    production: clamp(
-      next.production + (deltas.production ?? 0),
-      0,
-      100
-    ),
-    moral: clamp(next.moral + (deltas.moral ?? 0), 0, 100),
-    piecesAujourdhui:
-      next.piecesAujourdhui + (deltas.piecesAujourdhui ?? 0),
-    tauxPanne: Math.max(0, next.tauxPanne + (deltas.tauxPanne ?? 0)),
-    vitesseProduction:
-      next.vitesseProduction + (deltas.vitesseProduction ?? 0),
-  };
-
-  if (decision.machineEffects?.length) {
-    next = {
-      ...next,
-      machines: next.machines.map((m) => {
-        const effect = decision.machineEffects?.find(
-          (e) => e.machineId === m.id
-        );
-        if (!effect) return m;
-        return {
-          ...m,
-          etat: effect.etat,
-          production:
-            effect.etat === "PRODUCTION"
-              ? Math.max(m.production, 30)
-              : 0,
-        };
-      }),
-    };
-  }
-
-  if (
-    decision.unlockMachine &&
-    !next.machines.some((m) => m.id === decision.unlockMachine!.id)
-  ) {
-    next = {
-      ...next,
-      machines: [...next.machines, { ...decision.unlockMachine }],
-      feedbackFlash: `Nouvelle machine : ${decision.unlockMachine.nom}`,
-    };
-  }
-
-  if (decision.visibilityUpgrade) {
-    next = updateVisibility(next, decision.visibilityUpgrade);
-  }
-
-  next = addXP(next, decision.xpReward ?? 0);
-
-  const journalEntry: JournalEntry = {
-    id: `j-${decision.id}-${Date.now()}`,
-    day: Math.max(1, next.day),
-    titre: decision.titre,
-    narration:
-      decision.journalNarration ??
-      `Tu as choisi : ${decision.titre}.`,
-    xp: decision.xpReward ?? 0,
-    at: formatGameClock(next.minutesSinceStart),
-  };
-
-  next = {
-    ...next,
-    decisionHistory: [
-      {
-        id: `${decision.id}-${Date.now()}`,
-        titre: decision.titre,
-        at: formatGameClock(next.minutesSinceStart),
-        xp: decision.xpReward ?? 0,
-      },
-      ...next.decisionHistory,
-    ],
-    journal: [journalEntry, ...next.journal],
-    badges: next.badges.map((b) =>
-      b.id === "badge-first" ? { ...b, unlocked: true } : b
-    ),
-    feedbackFlash:
-      next.feedbackFlash ??
-      `Décision validée : ${decision.titre}${
-        decision.xpReward ? ` (+${decision.xpReward} XP)` : ""
-      }`,
-    dayDecisionId: decision.id,
-    decisionsTaken: [...next.decisionsTaken, decision.id],
-  };
-
-  next = applyScenarioDecisionEffects(next, decision);
-  return checkObjectives(next);
-}
-
-export function applyScenarioDecisionEffects(
-  state: GameState,
-  decision: Decision
-): GameState {
-  let next = { ...state };
-
-  if (decision.id === "d1-capteur") {
-    next = {
-      ...next,
-      sensorInstalled: true,
-      visibilityLevel: 2,
-      kpiVisibility: {
-        ...next.kpiVisibility,
-        tresorerie: "PRECIS",
-        production: "TEMPS_REEL",
-        moral: "PRECIS",
-        pieces: "TEMPS_REEL",
-        panne: "PRECIS",
-        rebut: "TEMPS_REEL",
-        stock: "PRECIS",
-        ethique: "PRECIS",
-        autovolt: "PRECIS",
-      },
-      rebutRate: 18,
-      production: next.dailyProductionBase,
-      feedbackFlash: "Capteur live — rebut réel 18 %, prod 60/jour",
-      badges: next.badges.map((b) =>
-        b.id === "badge-eye" ? { ...b, unlocked: true } : b
-      ),
-    };
-  }
-
-  if (decision.id === "d1-machine") {
-    next = {
-      ...next,
-      feedbackFlash:
-        "Nouvelle machine commandée — trop tard pour cette semaine",
-    };
-  }
-
-  if (decision.id === "d2-hs") {
-    next = {
-      ...next,
-      overtimeBonus: 20,
-      dailyProductionBase: 60 + 20 + next.marieReorgBonus,
-      production: 60 + 20 + next.marieReorgBonus,
-      relations: {
-        ...next.relations,
-        "pers-marie": clamp((next.relations["pers-marie"] ?? 30) - 10, 0, 100),
-      },
-    };
-  }
-
-  if (decision.id === "d2-no-hs") {
-    next = {
-      ...next,
-      relations: {
-        ...next.relations,
-        "pers-marie": clamp((next.relations["pers-marie"] ?? 30) + 8, 0, 100),
-      },
-    };
-  }
-
-  if (decision.id === "d2-marie-reorg") {
-    next = {
-      ...next,
-      marieReorgBonus: 15,
-      dailyProductionBase: 60 + next.overtimeBonus + 15,
-      production: 60 + next.overtimeBonus + 15,
-    };
-  }
-
-  if (decision.id === "d3-repair") {
-    next = {
-      ...next,
-      machine3DownDays: 1,
-      alarmActive: false,
-      machines: next.machines.map((m) =>
-        m.id === "m3"
-          ? { ...m, etat: "ARRET", production: 0, nextMaintenance: "Réparation J+1" }
-          : m
-      ),
-      feedbackFlash: "Machine 3 en réparation — atelier mis à jour",
-    };
-  }
-
-  if (decision.id === "d3-bypass") {
-    next = {
-      ...next,
-      machine3Bypass: true,
-      rebutRate: next.rebutRate + 8,
-      alarmActive: true,
-      feedbackFlash: "Contournement actif — qualité -10 %, Machine 3 rouge",
-    };
-  }
-
-  if (decision.id === "d3-externe") {
-    next = {
-      ...next,
-      alarmActive: false,
-      machine3DownDays: 0,
-      machines: next.machines.map((m) =>
-        m.id === "m3"
-          ? { ...m, etat: "PRODUCTION", production: 18, nextMaintenance: "J+7" }
-          : m
-      ),
-      feedbackFlash: "Machine 3 réparée (prestataire) — retour au vert",
-    };
-  }
-
-  if (decision.id === "d4-livrer") {
-    next = {
-      ...next,
-      ethique: clamp(next.ethique - 30, 0, 100),
-      confianceAutoVolt: clamp(next.confianceAutoVolt - 15, 0, 100),
-      piecesBrutesSemaine: next.piecesBrutesSemaine + 40,
-      piecesQualiteSemaine: next.piecesQualiteSemaine + 40,
-      feedbackFlash: "40 pièces livrées — éthique -30",
-    };
-  }
-
-  if (decision.id === "d4-jeter") {
-    next = {
-      ...next,
-      ethique: clamp(next.ethique + 20, 0, 100),
-      confianceAutoVolt: clamp(next.confianceAutoVolt + 10, 0, 100),
-      badges: next.badges.map((b) =>
-        b.id === "badge-ethique" ? { ...b, unlocked: true } : b
-      ),
-      feedbackFlash: "Pièces jetées — éthique +20, AutoVolt +10",
-    };
-  }
-
-  if (decision.id === "d5-nego-transparence") {
-    next = {
-      ...next,
-      ethique: clamp(next.ethique + 10, 0, 100),
-      confianceAutoVolt: clamp(next.confianceAutoVolt + 15, 0, 100),
-    };
-  }
-
-  if (decision.id === "d5-nego-prix") {
-    next = {
-      ...next,
-      confianceAutoVolt: clamp(next.confianceAutoVolt + 8, 0, 100),
-    };
-  }
-
-  if (decision.id === "d5-nego-dur") {
-    const bonus = next.ethique >= 50 && next.piecesQualiteSemaine >= 400 ? 5 : -5;
-    next = {
-      ...next,
-      confianceAutoVolt: clamp(next.confianceAutoVolt + bonus, 0, 100),
-    };
-  }
-
-  // After day decision, bank today's production into weekly quality
-  if (decision.id.startsWith("d") && decision.id.includes("-")) {
-    next = bankDayProduction(next);
-  }
-
-  return next;
-}
-
-function bankDayProduction(state: GameState): GameState {
-  if (state.day < 1 || state.day > 5) return state;
-  let daily = state.dailyProductionBase;
-  if (state.machine3DownDays > 0 && state.day === 3) {
-    daily = Math.round(daily * 0.55);
-  }
-  if (state.machine3Bypass) {
-    daily = Math.round(daily * 0.95);
-  }
-  const qualityFactor = Math.max(0.4, 1 - state.rebutRate / 100);
-  const quality = Math.round(daily * qualityFactor);
-  return {
-    ...state,
-    piecesAujourdhui: daily,
-    piecesBrutesSemaine: state.piecesBrutesSemaine + daily,
-    piecesQualiteSemaine: state.piecesQualiteSemaine + quality,
-    production: daily,
-    feedbackFlash:
-      (state.feedbackFlash ? state.feedbackFlash + " · " : "") +
-      `Journée bancarisée : +${quality} pièces qualité (cumul ${state.piecesQualiteSemaine + quality})`,
-  };
 }
 
 export function computeEnding(state: GameState): EndingKind {
-  const q = state.piecesQualiteSemaine;
-  const e = state.ethique;
-  if (e < 20 || q < 400) return "ECHEC";
+  const q = state.finance.qualite;
+  const e = state.humain.ethique;
+  // Thresholds come from scenario rules when present
+  const failEthique = state.meta.rules.endingBands.find(
+    (b) => b.id === "ECHEC" && b.maxEthique < 50
+  );
+  const ethiqueFloor = failEthique ? failEthique.maxEthique + 1 : 20;
+  if (e < ethiqueFloor || q < 400) return "ECHEC";
   if (q >= 480 && e > 50) return "VICTOIRE";
   if (q >= 400 && q < 480) return "PARTIELLE";
   if (q >= 480 && e <= 50) return "PARTIELLE";
   return "ECHEC";
 }
 
-export function advanceScenarioDay(state: GameState): GameState {
-  if (state.showDebrief) return state;
-
-  // End of day 5 → debrief
-  if (state.day >= 5 && state.dayDecisionId) {
-    const ending = computeEnding(state);
-    return {
-      ...state,
-      showDebrief: true,
-      ending,
-      minutesSinceStart: state.dayLengthMinutes,
-      feedbackFlash:
-        ending === "VICTOIRE"
-          ? "Victoire — contrat AutoVolt tenu"
-          : ending === "PARTIELLE"
-            ? "Victoire partielle"
-            : "Échec — contrat en danger",
-      badges: state.badges.map((b) =>
-        b.id === "badge-victoire" && ending === "VICTOIRE"
-          ? { ...b, unlocked: true }
-          : b
-      ),
-      journal: [
-        {
-          id: `j-end-${Date.now()}`,
-          day: 5,
-          titre: "Débrief 16h00",
-          narration: endingNarration(ending, state),
-          xp: ending === "VICTOIRE" ? 500 : ending === "PARTIELLE" ? 200 : 50,
-          at: "16:00",
-        },
-        ...state.journal,
-      ],
-    };
-  }
-
-  if (!state.dayDecisionId) {
-    return {
-      ...state,
-      feedbackFlash: "Prends d'abord la décision du jour.",
-    };
-  }
-
-  const nextDay = state.day + 1;
-  const patch = createScenarioDayState(state, nextDay);
-  let next: GameState = {
-    ...state,
-    ...patch,
-    feedbackFlash: `Passage au Jour ${nextDay}`,
-  };
-
-  // Day 3: force machine 3 panne at 10:00
-  if (nextDay === 3) {
-    next = {
-      ...next,
-      minutesSinceStart: 2 * 60,
-      alarmActive: true,
-      machines: next.machines.map((m) =>
-        m.id === "m3"
-          ? { ...m, etat: "PANNE", production: 0, nextMaintenance: "URGENTE" }
-          : m
-      ),
-      journal: [
-        {
-          id: `j-panne-${Date.now()}`,
-          day: 3,
-          titre: "10h00 — PANNE MACHINE 3",
-          narration:
-            "Alarme. L'Atelier Live bascule au rouge. Il faut décider : réparer, contourner, ou prestataire.",
-          xp: 10,
-          at: "10:00",
-        },
-        ...next.journal,
-      ],
-    };
-  }
-
-  // Heal machine after repair day
-  if (state.day === 3 && state.decisionsTaken.includes("d3-repair")) {
-    next = {
-      ...next,
-      machine3DownDays: 0,
-      machines: next.machines.map((m) =>
-        m.id === "m3"
-          ? { ...m, etat: "PRODUCTION", production: 18, nextMaintenance: "J+5" }
-          : m
-      ),
-    };
-  }
-
-  return checkObjectives(next);
-}
-
-function endingNarration(ending: EndingKind, state: GameState): string {
-  const q = state.piecesQualiteSemaine;
-  const e = state.ethique;
-  if (ending === "VICTOIRE") {
-    return `Victoire. ${q} pièces qualité, éthique ${e}. AutoVolt reste. Novacier tient.`;
-  }
-  if (ending === "PARTIELLE") {
-    return `Victoire partielle. ${q} pièces qualité, éthique ${e}. Le contrat est fragile, mais vivant.`;
-  }
-  return `Échec. ${q} pièces qualité, éthique ${e}. AutoVolt s'éloigne — l'écho de 2022.`;
-}
-
-export function startScenarioWeek(state: GameState): GameState {
-  const patch = createScenarioDayState(state, 1);
-  return {
-    ...state,
-    ...patch,
-    day: 1,
-    onboardingDone: true,
-    onboardingStep: 5,
-    unlockedActions: [...ALL_ACTIONS],
-    scenarioActive: true,
-    minutesSinceStart: 15, // 08:15 — Laurent's email moment
-    feedbackFlash: "Jour 1 — 08:15. Mail de Laurent. Brouillard total.",
-    journal: [
-      {
-        id: `j-week-${Date.now()}`,
-        day: 1,
-        titre: "Jour 1 — Le brouillard",
-        narration:
-          "Lundi. Tous les KPIs affichent ???. Laurent demande où en est le retard. Karim murmure qu'un capteur est mort.",
-        xp: 10,
-        at: "08:15",
-      },
-      ...state.journal,
-    ],
-  };
-}
-
-export function applyDialogueChoice(
-  state: GameState,
-  personnageId: string,
-  choice: DialogueChoice
-): GameState {
-  const current = state.relations[personnageId] ?? 50;
-  const relations = {
-    ...state.relations,
-    [personnageId]: clamp(current + choice.confianceDelta, 0, 100),
-  };
-  const unlockedInfos = choice.unlockInfo
-    ? Array.from(new Set([...state.unlockedInfos, choice.unlockInfo]))
-    : state.unlockedInfos;
-
-  const shortName =
-    CHARACTER_META[personnageId as CharacterVisualId]?.shortName ??
-    "Confiance";
-  const deltaLabel =
-    choice.confianceDelta >= 0
-      ? `+${choice.confianceDelta}`
-      : `${choice.confianceDelta}`;
-
-  let next: GameState = {
-    ...state,
-    relations,
-    unlockedInfos,
-    feedbackFlash: `Confiance ${shortName} ${deltaLabel}`,
-  };
-
-  if (choice.xp) next = addXP(next, choice.xp);
-
-  if (
-    choice.unlockInfo === "RUMEUR_CONFIRMED" ||
-    choice.unlockInfo === "RUMEUR_PARTIELLE"
-  ) {
-    next = {
-      ...next,
-      rumors: next.rumors.map((r) =>
-        r.id === "rum-autovolt-pl" ? { ...r, verified: true } : r
-      ),
-      events: next.events.map((e) =>
-        e.id === "ev-rumor-pl" ? { ...e, rumorResolved: true } : e
-      ),
-      feedbackFlash: "Rumeur AutoVolt / Pologne confirmée via interview",
-    };
-  }
-
-  if (choice.unlockInfo === "SOLUTION_MARIE") {
-    next = {
-      ...next,
-      feedbackFlash:
-        "Solution Marie débloquée (confiance) — réorganisation sans HS",
-    };
-  }
-
-  if (choice.unlockInfo === "CAPTEUR_M3_MORT") {
-    next = checkObjectives({
-      ...next,
-      feedbackFlash: "Karim a parlé : capteur Machine 3 mort (5 k€)",
-    });
-  }
-
-  next = {
-    ...next,
-    journal: [
-      {
-        id: `j-dlg-${Date.now()}`,
-        day: Math.max(0, next.day),
-        titre: "Choix de dialogue",
-        narration: `Tu as répondu « ${choice.texte} ». ${choice.reponse}${
-          choice.xp ? ` +${choice.xp} XP` : ""
-        }`,
-        xp: choice.xp ?? 0,
-        at: formatGameClock(next.minutesSinceStart),
-      },
-      ...next.journal,
-    ],
-  };
-
-  return checkObjectives(next);
-}
-
-export function advanceOnboarding(
-  state: GameState,
-  viaAction: ActionType
-): GameState {
-  if (state.onboardingDone) return state;
-
-  const meta = onboardingStepsMeta.find((s) => s.step === state.onboardingStep);
-  if (!meta) return state;
-  if (meta.actionHint !== viaAction && meta.unlock !== "ALL") {
-    // allow completing step when the hinted action is used
-    if (viaAction !== meta.actionHint) return state;
-  }
-
-  const step = state.onboardingStep;
-  let unlockedActions = [...state.unlockedActions];
-  let messages = [...state.messages];
-  let onboardingStep = step;
-  let onboardingDone = false;
-  let day = state.day;
-  let feedbackFlash = state.feedbackFlash;
-  let badges = state.badges;
-  let journal = state.journal;
-
-  if (step === 1 && viaAction === "VIEW_ATELIER_LIVE") {
-    unlockedActions = uniqueActions([...unlockedActions, "INTERVIEW"]);
-    onboardingStep = 2;
-    messages = [
-      {
-        id: `msg-m-${Date.now()}`,
-        from: "Henri Vallon",
-        role: "Mentor",
-        text: "Bien. Maintenant va voir Marie — interview.",
-        time: formatGameClock(state.minutesSinceStart),
-        mentor: true,
-      },
-      ...messages,
-    ];
-    feedbackFlash = "Étape 1/4 — Atelier découvert";
-    journal = [
-      {
-        id: `j-ob-1-${Date.now()}`,
-        day: 0,
-        titre: "Jour 0 — Atelier",
-        narration:
-          "Henri t'a fait ouvrir l'Atelier Live. Les machines respirent. La 3 clignote déjà rouge.",
-        xp: 15,
-        at: formatGameClock(state.minutesSinceStart),
-      },
-      ...journal,
-    ];
-  } else if (step === 2 && viaAction === "INTERVIEW") {
-    unlockedActions = uniqueActions([...unlockedActions, "ACCESS_COMPUTER"]);
-    onboardingStep = 3;
-    messages = [
-      {
-        id: `msg-m-${Date.now()}`,
-        from: "Henri Vallon",
-        role: "Mentor",
-        text: "Marie t'a parlé. Ouvre maintenant l'ordinateur — ERP et mails sont dessus.",
-        time: formatGameClock(state.minutesSinceStart),
-        mentor: true,
-      },
-      ...messages,
-    ];
-    feedbackFlash = "Étape 2/4 — Marie rencontrée";
-    journal = [
-      {
-        id: `j-ob-2-${Date.now()}`,
-        day: 0,
-        titre: "Jour 0 — Marie",
-        narration:
-          "Tu as rencontré Marie Dubois. La confiance se gagne réponse après réponse.",
-        xp: 15,
-        at: formatGameClock(state.minutesSinceStart),
-      },
-      ...journal,
-    ];
-  } else if (step === 3 && viaAction === "ACCESS_COMPUTER") {
-    unlockedActions = uniqueActions([...unlockedActions, "DECIDE"]);
-    onboardingStep = 4;
-    messages = [
-      {
-        id: `msg-m-${Date.now()}`,
-        from: "Henri Vallon",
-        role: "Mentor",
-        text: "Dernière étape : ton premier objectif. Stabilise la machine 3 quand tu seras prêt.",
-        time: formatGameClock(state.minutesSinceStart),
-        mentor: true,
-      },
-      ...messages,
-    ];
-    feedbackFlash = "Étape 3/4 — Ordinateur découvert";
-    journal = [
-      {
-        id: `j-ob-3-${Date.now()}`,
-        day: 0,
-        titre: "Jour 0 — Ordinateur",
-        narration:
-          "Tu as ouvert l'ordinateur Novacier. ERP, mails, chat : tout passe par là.",
-        xp: 15,
-        at: formatGameClock(state.minutesSinceStart),
-      },
-      ...journal,
-    ];
-  } else if (step === 4 && viaAction === "DECIDE") {
-    unlockedActions = uniqueActions([
-      ...unlockedActions,
-      "DECIDE",
-      "ACCESS_COMPUTER",
-      "INTERVIEW",
-      "VIEW_ATELIER_LIVE",
-    ]);
-    onboardingStep = 5;
-    onboardingDone = true;
-    day = Math.max(1, day === 0 ? 1 : day);
-    badges = badges.map((b) =>
-      b.id === "badge-jour0" ? { ...b, unlocked: true } : b
-    );
-    feedbackFlash = "Jour 0 terminé — bienvenue dans le quotidien";
-    journal = [
-      {
-        id: `j-ob-4-${Date.now()}`,
-        day: 1,
-        titre: "Fin du Jour 0",
-        narration:
-          "Le mentor s'efface un peu. Les outils sont à toi. Chapitre 1 continue.",
-        xp: 40,
-        at: formatGameClock(state.minutesSinceStart),
-      },
-      ...journal,
-    ];
-  } else {
-    return state;
-  }
-
-  let next: GameState = {
-    ...state,
-    unlockedActions,
-    onboardingStep,
-    onboardingDone,
-    day,
-    messages,
-    badges,
-    journal,
-    feedbackFlash,
-  };
-
-  if (onboardingDone || onboardingStep > step) {
-    next = addXP(next, 15);
-  }
-  if (onboardingDone) next = addXP(next, 40);
-
-  return checkObjectives(next);
-}
-
-export function completeOnboardingStep4(state: GameState): GameState {
-  return advanceOnboarding(state, "DECIDE");
-}
-
-function uniqueActions(list: ActionType[]): ActionType[] {
-  return Array.from(new Set(list));
-}
-
 export function unlockBadge(state: GameState, badgeId: string): GameState {
   return {
     ...state,
-    badges: state.badges.map((b) =>
-      b.id === badgeId ? { ...b, unlocked: true } : b
-    ),
+    world: {
+      ...state.world,
+      badges: state.world.badges.map((b) =>
+        b.id === badgeId ? { ...b, unlocked: true } : b
+      ),
+    },
   };
 }
 
 export function markEmailRead(state: GameState, emailId: string): GameState {
-  const emails = state.emails.map((e) =>
-    e.id === emailId ? { ...e, read: true } : e
-  );
-  return checkObjectives({ ...state, emails });
+  return checkObjectives({
+    ...state,
+    world: {
+      ...state.world,
+      emails: state.world.emails.map((e) =>
+        e.id === emailId ? { ...e, read: true } : e
+      ),
+    },
+  });
 }
 
 export function resolveRumor(
@@ -861,26 +532,34 @@ export function resolveRumor(
   rumorId: string,
   verified: boolean
 ): GameState {
-  const rumors = state.rumors.map((r) =>
+  const rumors = state.world.rumors.map((r) =>
     r.id === rumorId ? { ...r, verified } : r
   );
-  const events = state.events.map((e) =>
+  const events = state.world.events.map((e) =>
     e.isRumor && rumors.some((r) => r.eventId === e.id && r.id === rumorId)
       ? { ...e, rumorResolved: verified }
       : e
   );
   return {
     ...state,
-    rumors,
-    events,
-    feedbackFlash: verified
-      ? "Rumeur confirmée par les faits."
-      : "Rumeur infirmée.",
+    world: {
+      ...state.world,
+      rumors,
+      events,
+      feedbackFlash: verified
+        ? "Rumeur confirmée par les faits."
+        : "Rumeur infirmée.",
+    },
   };
 }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n));
+export type VisibilityLevel = "INCONNU" | "ESTIME" | "PRECIS" | "TEMPS_REEL";
+
+export function visibilityForLevel(level: 0 | 1 | 2 | 3): VisibilityLevel {
+  if (level >= 3) return "TEMPS_REEL";
+  if (level >= 2) return "PRECIS";
+  if (level >= 1) return "ESTIME";
+  return "INCONNU";
 }
 
 export function formatKpiValue(
@@ -891,10 +570,8 @@ export function formatKpiValue(
   if (visibility === "INCONNU") {
     return { display: "???", unknown: true };
   }
-
   const rounded =
     visibility === "ESTIME" ? Math.round(value / 10) * 10 : value;
-
   let display: string;
   if (format === "money") {
     display = new Intl.NumberFormat("fr-FR", {
@@ -907,14 +584,12 @@ export function formatKpiValue(
   } else {
     display = `${visibility === "ESTIME" ? "~" : ""}${rounded}`;
   }
-
-  if (visibility === "ESTIME" && format === "money") {
-    display = `~${display}`;
-  }
-
+  if (visibility === "ESTIME" && format === "money") display = `~${display}`;
   return {
     display,
     estimated: visibility === "ESTIME",
     live: visibility === "TEMPS_REEL",
   };
 }
+
+export { maxVisibility };

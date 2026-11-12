@@ -2,8 +2,8 @@
 
 import { Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { decisionForDay } from "@/data/scenarioNovacier";
 import { exampleActions, visibilityInvestments } from "@/lib/mock";
-import { dayDecisions } from "@/lib/scenario";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +19,8 @@ export function VisibilityPanel() {
 
   if (!showVisibilityPanel) return null;
 
-  const capteur = dayDecisions[1].find((d) => d.id === "d1-capteur");
+  const day1 = decisionForDay(1);
+  const capteur = day1?.choix.find((c) => c.id === "d1-capteur");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -85,8 +86,8 @@ export function VisibilityPanel() {
                       disabled={Boolean(gameState.dayDecisionId) && gameState.day === 1}
                       onClick={() => {
                         setShowVisibilityPanel(false);
-                        if (gameState.day === 1 && !gameState.dayDecisionId) {
-                          applyDecision(capteur);
+                        if (gameState.day === 1 && !gameState.dayDecisionId && day1) {
+                          applyDecision(day1, capteur.id);
                         } else {
                           setSelectedDecisionId("d1-capteur");
                           const decide = exampleActions.find((a) => a.type === "DECIDE");

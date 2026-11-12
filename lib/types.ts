@@ -114,7 +114,8 @@ export type DecisionImpact = {
 
 export type EndingKind = "VICTOIRE" | "PARTIELLE" | "ECHEC" | null;
 
-export type Decision = {
+/** @deprecated Prefer Decision from @/lib/decisions — kept for transitional UI helpers */
+export type LegacyDecisionOption = {
   id: string;
   titre: string;
   description: string;
@@ -129,6 +130,9 @@ export type Decision = {
   costEuros?: number;
   journalNarration?: string;
 };
+
+export type { Decision, DecisionChoix } from "./decisions";
+export type { GameState } from "./gameState";
 
 export type Email = {
   id: string;
@@ -270,60 +274,6 @@ export type LivreEntreprise = {
 
 export type GameMode = "skills" | "story" | null;
 
-export type GameState = {
-  mode: GameMode;
-  roleId: string | null;
-  day: number;
-  week: number;
-  minutesSinceStart: number;
-  dayLengthMinutes: number;
-  xp: number;
-  level: number;
-  tresorerie: number;
-  production: number;
-  moral: number;
-  piecesAujourdhui: number;
-  tauxPanne: number;
-  vitesseProduction: number;
-  stockKg: number;
-  rebutRate: number;
-  ethique: number;
-  confianceAutoVolt: number;
-  piecesQualiteSemaine: number;
-  piecesBrutesSemaine: number;
-  dailyProductionBase: number;
-  overtimeBonus: number;
-  marieReorgBonus: number;
-  sensorInstalled: boolean;
-  machine3Bypass: boolean;
-  machine3DownDays: number;
-  dayDecisionId: string | null;
-  decisionsTaken: string[];
-  showDebrief: boolean;
-  ending: EndingKind;
-  alarmActive: boolean;
-  scenarioActive: boolean;
-  visibilityLevel: 0 | 1 | 2 | 3;
-  kpiVisibility: Record<string, VisibilityLevel>;
-  machines: Machine[];
-  objectives: Objective[];
-  events: CompanyEvent[];
-  emails: Email[];
-  messages: ChatMessage[];
-  rumors: Rumor[];
-  decisionHistory: DecisionHistoryItem[];
-  badges: Badge[];
-  skillProgress: Record<string, { niveau: number; xp: number }>;
-  feedbackFlash: string | null;
-  introSeen: boolean;
-  onboardingStep: OnboardingStep;
-  onboardingDone: boolean;
-  unlockedActions: ActionType[];
-  chapterId: string;
-  chapters: Chapitre[];
-  journal: JournalEntry[];
-  relations: Record<string, number>;
-  unlockedInfos: string[];
-};
-
 export type PlayTab = "workspace" | "emails" | "chat" | "feed";
+
+export type { ActionType as EngineActionType } from "./gameState";

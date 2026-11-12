@@ -1,19 +1,18 @@
 import type {
   Action,
   Badge,
-  Decision,
-  GameState,
   KpiDefinition,
   Role,
   Skill,
   VisibilityInvestment,
 } from "./types";
+import type { GameState } from "./gameState";
+import { syncMetaClock } from "./gameState";
+import { createNovacierInitialState } from "@/data/scenarioNovacier";
+import { novacierDecisions } from "@/data/scenarioNovacier";
 import {
-  DAY_LENGTH,
-  dayDecisions,
   emailsForDay,
   eventsForDay,
-  initialKpiVisibility,
   livreNovacier as livreFromScenario,
   messagesForDay,
   scenarioChapters,
@@ -276,7 +275,7 @@ export const onboardingStepsMeta = [
   },
 ];
 
-export const exampleDecisions: Decision[] = Object.values(dayDecisions).flat();
+export const exampleDecisions = novacierDecisions;
 
 export const exampleBadges: Badge[] = [
   {
@@ -410,7 +409,7 @@ export const skillEvolution = [
   { mois: "S1", nego: 1, crise: 2, lead: 2, stock: 1 },
 ];
 
-const ALL_ACTIONS: GameState["unlockedActions"] = [
+const ALL_ACTIONS: GameState["world"]["unlockedActions"] = [
   "ACCESS_COMPUTER",
   "INTERVIEW",
   "DECIDE",
@@ -418,95 +417,77 @@ const ALL_ACTIONS: GameState["unlockedActions"] = [
 ];
 
 export function createInitialGameState(): GameState {
-  return {
-    mode: null,
-    roleId: null,
-    day: 0,
-    week: 1,
-    minutesSinceStart: 0,
-    dayLengthMinutes: DAY_LENGTH,
-    xp: 0,
-    level: 1,
-    tresorerie: 420_000,
-    production: 60,
-    moral: 55,
-    piecesAujourdhui: 0,
-    tauxPanne: 5,
-    vitesseProduction: 60,
-    stockKg: 850,
-    rebutRate: 18,
-    ethique: 80,
-    confianceAutoVolt: 60,
-    piecesQualiteSemaine: 0,
-    piecesBrutesSemaine: 0,
-    dailyProductionBase: 60,
-    overtimeBonus: 0,
-    marieReorgBonus: 0,
-    sensorInstalled: false,
-    machine3Bypass: false,
-    machine3DownDays: 0,
-    dayDecisionId: null,
-    decisionsTaken: [],
-    showDebrief: false,
-    ending: null,
-    alarmActive: false,
-    scenarioActive: true,
-    visibilityLevel: 0,
-    kpiVisibility: { ...initialKpiVisibility },
-    machines: scenarioMachines.map((m) => ({ ...m })),
-    objectives: scenarioObjectives.map((o) => ({ ...o })),
-    events: eventsForDay(1),
-    emails: emailsForDay(1),
-    messages: messagesForDay(1),
-    rumors: [{ ...scenarioRumor }],
-    decisionHistory: [],
-    badges: exampleBadges.map((b) => ({ ...b })),
-    skillProgress: Object.fromEntries(
-      skills.map((s) => [s.id, { niveau: s.niveau, xp: s.xp }])
-    ),
-    feedbackFlash: null,
-    introSeen: false,
-    onboardingStep: 1,
-    onboardingDone: false,
-    unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
-    chapterId: "ch-semaine",
-    chapters: scenarioChapters.map((c) => ({ ...c })),
-    journal: [],
-    relations: Object.fromEntries(
-      scenarioPersonnages.map((p) => [p.id, p.relationConfiance])
-    ),
-    unlockedInfos: [],
-  };
+  const base = createNovacierInitialState();
+  return syncMetaClock({
+    ...base,
+    flags: { ...base.flags, tauxPanne: 5 },
+    world: {
+      ...base.world,
+      machines: scenarioMachines.map((m) => ({ ...m })),
+      objectives: scenarioObjectives.map((o) => ({ ...o })),
+      events: eventsForDay(1),
+      emails: emailsForDay(1),
+      messages: messagesForDay(1),
+      rumors: [{ ...scenarioRumor }],
+      badges: exampleBadges.map((b) => ({ ...b })),
+      skillProgress: Object.fromEntries(
+        skills.map((s) => [s.id, { niveau: s.niveau, xp: s.xp }])
+      ),
+      chapters: scenarioChapters.map((c) => ({ ...c })),
+      unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
+    },
+  });
 }
 
+/** Patch world content when entering a scenario day (keeps finance/relations). */
 export function createScenarioDayState(
   from: GameState,
   day: number
-): Partial<GameState> {
-  return {
-    day,
-    minutesSinceStart: day === 3 ? 2 * 60 : 0, // Jour 3 starts near 10:00 for panne
-    dayDecisionId: null,
-    emails: emailsForDay(day),
-    messages: messagesForDay(day),
-    events: eventsForDay(day),
-    rumors:
-      day >= 2
-        ? [
-            {
-              ...scenarioRumor,
-              verified: from.unlockedInfos.includes("RUMEUR_CONFIRMED")
-                ? true
-                : from.unlockedInfos.includes("RUMEUR_PARTIELLE")
+): GameState {
+  return syncMetaClock({
+    ...from,
+    meta: {
+      ...from.meta,
+      jourActuel: day,
+      minutesSinceStart: day === 3 ? 2 * 60 : 0,
+    },
+    finance: {
+      ...from.finance,
+      piecesAujourdhui: 0,
+    },
+    world: {
+      ...from.world,
+      dayDecisionId: null,
+      emails: emailsForDay(day),
+      messages: messagesForDay(day),
+      events: eventsForDay(day),
+      rumors:
+        day >= 2
+          ? [
+              {
+                ...scenarioRumor,
+                verified: from.world.unlockedInfos.includes("RUMEUR_CONFIRMED")
                   ? true
-                  : null,
-            },
-          ]
-        : from.rumors,
-    alarmActive: day === 3,
-    piecesAujourdhui: 0,
-  };
+                  : from.world.unlockedInfos.includes("RUMEUR_PARTIELLE")
+                    ? true
+                    : null,
+              },
+            ]
+          : from.world.rumors,
+      alarmActive: day === 3,
+      feedbackFlash: from.world.feedbackFlash,
+    },
+    flags: {
+      ...from.flags,
+      alarmActive: day === 3 ? 1 : from.flags.alarmActive,
+    },
+  });
 }
 
-export { ALL_ACTIONS, dayDecisions };
+export { ALL_ACTIONS, novacierDecisions };
+/** @deprecated use novacierDecisions — kept for any leftover imports */
+export const dayDecisions = Object.fromEntries(
+  novacierDecisions.map((d) => [d.jour, d.choix])
+);
 export const initialGameState = createInitialGameState();
+export { dayTitles } from "@/data/scenarioNovacier";

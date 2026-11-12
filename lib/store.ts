@@ -2,32 +2,35 @@
 
 import { useSyncExternalStore } from "react";
 import { COMPUTER_APP_TIME } from "./computerData";
+import type { Decision } from "./decisions";
+import {
+  advanceTime,
+  applyDecision as engineApplyDecision,
+  canSpendTime,
+  markEmailRead as engineMarkEmailRead,
+  resolveRumor as engineResolveRumor,
+  unlockBadge,
+} from "./engine";
+import type { GameState } from "./gameState";
+import { createInitialGameState } from "./mock";
 import {
   advanceOnboarding,
   advanceScenarioDay,
-  advanceTime,
-  applyDecision as engineApplyDecision,
-  applyDialogueChoice as engineApplyDialogueChoice,
-  canSpendTime,
+  applyDialogueChoice as runtimeApplyDialogueChoice,
   completeOnboardingStep4,
-  markEmailRead as engineMarkEmailRead,
-  resolveRumor as engineResolveRumor,
   startScenarioWeek,
-  unlockBadge,
-} from "./engine";
-import { createInitialGameState } from "./mock";
+} from "./runtime";
 import type {
   Action,
   ComputerAppId,
-  Decision,
   DialogueChoice,
   GameMode,
-  GameState,
   PlayTab,
 } from "./types";
+import { toGameView, type GameView } from "./viewModel";
 
 type StoreSnapshot = {
-  gameState: GameState;
+  state: GameState;
   activeAction: Action | null;
   playTab: PlayTab;
   computerApp: ComputerAppId | null;
@@ -38,7 +41,7 @@ type StoreSnapshot = {
 };
 
 let snapshot: StoreSnapshot = {
-  gameState: createInitialGameState(),
+  state: createInitialGameState(),
   activeAction: null,
   playTab: "workspace",
   computerApp: null,
@@ -59,45 +62,57 @@ function setSnapshot(partial: Partial<StoreSnapshot>) {
   emit();
 }
 
-function patchGame(updater: (s: GameState) => GameState) {
-  setSnapshot({ gameState: updater(snapshot.gameState) });
+function patchState(updater: (s: GameState) => GameState) {
+  setSnapshot({ state: updater(snapshot.state) });
 }
 
 export function setMode(mode: GameMode) {
-  patchGame((s) => ({ ...s, mode }));
+  patchState((s) => ({
+    ...s,
+    world: { ...s.world, mode },
+  }));
 }
 
 export function setRole(roleId: string) {
-  patchGame((s) => ({
+  patchState((s) => ({
     ...s,
-    roleId,
-    mode: "story",
-    introSeen: false,
-    day: 0,
-    onboardingDone: false,
-    onboardingStep: 1,
-    unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
-    feedbackFlash: "Rôle sélectionné — lit l'intro.",
+    meta: { ...s.meta, roleId },
+    world: {
+      ...s.world,
+      mode: "story",
+      introSeen: false,
+      onboardingDone: false,
+      onboardingStep: 1,
+      unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
+      feedbackFlash: "Rôle sélectionné — lit l'intro.",
+    },
+  }));
+  patchState((s) => ({
+    ...s,
+    meta: { ...s.meta, jourActuel: 0 },
   }));
 }
 
 export function markIntroSeen() {
-  patchGame((s) => {
-    const withIntro = {
+  patchState((s) => {
+    const withIntro: GameState = {
       ...s,
-      introSeen: true,
-      journal: [
-        {
-          id: `j-intro-${Date.now()}`,
-          day: 0,
-          titre: "Lundi 8h00 — Arrivée",
-          narration:
-            "Tu franchis la porte de Novacier. Henri te salue. La Semaine Qui Décide De Tout commence.",
-          xp: 10,
-          at: "08:00",
-        },
-        ...s.journal,
-      ],
+      world: {
+        ...s.world,
+        introSeen: true,
+        journal: [
+          {
+            id: `j-intro-${Date.now()}`,
+            day: 0,
+            titre: "Lundi 8h00 — Arrivée",
+            narration:
+              "Tu franchis la porte de Novacier. Henri te salue. La Semaine Qui Décide De Tout commence.",
+            xp: 10,
+            at: "08:00",
+          },
+          ...s.world.journal,
+        ],
+      },
     };
     return startScenarioWeek(withIntro);
   });
@@ -106,32 +121,41 @@ export function markIntroSeen() {
 export function setActiveAction(action: Action | null) {
   if (action) {
     const gated =
-      snapshot.gameState.mode === "story" &&
-      !snapshot.gameState.onboardingDone;
-    if (gated && !snapshot.gameState.unlockedActions.includes(action.type)) {
-      patchGame((s) => ({
+      snapshot.state.world.mode === "story" &&
+      !snapshot.state.world.onboardingDone;
+    if (
+      gated &&
+      !snapshot.state.world.unlockedActions.includes(action.type)
+    ) {
+      patchState((s) => ({
         ...s,
-        feedbackFlash: "Pas encore débloqué — suis le mentor.",
+        world: {
+          ...s.world,
+          feedbackFlash: "Pas encore débloqué — suis le mentor.",
+        },
       }));
       return;
     }
 
-    if (!canSpendTime(snapshot.gameState, action.timeCostMinutes)) {
-      patchGame((s) => ({
+    if (!canSpendTime(snapshot.state, action.timeCostMinutes)) {
+      patchState((s) => ({
         ...s,
-        feedbackFlash: "Pas assez de temps restant aujourd'hui.",
+        world: {
+          ...s.world,
+          feedbackFlash: "Pas assez de temps restant aujourd'hui.",
+        },
       }));
       return;
     }
 
-    let next = advanceTime(snapshot.gameState, action.timeCostMinutes);
+    let next = advanceTime(snapshot.state, action.timeCostMinutes);
     if (action.type === "VIEW_ATELIER_LIVE") {
       next = unlockBadge(next, "badge-atelier");
     }
     next = advanceOnboarding(next, action.type);
 
     setSnapshot({
-      gameState: next,
+      state: next,
       activeAction: action,
       computerApp: null,
       playTab: "workspace",
@@ -144,18 +168,24 @@ export function setActiveAction(action: Action | null) {
 
 export function openComputerApp(app: ComputerAppId) {
   const cost = COMPUTER_APP_TIME[app] ?? 10;
-  if (!canSpendTime(snapshot.gameState, cost)) {
-    patchGame((s) => ({
+  if (!canSpendTime(snapshot.state, cost)) {
+    patchState((s) => ({
       ...s,
-      feedbackFlash: "Pas assez de temps restant aujourd'hui.",
+      world: {
+        ...s.world,
+        feedbackFlash: "Pas assez de temps restant aujourd'hui.",
+      },
     }));
     return;
   }
-  const next = advanceTime(snapshot.gameState, cost);
+  const next = advanceTime(snapshot.state, cost);
   setSnapshot({
-    gameState: {
+    state: {
       ...next,
-      feedbackFlash: `+${cost} min — session ${appLabel(app)}`,
+      world: {
+        ...next.world,
+        feedbackFlash: `+${cost} min — session ${appLabel(app)}`,
+      },
     },
     computerApp: app,
   });
@@ -196,45 +226,36 @@ export function setShowVisibilityPanel(open: boolean) {
 export function markLivreOpened() {
   if (snapshot.livreOpened) return;
   setSnapshot({ livreOpened: true });
-  patchGame((s) =>
+  patchState((s) =>
     unlockBadge(
       {
         ...s,
-        feedbackFlash: "Livre de l'Entreprise ouvert",
-        journal: [
-          {
-            id: `j-livre-${Date.now()}`,
-            day: Math.max(0, s.day),
-            titre: "Livre de Novacier",
-            narration:
-              "Tu as ouvert le Livre : 1987, quasi-faillite 2022, AutoVolt 45 % du CA. La mémoire du lieu.",
-            xp: 20,
-            at: "—",
-          },
-          ...s.journal,
-        ],
+        world: {
+          ...s.world,
+          feedbackFlash: "Livre de l'Entreprise ouvert",
+          journal: [
+            {
+              id: `j-livre-${Date.now()}`,
+              day: Math.max(0, s.meta.jourActuel),
+              titre: "Livre de Novacier",
+              narration:
+                "Tu as ouvert le Livre : 1987, quasi-faillite 2022, AutoVolt 45 % du CA. La mémoire du lieu.",
+              xp: 20,
+              at: "—",
+            },
+            ...s.world.journal,
+          ],
+        },
       },
       "badge-livre"
     )
   );
 }
 
-export function applyDecision(decision: Decision) {
-  patchGame((s) => {
-    if (s.dayDecisionId) {
-      return {
-        ...s,
-        feedbackFlash: "Décision du jour déjà prise — passe au jour suivant.",
-      };
-    }
-    if (decision.id === "d2-marie-reorg" && (s.relations["pers-marie"] ?? 0) <= 60) {
-      return {
-        ...s,
-        feedbackFlash: "Il faut confiance Marie > 60 pour cette option.",
-      };
-    }
-    let next = engineApplyDecision(s, decision);
-    if (!next.onboardingDone && next.onboardingStep === 4) {
+export function applyDecision(decision: Decision, choixId: string) {
+  patchState((s) => {
+    let next = engineApplyDecision(s, decision, choixId);
+    if (!next.world.onboardingDone && next.world.onboardingStep === 4) {
       next = completeOnboardingStep4(next);
     }
     return next;
@@ -242,35 +263,38 @@ export function applyDecision(decision: Decision) {
 }
 
 export function advanceDay() {
-  patchGame((s) => advanceScenarioDay(s));
+  patchState((s) => advanceScenarioDay(s));
 }
 
 export function applyDialogueChoice(
   personnageId: string,
   choice: DialogueChoice
 ) {
-  patchGame((s) => engineApplyDialogueChoice(s, personnageId, choice));
+  patchState((s) => runtimeApplyDialogueChoice(s, personnageId, choice));
 }
 
 export function markEmailRead(emailId: string) {
-  patchGame((s) => engineMarkEmailRead(s, emailId));
+  patchState((s) => engineMarkEmailRead(s, emailId));
 }
 
 export function resolveRumor(rumorId: string, verified: boolean) {
-  patchGame((s) => engineResolveRumor(s, rumorId, verified));
+  patchState((s) => engineResolveRumor(s, rumorId, verified));
 }
 
 export function finishOnboarding() {
-  patchGame((s) => startScenarioWeek(completeOnboardingStep4(s)));
+  patchState((s) => startScenarioWeek(completeOnboardingStep4(s)));
 }
 
 export function clearFeedback() {
-  patchGame((s) => ({ ...s, feedbackFlash: null }));
+  patchState((s) => ({
+    ...s,
+    world: { ...s.world, feedbackFlash: null },
+  }));
 }
 
 export function resetState() {
   setSnapshot({
-    gameState: createInitialGameState(),
+    state: createInitialGameState(),
     activeAction: null,
     playTab: "workspace",
     computerApp: null,
@@ -292,9 +316,18 @@ function getSnapshot() {
 
 export function useGameStore() {
   const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const gameState: GameView = toGameView(current.state);
 
   return {
-    ...current,
+    gameState,
+    rawState: current.state,
+    activeAction: current.activeAction,
+    playTab: current.playTab,
+    computerApp: current.computerApp,
+    selectedDecisionId: current.selectedDecisionId,
+    selectedPersonnageId: current.selectedPersonnageId,
+    showVisibilityPanel: current.showVisibilityPanel,
+    livreOpened: current.livreOpened,
     setMode,
     setRole,
     markIntroSeen,

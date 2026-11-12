@@ -4,9 +4,17 @@ import { HelpCircle } from "lucide-react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { Button } from "@/components/ui/button";
 import { useGameStore } from "@/lib/store";
-import type { CompanyEvent } from "@/lib/types";
-
-export function RumorCard({ event }: { event: CompanyEvent }) {
+export function RumorCard({
+  event,
+}: {
+  event: {
+    id: string;
+    titre: string;
+    description: string;
+    timestamp: string;
+    isRumor?: boolean;
+  };
+}) {
   const { gameState, resolveRumor } = useGameStore();
   const rumor = gameState.rumors.find((r) => r.eventId === event.id);
 

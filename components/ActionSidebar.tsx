@@ -29,9 +29,9 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 export function ActionSidebar() {
-  const { activeAction, setActiveAction, gameState } = useGameStore();
+  const { activeAction, setActiveAction, gameState, rawState } = useGameStore();
   const clock = formatGameClock(gameState.minutesSinceStart);
-  const left = remainingDayMinutes(gameState);
+  const left = remainingDayMinutes(rawState);
   const chapter = gameState.chapters.find((c) => c.id === gameState.chapterId);
 
   return (

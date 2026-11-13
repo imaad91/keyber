@@ -10,40 +10,25 @@ import {
   PageHeader,
   inputClass,
 } from "@/components/admin/AdminPrimitives";
-import {
-  ficheFillPercent,
-  ficheStatusLabel,
-  type AdminFicheStatus,
-} from "@/lib/adminFiches";
+import { WorkflowStatusBadge } from "@/components/admin/WorkflowStatusBadge";
 import { useAdminStore } from "@/lib/adminStore";
+import {
+  matchesWorkflowFilter,
+  workflowProgressLabel,
+  WORKFLOW_LIST_FILTERS,
+  type WorkflowListFilter,
+} from "@/lib/adminWorkflow";
 import { cn } from "@/lib/utils";
-
-function FicheStatusBadge({ status }: { status: AdminFicheStatus }) {
-  const styles: Record<AdminFicheStatus, string> = {
-    brouillon: "bg-slate-100 text-slate-700",
-    en_cours: "bg-sky-50 text-sky-800 ring-1 ring-sky-200",
-    complete: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
-    validee: "bg-violet-50 text-violet-800 ring-1 ring-violet-200",
-  };
-  return (
-    <span
-      className={cn(
-        "inline-flex rounded-md px-2 py-0.5 text-xs font-semibold",
-        styles[status]
-      )}
-    >
-      {ficheStatusLabel(status)}
-    </span>
-  );
-}
 
 export default function AdminFichesPage() {
   const router = useRouter();
   const { fiches, scenarios, createFiche } = useAdminStore();
   const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<WorkflowListFilter>("tout");
 
   const list = useMemo(() => {
     return [...fiches]
+      .filter((f) => matchesWorkflowFilter(f.statutWorkflow, filter))
       .filter((f) =>
         q
           ? `${f.titre} ${f.entrepriseNom} ${f.role}`
@@ -53,14 +38,15 @@ export default function AdminFichesPage() {
       )
       .sort(
         (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          new Date(b.lastStepAt || b.updatedAt).getTime() -
+          new Date(a.lastStepAt || a.updatedAt).getTime()
       );
-  }, [fiches, q]);
+  }, [fiches, q, filter]);
 
   return (
     <div>
       <PageHeader
-        title="Fiches"
+        title="Liste des Fiches"
         subtitle="Porte d'entrée du réel — une ligne par fiche, ouverture en plein écran."
         actions={
           <AdminButton
@@ -74,6 +60,24 @@ export default function AdminFichesPage() {
           </AdminButton>
         }
       />
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        {WORKFLOW_LIST_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setFilter(f.id)}
+            className={cn(
+              "rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+              filter === f.id
+                ? "bg-slate-900 text-white"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
       <div className="mb-4 max-w-md">
         <Field label="Recherche">
@@ -91,16 +95,18 @@ export default function AdminFichesPage() {
 
       <div className="space-y-3">
         {list.map((f) => {
-          const pct = ficheFillPercent(f);
           const scn = scenarios.find((s) => s.id === f.scenarioId);
-          const date = new Date(f.updatedAt).toLocaleString("fr-FR", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Europe/Paris",
-          });
+          const date = new Date(f.lastStepAt || f.updatedAt).toLocaleString(
+            "fr-FR",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Europe/Paris",
+            }
+          );
           return (
             <Link
               key={f.id}
@@ -116,14 +122,14 @@ export default function AdminFichesPage() {
                   </span>
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Scénario : {scn?.titre ?? "Non lié"} · Modifiée {date}
-                  {f.coeurGenere ? " · Cœur généré" : ""}
+                  Scénario : {scn?.titre ?? "Non lié"} · Dernière étape {date}
+                  {f.provisoire ? " · PROVISOIRE" : ""}
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-3">
-                <FicheStatusBadge status={f.statut} />
-                <span className="tabular-nums text-sm font-semibold text-slate-700">
-                  {pct}%
+                <WorkflowStatusBadge status={f.statutWorkflow} showStep />
+                <span className="text-xs font-medium text-slate-500">
+                  {workflowProgressLabel(f.statutWorkflow)}
                 </span>
                 <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700">
                   Ouvrir
@@ -135,7 +141,7 @@ export default function AdminFichesPage() {
         })}
         {list.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-12 text-center text-sm text-slate-500">
-            Aucune fiche. Créez la première avec « + Créer une fiche ».
+            Aucune fiche pour ce filtre.
           </div>
         ) : null}
       </div>

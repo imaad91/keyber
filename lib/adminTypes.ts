@@ -144,6 +144,10 @@ export type AdminScenario = {
   description: string;
   entrepriseId: string | null;
   statut: AdminScenarioStatus;
+  /** Closed Fiche→Scénario workflow (synced with Fiche / Cœur). */
+  statutWorkflow?: import("./adminWorkflow").StatutWorkflow;
+  /** Badge PROVISOIRE until retenu_publie. */
+  provisoire?: boolean;
   order: number;
   consultantPercent?: number;
   submittedBy?: string;

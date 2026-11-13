@@ -11,7 +11,9 @@ import {
   StatusBadge,
   inputClass,
 } from "@/components/admin/AdminPrimitives";
+import { WorkflowStatusBadge } from "@/components/admin/WorkflowStatusBadge";
 import { useAdminStore } from "@/lib/adminStore";
+import { workflowProgressLabel } from "@/lib/adminWorkflow";
 
 export default function AdminScenariosPage() {
   const router = useRouter();
@@ -67,6 +69,7 @@ export default function AdminScenariosPage() {
               <th className="px-4 py-3">Rôle</th>
               <th className="px-4 py-3">Jours</th>
               <th className="px-4 py-3">Statut</th>
+              <th className="px-4 py-3">Workflow</th>
               <th className="px-4 py-3">Fiche liée</th>
               <th className="px-4 py-3" />
             </tr>
@@ -75,6 +78,7 @@ export default function AdminScenariosPage() {
             {list.map((s) => {
               const ent = entreprises.find((e) => e.id === s.entrepriseId);
               const fiche = fiches.find((f) => f.scenarioId === s.id);
+              const wf = fiche?.statutWorkflow ?? s.statutWorkflow ?? "brouillon";
               return (
                 <tr
                   key={s.id}
@@ -86,6 +90,11 @@ export default function AdminScenariosPage() {
                       className="font-semibold text-slate-900 hover:underline"
                     >
                       {s.titre}
+                      {s.provisoire || fiche?.provisoire ? (
+                        <span className="ml-2 rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                          Provisoire
+                        </span>
+                      ) : null}
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-slate-600">
@@ -99,6 +108,14 @@ export default function AdminScenariosPage() {
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={s.statut} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      <WorkflowStatusBadge status={wf} />
+                      <span className="text-[10px] font-medium text-slate-500">
+                        {workflowProgressLabel(wf)}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     {fiche ? (
@@ -134,7 +151,7 @@ export default function AdminScenariosPage() {
             {list.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-4 py-10 text-center text-sm text-slate-500"
                 >
                   Aucun scénario.

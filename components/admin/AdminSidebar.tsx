@@ -27,7 +27,15 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/scenarios", label: "Scénarios", icon: ScrollText },
-  { href: "/admin/fiches", label: "Fiches", icon: FileText },
+  {
+    href: "/admin/fiches",
+    label: "Fiches",
+    icon: FileText,
+    children: [
+      { href: "/admin/fiches", label: "Liste des Fiches" },
+      { href: "/admin/fiches/suivi", label: "Suivi Validation" },
+    ],
+  },
   { href: "/admin/logique", label: "Logique", icon: Network },
   {
     href: "/admin/coeur",
@@ -81,8 +89,17 @@ export function AdminSidebar() {
                 <div className="mb-1 ml-4 mt-0.5 space-y-0.5 border-l border-slate-200 pl-3">
                   {item.children.map((child) => {
                     const childActive =
-                      pathname === child.href ||
-                      pathname.startsWith(child.href + "/");
+                      child.href === item.href
+                        ? pathname === child.href ||
+                          (pathname.startsWith(child.href + "/") &&
+                            !item.children!.some(
+                              (c) =>
+                                c.href !== child.href &&
+                                (pathname === c.href ||
+                                  pathname.startsWith(c.href + "/"))
+                            ))
+                        : pathname === child.href ||
+                          pathname.startsWith(child.href + "/");
                     const ChildIcon = child.icon;
                     return (
                       <Link

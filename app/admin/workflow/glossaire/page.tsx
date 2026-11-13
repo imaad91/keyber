@@ -11,7 +11,7 @@ import { useAdminStore } from "@/lib/adminStore";
 export default function WorkflowGlossaireListPage() {
   const { glossaire, createGlossaireTerme } = useAdminStore();
   const router = useRouter();
-  const list = [...glossaire].sort((a, b) =>
+  const list = [...(glossaire ?? [])].sort((a, b) =>
     a.terme.localeCompare(b.terme, "fr")
   );
 
@@ -74,7 +74,7 @@ export default function WorkflowGlossaireListPage() {
                   {t.definitionCourte}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
-                  Où : {t.utilisations.join(" / ")}
+                  Où : {(t.utilisations ?? []).join(" / ")}
                 </p>
               </div>
               <p className="shrink-0 text-xs text-slate-400">

@@ -38,7 +38,8 @@ export default function AgentDetailPage() {
     useAdminStore();
   const agent = agents.find((a) => a.id === agentId);
   const defaultScenarioId =
-    scenarios.find((s) => s.id === "novacier")?.id ??
+    scenarios.find((s) => s.statut === "publie")?.id ??
+    scenarios.find((s) => s.id.includes("novacier"))?.id ??
     scenarios[0]?.id ??
     "";
 

@@ -9,7 +9,6 @@ import { skills } from "@/lib/mock";
 import { XP_PER_SKILL_LEVEL } from "@/lib/progression";
 import {
   getMostRecentSave,
-  hydrateFromCloud,
   loadProgressionLocale,
 } from "@/lib/saveStore";
 import {
@@ -31,13 +30,6 @@ export function HomeProgression() {
   const [skillBars, setSkillBars] = useState(gameState.skillProgress);
 
   useEffect(() => {
-    void hydrateFromCloud().then(() => {
-      setResume(getMostRecentSave());
-      const p = loadProgressionLocale();
-      if (Object.keys(p.competences).length) {
-        setSkillBars(p.competences);
-      }
-    });
     setResume(getMostRecentSave());
     const p = loadProgressionLocale();
     if (Object.keys(p.competences).length) {

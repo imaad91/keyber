@@ -1,6 +1,5 @@
 /**
- * Client-side save slots — localStorage is the source of truth on this VM;
- * Supabase sync is best-effort via /api when secrets are configured.
+ * Client-side save slots — localStorage only.
  */
 
 import type { GameState, ModeJeu } from "./gameState";
@@ -118,7 +117,7 @@ export function buildSauvegarde(
   };
 }
 
-/** Write slot locally + update global progression; fire-and-forget cloud sync. */
+/** Write slot locally + update global progression. */
 export function saveSlotAndProgression(
   slot: SlotNumber,
   state: GameState,
@@ -142,8 +141,6 @@ export function saveSlotAndProgression(
   );
   persistProgression(progression);
 
-  void syncCloud(sauvegarde, progression);
-
   return { sauvegarde, progression };
 }
 
@@ -152,7 +149,6 @@ export function clearSlot(slot: SlotNumber) {
   delete bundle.slots[slot];
   if (bundle.activeSlot === slot) bundle.activeSlot = null;
   persistBundle(bundle);
-  void deleteCloudSlot(slot);
 }
 
 export function getMostRecentSave(): Sauvegarde | null {
@@ -173,124 +169,4 @@ export function prepareNewGameState(
 ): GameState {
   const prog = progression ?? loadProgressionLocale();
   return applyProgressionToState(fresh, prog);
-}
-
-async function syncCloud(
-  sauvegarde: Sauvegarde,
-  progression: ProgressionGlobale
-) {
-  try {
-    await fetch("/api/sauvegardes", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: progression.userId,
-        sauvegarde,
-      }),
-    });
-    await fetch("/api/progression", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(progression),
-    });
-  } catch {
-    // local-only fallback — cloud optional
-  }
-}
-
-async function deleteCloudSlot(slot: SlotNumber) {
-  try {
-    const userId = getOrCreateUserId();
-    await fetch(
-      `/api/sauvegardes?userId=${encodeURIComponent(userId)}&slot=${slot}`,
-      { method: "DELETE" }
-    );
-  } catch {
-    // ignore
-  }
-}
-
-/** Pull cloud saves when available; merge by newest date. */
-export async function hydrateFromCloud(): Promise<void> {
-  if (!canUseStorage()) return;
-  const userId = getOrCreateUserId();
-  try {
-    const [sRes, pRes] = await Promise.all([
-      fetch(`/api/sauvegardes?userId=${encodeURIComponent(userId)}`),
-      fetch(`/api/progression?userId=${encodeURIComponent(userId)}`),
-    ]);
-    if (sRes.ok) {
-      const data = (await sRes.json()) as { slots?: Sauvegarde[] };
-      if (data.slots?.length) {
-        const bundle = loadSavesBundle();
-        for (const s of data.slots) {
-          const local = bundle.slots[s.slot];
-          if (
-            !local ||
-            new Date(s.dateDerniereSauvegarde).getTime() >
-              new Date(local.dateDerniereSauvegarde).getTime()
-          ) {
-            bundle.slots[s.slot] = s;
-          }
-        }
-        persistBundle(bundle);
-      }
-    }
-    if (pRes.ok) {
-      const cloud = (await pRes.json()) as ProgressionGlobale | null;
-      if (cloud?.userId) {
-        const local = loadProgressionLocale();
-        const merged = progressionFromState(
-          userId,
-          {
-            progression: {
-              xp: cloud.xpTotal,
-              niveau: cloud.niveauGlobal,
-              competences: Object.fromEntries(
-                Object.entries(cloud.competences).map(([k, v]) => [k, v.niveau])
-              ),
-            },
-            world: {
-              skillProgress: cloud.competences,
-              histoiresCompleted: cloud.histoiresTerminees.map((id) => ({
-                scenarioId: id,
-                titre: id,
-                ending: null,
-                at: cloud.updatedAt,
-              })),
-              trainingsCompleted: cloud.entrainementsTermines.map((key) => {
-                const [competenceId, decisionId] = key.split(":");
-                return {
-                  competenceId: competenceId ?? key,
-                  decisionId: decisionId ?? key,
-                  choixId: "",
-                  label: key,
-                  at: cloud.updatedAt,
-                  xp: 0,
-                };
-              }),
-            },
-          } as unknown as GameState,
-          local
-        );
-        persistProgression({
-          ...merged,
-          histoiresTerminees: Array.from(
-            new Set([
-              ...local.histoiresTerminees,
-              ...cloud.histoiresTerminees,
-            ])
-          ),
-          entrainementsTermines: Array.from(
-            new Set([
-              ...local.entrainementsTermines,
-              ...cloud.entrainementsTermines,
-            ])
-          ),
-        });
-      }
-    }
-  } catch {
-    // stay local
-  }
 }

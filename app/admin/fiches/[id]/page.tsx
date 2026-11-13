@@ -30,6 +30,9 @@ import {
   isFicheContentEditable,
   workflowProgressLabel,
 } from "@/lib/adminWorkflow";
+import { allCompetenceImpactsPrecise } from "@/lib/competenceLocks";
+import { ALL_COMPETENCES, getCompetenceDef } from "@/lib/competences";
+import { cn } from "@/lib/utils";
 
 export default function AdminFicheDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -65,6 +68,10 @@ export default function AdminFicheDetailPage() {
   const agentsOk = fiche
     ? allAgentsValidated(fiche.agentTestReports ?? [])
     : false;
+  const competencesOk = fiche
+    ? allCompetenceImpactsPrecise(fiche.competencePrecision ?? [])
+    : false;
+  const canRetain = agentsOk && competencesOk;
 
   const scenarioOptions = useMemo(
     () => [...scenarios].sort((a, b) => a.order - b.order),
@@ -210,13 +217,15 @@ export default function AdminFicheDetailPage() {
           <>
             <AdminButton
               onClick={() => run(() => retenirScenario(fiche.id))}
-              disabled={!agentsOk}
+              disabled={!canRetain}
             >
-              {agentsOk
+              {canRetain
                 ? "Retenir le Scénario"
-                : "En attente de validation des Agents"}
+                : !agentsOk
+                  ? "En attente de validation des Agents"
+                  : "En attente — compétences imprécises"}
             </AdminButton>
-            {!agentsOk ? (
+            {!canRetain ? (
               <>
                 <AdminButton
                   variant="secondary"
@@ -366,14 +375,79 @@ export default function AdminFicheDetailPage() {
       ) : null}
 
       {fiche.statutWorkflow === "en_test" ? (
-        <div id="rapport-agents" className="mb-8 space-y-3">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Rapport de test Agents
-          </h2>
-          <FicheAgentTestReport
-            reports={fiche.agentTestReports ?? []}
-            agents={agents}
-          />
+        <div id="rapport-agents" className="mb-8 space-y-6">
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Rapport de test Agents
+            </h2>
+            <FicheAgentTestReport
+              reports={fiche.agentTestReports ?? []}
+              agents={agents}
+            />
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Précision des compétences
+            </h2>
+            {(fiche.competencePrecision ?? []).length === 0 ? (
+              <p className="text-sm text-slate-500">
+                Aucun impact compétence dans le Cœur — ou lancez les tests.
+              </p>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-slate-100 bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2">Compétence</th>
+                      <th className="px-3 py-2">Indicateur</th>
+                      <th className="px-3 py-2">Feedback</th>
+                      <th className="px-3 py-2">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(fiche.competencePrecision ?? []).map((row) => (
+                      <tr
+                        key={`${row.decisionId}-${row.choixId}-${row.competenceId}`}
+                        className="border-b border-slate-50"
+                      >
+                        <td className="px-3 py-2">
+                          <p className="font-medium text-slate-900">
+                            {row.competenceNom}
+                          </p>
+                          <p className="text-[10px] text-slate-400">
+                            {row.decisionTitre} · {row.choixLabel}
+                          </p>
+                        </td>
+                        <td className="px-3 py-2 text-xs text-slate-600">
+                          {row.indicateurTeste}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-slate-600">
+                          <p>✓ {row.feedbackSiReussi}</p>
+                          <p className="mt-0.5">✗ {row.feedbackSiEchoue}</p>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={cn(
+                              "rounded-md px-2 py-0.5 text-xs font-semibold",
+                              row.statut === "precis"
+                                ? "bg-emerald-50 text-emerald-800"
+                                : "bg-rose-50 text-rose-800"
+                            )}
+                          >
+                            {row.statut === "precis"
+                              ? "Précis ✓"
+                              : row.statut === "incoherent"
+                                ? "Incohérent ✗"
+                                : "Imprécis ✗"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       ) : null}
 
@@ -451,6 +525,62 @@ export default function AdminFicheDetailPage() {
             disabled={!editable}
             onChange={(e) => updateFiche(fiche.id, { role: e.target.value })}
           />
+        </Field>
+        <Field
+          label="Compétences liées aux décisions (id catalogue)"
+          hint="Liste déroulante uniquement — interdiction de texte libre / d'inventer."
+        >
+          <select
+            className={selectClass}
+            disabled={!editable}
+            value=""
+            onChange={(e) => {
+              const id = e.target.value;
+              if (!id) return;
+              const current = fiche.competenceIds ?? [];
+              if (current.includes(id)) return;
+              updateFiche(fiche.id, {
+                competenceIds: [...current, id],
+              });
+            }}
+          >
+            <option value="">— Ajouter une compétence —</option>
+            {ALL_COMPETENCES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.type === "ciblee" ? "Ciblée" : "Générale"} — {c.nom} ({c.id})
+              </option>
+            ))}
+          </select>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {(fiche.competenceIds ?? []).map((cid) => {
+              const def = getCompetenceDef(cid);
+              return (
+                <button
+                  key={cid}
+                  type="button"
+                  disabled={!editable}
+                  onClick={() =>
+                    updateFiche(fiche.id, {
+                      competenceIds: (fiche.competenceIds ?? []).filter(
+                        (x) => x !== cid
+                      ),
+                    })
+                  }
+                  className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-rose-50 hover:text-rose-800 disabled:opacity-50"
+                  title="Retirer"
+                >
+                  {def?.nom ?? cid}{" "}
+                  <span className="font-mono text-[10px] text-slate-400">
+                    {cid}
+                  </span>{" "}
+                  ×
+                </button>
+              );
+            })}
+            {(fiche.competenceIds ?? []).length === 0 ? (
+              <span className="text-xs text-slate-400">Aucune sélectionnée</span>
+            ) : null}
+          </div>
         </Field>
       </div>
 

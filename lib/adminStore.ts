@@ -49,6 +49,13 @@ import {
   type StatutWorkflow,
   type WorkflowActor,
 } from "./adminWorkflow";
+import {
+  allCompetenceImpactsPrecise,
+  evaluateImpactPrecision,
+  normalizeLockedImpact,
+  scanCoeurCompetencePrecision,
+  validateLockedImpact,
+} from "./competenceLocks";
 
 const STORAGE_KEY = "keyber-admin-v1";
 
@@ -672,11 +679,13 @@ export function lancerTestsAgents(ficheId: string) {
       ranAt: r.ranAt,
     };
   });
+  const coeur = getScenarioCoeur(fiche.scenarioId);
+  const competencePrecision = scanCoeurCompetencePrecision(coeur);
   const ok = applyFicheWorkflow(ficheId, "en_test", {
     commentaire: "Tests Agents lancés",
     provisoire: true,
     publish: false,
-    patchFiche: { agentTestReports },
+    patchFiche: { agentTestReports, competencePrecision },
   });
   if (ok) toast("Tests Agents en cours");
   return ok;
@@ -692,6 +701,17 @@ export function retenirScenario(ficheId: string) {
   const reports = fiche.agentTestReports ?? [];
   if (!allAgentsValidated(reports)) {
     toast("En attente de validation des Agents");
+    return false;
+  }
+  const precision =
+    fiche.competencePrecision ??
+    (fiche.scenarioId
+      ? scanCoeurCompetencePrecision(getScenarioCoeur(fiche.scenarioId))
+      : []);
+  if (!allCompetenceImpactsPrecise(precision)) {
+    toast(
+      "Retenir bloqué — toutes les décisions doivent être à Précis ✓ (compétences)"
+    );
     return false;
   }
   const ok = applyFicheWorkflow(ficheId, "retenu_publie", {
@@ -1125,6 +1145,19 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
               });
             }
           }
+          for (const imp of c.competencesImpactees ?? []) {
+            const lockErrs = validateLockedImpact(imp, `${d.id}/${c.id}`);
+            for (const e of lockErrs) {
+              issues.push({
+                priorite: "haute" as const,
+                titre: "Utilisation imprécise",
+                detail: e.message,
+                solution:
+                  "Corriger competenceId / indicateurTeste / feedbacks dans le Cœur",
+                nodeId: d.id,
+              });
+            }
+          }
         }
       }
     }
@@ -1138,12 +1171,36 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
       });
     }
     if (a.id === "agent-pedagogue") {
-      issues.push({
-        priorite: "basse" as const,
-        titre: "Couverture compétences",
-        detail: "Éthique concentrée J4 — peu de rappels avant.",
-        solution: "Ajouter un hint éthique en feedback J2.",
-      });
+      let incoherent = 0;
+      for (const d of coeur.decisions) {
+        for (const c of d.choix) {
+          for (const imp of c.competencesImpactees ?? []) {
+            const { statut, erreurs } = evaluateImpactPrecision(
+              d.dilemme,
+              normalizeLockedImpact(imp)
+            );
+            if (statut === "incoherent" || erreurs.some((e) => e.includes("Incohérence"))) {
+              incoherent++;
+              issues.push({
+                priorite: "haute" as const,
+                titre: "Incohérence : décision ne teste pas l'indicateur annoncé",
+                detail: `${d.titre} / ${c.label} — ${erreurs.join(" ; ")}`,
+                solution:
+                  "Réécrire le dilemme pour parler de l'indicateur, ou changer indicateurTeste",
+                nodeId: d.id,
+              });
+            }
+          }
+        }
+      }
+      if (incoherent === 0) {
+        issues.push({
+          priorite: "basse" as const,
+          titre: "Couverture compétences",
+          detail: "Éthique concentrée J4 — peu de rappels avant.",
+          solution: "Ajouter un hint éthique en feedback J2.",
+        });
+      }
     }
     const penalty = issues.reduce(
       (s, i) => s + (i.priorite === "haute" ? 25 : i.priorite === "moyenne" ? 12 : 5),

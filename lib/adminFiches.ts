@@ -12,6 +12,7 @@ import {
   type StatutWorkflow,
   type WorkflowTransition,
 } from "./adminWorkflow";
+import type { CompetencePrecisionRow } from "./competenceLocks";
 
 export type AdminFicheSections = {
   contexteEntreprise: string;
@@ -38,6 +39,10 @@ export type AdminFiche = {
   commentaireCorrection?: string;
   raisonRejet?: string;
   agentTestReports?: FicheAgentReport[];
+  /** Snapshot « Précision des compétences » from last agent test run. */
+  competencePrecision?: CompetencePrecisionRow[];
+  /** Competences linked to decisions — IDs only, never free text. */
+  competenceIds?: string[];
   /** Badge PROVISOIRE when scénario provisoire créé. */
   provisoire?: boolean;
 };
@@ -172,6 +177,15 @@ export function seedNovacierFiche(): AdminFiche {
         "Trésorerie ~420 k€, stock acier ~850 kg, prod ~60/j, rebut réel ~18 % une fois le brouillard levé. Objectif : 500 pièces qualité.",
     },
     coeurGenere: true,
+    competenceIds: [
+      "priorisation",
+      "decision_incertitude",
+      "ordonnancement",
+      "leadership",
+      "qualite",
+      "maintenance",
+      "negociation",
+    ],
     historique: hist,
     provisoire: false,
     agentTestReports: [

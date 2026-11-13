@@ -13,8 +13,11 @@ import {
 import {
   assertPreciseDescription,
   COMPETENCES_CIBLEES_PROD,
-  isVagueFeedback,
 } from "@/lib/competences";
+import {
+  normalizeLockedImpact,
+  validateLockedImpact,
+} from "@/lib/competenceLocks";
 import type {
   AdminDecision,
   AdminEvent,
@@ -35,8 +38,13 @@ export type CoeurCompetenceImpact = {
   competenceId: string;
   type: "generale" | "ciblee";
   xp: number;
+  /** Player-compatible precise feedback (often = feedbackSiReussi). */
   feedback: string;
   indicateurIndex?: number;
+  /** Locked AI fields — must match catalogue. */
+  indicateurTeste?: string;
+  feedbackSiReussi?: string;
+  feedbackSiEchoue?: string;
 };
 
 export type CoeurChoix = {
@@ -236,15 +244,25 @@ export function novacierCoeur(): ScenarioCoeur {
         label: c.label,
         feedbackTexte: c.feedbackTexte,
         conditions: c.requis ?? c.conditions,
-        competencesImpactees: c.competencesImpactees?.map((i) => ({
-          competenceId: i.competenceId,
-          type: i.type,
-          xp: i.xp,
-          feedback: i.feedback,
-          ...(typeof i.indicateurIndex === "number"
-            ? { indicateurIndex: i.indicateurIndex }
-            : {}),
-        })),
+        competencesImpactees: c.competencesImpactees?.map((i) => {
+          const n = normalizeLockedImpact(i);
+          return {
+            competenceId: n.competenceId,
+            type: n.type,
+            xp: n.xp,
+            feedback: n.feedback || n.feedbackSiReussi || "",
+            ...(typeof n.indicateurIndex === "number"
+              ? { indicateurIndex: n.indicateurIndex }
+              : {}),
+            ...(n.indicateurTeste ? { indicateurTeste: n.indicateurTeste } : {}),
+            ...(n.feedbackSiReussi
+              ? { feedbackSiReussi: n.feedbackSiReussi }
+              : {}),
+            ...(n.feedbackSiEchoue
+              ? { feedbackSiEchoue: n.feedbackSiEchoue }
+              : {}),
+          };
+        }),
         consequences: c.consequences.map((x) => ({
           cible: x.cible,
           valeur: x.valeur,
@@ -646,7 +664,7 @@ export function validateCoeurObject(
     }
   }
 
-  // Precise feedback on choice skill impacts
+  // Competence ID + indicateur + precise dual feedback locks
   if (Array.isArray(root.decisions)) {
     (root.decisions as unknown[]).forEach((dec, di) => {
       if (!dec || typeof dec !== "object") return;
@@ -658,14 +676,21 @@ export function validateCoeurObject(
         if (!Array.isArray(choice.competencesImpactees)) return;
         (choice.competencesImpactees as unknown[]).forEach((imp, ii) => {
           if (!imp || typeof imp !== "object") return;
-          const impact = imp as Record<string, unknown>;
-          if (!isString(impact.feedback) || isVagueFeedback(impact.feedback)) {
-            errors.push(
-              err(
-                lineOf(text, '"competencesImpactees"'),
-                `decisions[${di}].choix[${ci}].competencesImpactees[${ii}] : feedback précis obligatoire (pas « Bien joué »)`
-              )
-            );
+          const path = `decisions[${di}].choix[${ci}].competencesImpactees[${ii}]`;
+          for (const e of validateLockedImpact(
+            imp as {
+              competenceId: string;
+              type: "generale" | "ciblee";
+              xp: number;
+              feedback?: string;
+              indicateurIndex?: number;
+              indicateurTeste?: string;
+              feedbackSiReussi?: string;
+              feedbackSiEchoue?: string;
+            },
+            path
+          )) {
+            errors.push(err(lineOf(text, '"competencesImpactees"'), e.message));
           }
         });
       });

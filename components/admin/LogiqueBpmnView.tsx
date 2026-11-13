@@ -4,13 +4,49 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Mail, MessageCircle, Phone } from "lucide-react";
 import type {
   CoeurChoix,
+  CoeurCompetenceImpact,
   CoeurConsequence,
   CoeurDecision,
   CoeurEvenement,
   ScenarioCoeur,
 } from "@/lib/adminCoeur";
 import type { CoeurHighlight } from "@/lib/coeurHistory";
+import { normalizeLockedImpact } from "@/lib/competenceLocks";
+import { getCompetenceDef } from "@/lib/competences";
 import { cn } from "@/lib/utils";
+
+function CompetenceImpactCard({ impact }: { impact: CoeurCompetenceImpact }) {
+  const n = normalizeLockedImpact(impact);
+  const def = getCompetenceDef(n.competenceId);
+  return (
+    <li className="rounded-lg border border-slate-200 bg-white px-2.5 py-2">
+      <p className="font-semibold text-slate-900">
+        {def?.nom ?? n.competenceId}{" "}
+        <span className="font-mono text-[10px] font-normal text-slate-400">
+          {n.competenceId}
+        </span>
+      </p>
+      {def?.descriptionPrecise ? (
+        <p className="mt-0.5 text-[11px] text-slate-500">
+          {def.descriptionPrecise}
+        </p>
+      ) : null}
+      <p className="mt-1 text-[11px] text-slate-700">
+        <span className="font-semibold">Indicateur testé :</span>{" "}
+        {n.indicateurTeste ?? "—"}
+      </p>
+      <p className="mt-1 text-[11px] text-emerald-800">
+        <span className="font-semibold">Si réussi :</span>{" "}
+        {n.feedbackSiReussi || n.feedback || "—"}
+      </p>
+      <p className="mt-0.5 text-[11px] text-rose-800">
+        <span className="font-semibold">Si échoué :</span>{" "}
+        {n.feedbackSiEchoue || "—"}
+      </p>
+      <p className="mt-1 text-[10px] tabular-nums text-slate-400">+{n.xp} XP</p>
+    </li>
+  );
+}
 
 type SelectedNode =
   | { kind: "decision"; id: string }
@@ -201,12 +237,12 @@ function ReadOnlyDetail({
             {generales.length > 0 ? (
               <div>
                 <p className="font-semibold text-slate-700">Générales</p>
-                <ul className="mt-1 space-y-1 text-slate-600">
+                <ul className="mt-1 space-y-2">
                   {generales.map((i) => (
-                    <li key={`${i.competenceId}-${i.feedback}`}>
-                      <span className="font-medium">{i.competenceId}</span> +
-                      {i.xp} — {i.feedback}
-                    </li>
+                    <CompetenceImpactCard
+                      key={`${i.competenceId}-${i.feedback}`}
+                      impact={i}
+                    />
                   ))}
                 </ul>
               </div>
@@ -214,12 +250,12 @@ function ReadOnlyDetail({
             {ciblees.length > 0 ? (
               <div>
                 <p className="font-semibold text-slate-700">Ciblées</p>
-                <ul className="mt-1 space-y-1 text-slate-600">
+                <ul className="mt-1 space-y-2">
                   {ciblees.map((i) => (
-                    <li key={`${i.competenceId}-${i.feedback}`}>
-                      <span className="font-medium">{i.competenceId}</span> +
-                      {i.xp} — {i.feedback}
-                    </li>
+                    <CompetenceImpactCard
+                      key={`${i.competenceId}-${i.feedback}`}
+                      impact={i}
+                    />
                   ))}
                 </ul>
               </div>
@@ -251,11 +287,12 @@ function ReadOnlyDetail({
           {generales.length > 0 ? (
             <div>
               <p className="text-[10px] uppercase text-slate-500">Générales</p>
-              <ul className="mt-1 space-y-1 text-slate-600">
+              <ul className="mt-1 space-y-2">
                 {generales.map((i) => (
-                  <li key={`g-${i.competenceId}-${i.feedback.slice(0, 24)}`}>
-                    {i.competenceId} +{i.xp} — {i.feedback}
-                  </li>
+                  <CompetenceImpactCard
+                    key={`g-${i.competenceId}-${(i.feedback || "").slice(0, 24)}`}
+                    impact={i}
+                  />
                 ))}
               </ul>
             </div>
@@ -263,11 +300,12 @@ function ReadOnlyDetail({
           {ciblees.length > 0 ? (
             <div>
               <p className="text-[10px] uppercase text-slate-500">Ciblées</p>
-              <ul className="mt-1 space-y-1 text-slate-600">
+              <ul className="mt-1 space-y-2">
                 {ciblees.map((i) => (
-                  <li key={`c-${i.competenceId}-${i.feedback.slice(0, 24)}`}>
-                    {i.competenceId} +{i.xp} — {i.feedback}
-                  </li>
+                  <CompetenceImpactCard
+                    key={`c-${i.competenceId}-${(i.feedback || "").slice(0, 24)}`}
+                    impact={i}
+                  />
                 ))}
               </ul>
             </div>

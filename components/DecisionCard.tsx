@@ -1,14 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { dayTitles } from "@/data/scenarioNovacier";
 import { annotateChoix } from "@/lib/engine";
-import {
-  adminOverridesActive,
-  getPlayDecisionForDay,
-} from "@/lib/playContent";
+import { getPlayDecisionForDay } from "@/lib/playContent";
 import { clearTrainingPrompt, useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -22,24 +18,8 @@ export function DecisionCard() {
     rawState,
   } = useGameStore();
 
-  const [studioTick, setStudioTick] = useState(0);
-  useEffect(() => {
-    const bump = () => setStudioTick((t) => t + 1);
-    window.addEventListener("focus", bump);
-    window.addEventListener("storage", bump);
-    window.addEventListener("keyber-admin-updated", bump);
-    bump();
-    return () => {
-      window.removeEventListener("focus", bump);
-      window.removeEventListener("storage", bump);
-      window.removeEventListener("keyber-admin-updated", bump);
-    };
-  }, []);
-
   const day = Math.min(5, Math.max(1, gameState.day || 1));
-  void studioTick;
   const decision = getPlayDecisionForDay(day);
-  const fromStudio = adminOverridesActive();
   const annotated = decision ? annotateChoix(rawState, decision) : [];
   const unlockedChoix = annotated.filter((a) => a.unlocked).map((a) => a.choix);
 
@@ -63,10 +43,9 @@ export function DecisionCard() {
     .filter((c) => c.cible === "tresorerie" && c.valeur < 0)
     .reduce((s, c) => s + Math.abs(c.valeur), 0);
 
-  const impacts =
-    fromStudio || !selected.impacts?.length
-      ? consequencesAsImpacts(selected.consequences)
-      : selected.impacts;
+  const impacts = !selected.impacts?.length
+    ? consequencesAsImpacts(selected.consequences)
+    : selected.impacts;
 
   return (
     <section className="view-enter grid h-full gap-4 lg:grid-cols-[280px_1fr]">
@@ -74,11 +53,6 @@ export function DecisionCard() {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
           {dayTitles[day] ?? `Jour ${day}`}
         </p>
-        {fromStudio ? (
-          <p className="rounded-md bg-accent/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent">
-            Paramétrage Studio actif
-          </p>
-        ) : null}
         <p className="text-sm leading-relaxed text-muted">{decision.dilemme}</p>
         <div className="space-y-1.5">
           {annotated.map(({ choix: c, unlocked, lockMessage }) => (

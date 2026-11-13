@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
+  Briefcase,
   Database,
   Eye,
   Factory,
@@ -12,6 +13,7 @@ import {
   Link2,
   MessageCircle,
   Network,
+  Play,
   Shield,
   Target,
   Zap,
@@ -33,6 +35,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "gamepad-2": Gamepad2,
   network: Network,
   hand: Hand,
+  play: Play,
+  briefcase: Briefcase,
 };
 
 /** Class strings must live here so Tailwind content scan keeps them. */

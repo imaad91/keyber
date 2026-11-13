@@ -171,12 +171,12 @@ export function seedGlossaire(): GlossaireTerme[] {
       terme: "agent",
       nomLisible: "Agent",
       definitionCourte:
-        "Profil d'IA dans l'Admin qui teste le Cœur, propose des corrections, et sort un rapport. 4 agents : Testeur, Expert, Pédagogue, Cohérence.",
+        "Profil d'IA dans Contrôle qui relit (ne modifie pas le code). 6 agents : Testeur, Expert Métier, Pédagogue, Cohérence ERP, Orchestra, Ergonomie.",
       definitionPrecise:
-        "Profil d'IA dans l'Admin qui teste le Cœur, propose des corrections, et sort un rapport. 4 agents : Testeur, Expert, Pédagogue, Cohérence.",
+        "Profil d'IA dans Contrôle qui relit (ne modifie pas le code ni le Cœur). 6 agents : Testeur Joueur, Expert Métier, Pédagogue, Cohérence ERP, Orchestra, Ergonomie. Cursor construit ; les agents relisent.",
       exempleConcret:
         "L'Agent Pédagogue refuse un feedback « Bien joué » et exige un feedback lié à l'indicateur.",
-      utilisations: ["Cœur", "Agents"],
+      utilisations: ["Agents", "Cœur"],
       synonymesInterdits: ["bot", "copilote générique", "ChatGPT"],
       updatedAt: NOW,
       seed: true,
@@ -201,7 +201,7 @@ export function mergeGlossaire(
 }
 
 export function unknownGlossaryTermError(terme: string): string {
-  return `Terme inconnu, voir Glossaire. Terme manquant : ${terme} — À ajouter dans Workflow > Glossaire`;
+  return `Terme inconnu, voir Glossaire. Terme manquant : ${terme} — À ajouter dans Système > Glossaire`;
 }
 
 export function missingGlossaryTermSignal(terme: string): string {

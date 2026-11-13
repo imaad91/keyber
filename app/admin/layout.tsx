@@ -3,8 +3,9 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminToast } from "@/components/admin/AdminToast";
 
 export const metadata: Metadata = {
-  title: "KEYBER Studio — Administrateur",
-  description: "Paramétrage des scénarios, entreprises, personnages et décisions.",
+  title: "KEYBER Studio",
+  description:
+    "Studio KEYBER — Atelier, Système, Contrôle, Équipe. Pas le jeu.",
 };
 
 export default function AdminLayout({

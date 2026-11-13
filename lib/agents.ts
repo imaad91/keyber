@@ -19,7 +19,9 @@ export type AgentIconId =
   | "book-open"
   | "gamepad-2"
   | "network"
-  | "hand";
+  | "hand"
+  | "play"
+  | "briefcase";
 
 export const AGENT_ICON_OPTIONS: AgentIconId[] = [
   "target",
@@ -35,6 +37,8 @@ export const AGENT_ICON_OPTIONS: AgentIconId[] = [
   "gamepad-2",
   "network",
   "hand",
+  "play",
+  "briefcase",
 ];
 
 export type AgentProfile = {
@@ -79,11 +83,26 @@ export type AgentIconThemeKey =
 export function agentIconThemeKey(
   agent: Pick<AgentProfile, "id" | "icone">
 ): AgentIconThemeKey {
-  if (agent.id === "agent-testeur" || agent.icone === "target") return "testeur";
-  if (agent.id === "agent-metier" || agent.icone === "factory") return "metier";
+  if (
+    agent.id === "agent-testeur" ||
+    agent.icone === "target" ||
+    agent.icone === "play"
+  )
+    return "testeur";
+  if (
+    agent.id === "agent-metier" ||
+    agent.icone === "factory" ||
+    agent.icone === "briefcase"
+  )
+    return "metier";
   if (agent.id === "agent-pedagogue" || agent.icone === "graduation-cap")
     return "pedagogue";
-  if (agent.id === "agent-coherence-erp" || agent.icone === "link") return "erp";
+  if (
+    agent.id === "agent-coherence-erp" ||
+    agent.icone === "link" ||
+    agent.icone === "database"
+  )
+    return "erp";
   if (agent.id === "agent-orchestra" || agent.icone === "network")
     return "orchestra";
   if (agent.id === "agent-ergonomie" || agent.icone === "hand")
@@ -108,7 +127,7 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
       "Rapport de jouabilité : score 0-100, liste des frictions par jour, propositions concrètes (réduire coût, clarifier label, ajouter feedback).",
     niveauExigence: "normal",
     actif: true,
-    icone: "target",
+    icone: "play",
   },
   {
     id: "agent-metier",
@@ -121,7 +140,7 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
       "Rapport réalisme : anomalies chiffrées (ex. machine 80k€ disproportionnée vs capteur), suggestions d'ajustement des conséquences.",
     niveauExigence: "strict",
     actif: true,
-    icone: "factory",
+    icone: "briefcase",
   },
   {
     id: "agent-pedagogue",
@@ -147,7 +166,7 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
       "Rapport cohérence : cibles invalides, competenceId / indicateur / feedback imprécis, mapping ERP manquant, correctifs au format CŒUR.",
     niveauExigence: "strict",
     actif: true,
-    icone: "link",
+    icone: "database",
   },
   {
     id: "agent-orchestra",
@@ -209,7 +228,7 @@ export function normalizeAgent(a: Partial<AgentProfile> & { id: string }): Agent
     sortieAttendue: seed?.sortieAttendue ?? a.sortieAttendue ?? "",
     niveauExigence: a.niveauExigence ?? seed?.niveauExigence ?? "normal",
     actif: a.actif ?? true,
-    icone: a.icone ?? seed?.icone ?? "target",
+    icone: seed?.icone ?? a.icone ?? "target",
   };
 }
 

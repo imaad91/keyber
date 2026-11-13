@@ -73,7 +73,8 @@ import {
   validateLockedImpact,
 } from "./competenceLocks";
 
-const STORAGE_KEY = "keyber-admin-v1";
+/** Studio-only storage — never read by the player runtime. */
+const STORAGE_KEY = "keyber-studio-v1";
 
 export const COEUR_LOCKED_MESSAGE =
   "Action interdite - Le Cœur est verrouillé";
@@ -255,8 +256,8 @@ function persist(next: AdminState) {
   state = next;
   if (typeof window !== "undefined") {
     const rest = { ...next, toast: null };
+    // Studio-only key — never touches game localStorage, never notifies player UI.
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
-    window.dispatchEvent(new Event("keyber-admin-updated"));
   }
   emit();
 }
@@ -268,16 +269,9 @@ function toast(message: string) {
 function ensureHydrated() {
   if (hydrated || typeof window === "undefined") return;
   hydrated = true;
-  const hadRaw = Boolean(window.localStorage.getItem(STORAGE_KEY));
   state = loadState();
-  // First Studio visit writes seed so Mode Joueur can read the same source.
-  if (!hadRaw) {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...state, toast: null })
-    );
-    window.dispatchEvent(new Event("keyber-admin-updated"));
-  }
+  // Do NOT write localStorage on first visit — Studio stays in-memory
+  // until the user explicitly mutates (Équipe / Glossaire / Agents).
 }
 
 function patch(partial: Partial<AdminState>) {
@@ -1289,11 +1283,14 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
       ranAt: new Date().toISOString(),
     };
   });
-  persist({ ...state, agentReports: reports });
+  // Append — never erase other agents' reports
+  const prev = state.agentReports ?? [];
+  const merged = [...reports, ...prev].slice(0, 200);
+  persist({ ...state, agentReports: merged });
   toast(
     onlyId
-      ? "Rapport agent généré"
-      : `Rapport multi-agents : ${reports.length} agent(s)`
+      ? "Rapport agent généré (historique conservé)"
+      : `Rapport multi-agents : ${reports.length} nouveau(x) — historique conservé`
   );
   return reports;
 }

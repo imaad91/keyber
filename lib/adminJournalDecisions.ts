@@ -43,7 +43,7 @@ export function seedJournalDecisions(): JournalDecision[] {
       consequenceSiChange:
         "Si on déverrouille, l'IA peut corrompre le Cœur.",
       moduleLie: "Cœur",
-      moduleHref: "/admin/coeur/langage",
+      moduleHref: "/admin/systeme/coeur",
       locked: true,
       seed: true,
     },
@@ -52,27 +52,27 @@ export function seedJournalDecisions(): JournalDecision[] {
       date: "2026-11-13T11:00:00.000Z",
       titre: "Workflow en lecture seule",
       decision:
-        "Dans Workflow, je suis que en lecture, aucune modification possible.",
+        "Dans Système, je suis en lecture seule — aucune modification de l'OS.",
       pourquoi:
-        "Parce que Workflow, c'est mes yeux, pas mes mains. Je modifie depuis Fiches, Compétences, Agents.",
+        "Parce que Système, c'est pour comprendre KEYBER, pas pour toucher. Je paramètre uniquement dans Équipe.",
       consequenceSiChange:
-        "Si on autorise l'édition dans Workflow, on casse la séparation yeux / mains et on risque des edits hors process.",
-      moduleLie: "Workflow",
-      moduleHref: "/admin/workflow/scenarios",
+        "Si on autorise l'édition dans Système, on casse la séparation Studio / jeu et on risque des edits hors process.",
+      moduleLie: "Architecture",
+      moduleHref: "/admin/systeme/architecture",
       locked: true,
       seed: true,
     },
     {
       id: "jd-rester-local",
       date: "2026-11-13T12:00:00.000Z",
-      titre: "Rester en local",
+      titre: "On reste en local",
       decision: "On reste en localStorage, pas de Supabase pour le POC.",
       pourquoi:
         "Pour tester plus vite, sans dépendance cloud. On branchera Supabase plus tard pour les testeurs.",
       consequenceSiChange:
         "Passer trop tôt au cloud ralentit le POC et ajoute des dépendances avant que le modèle métier soit stable.",
       moduleLie: "Système",
-      moduleHref: "/admin/parametres",
+      moduleHref: "/admin/systeme/architecture",
       locked: true,
       seed: true,
     },
@@ -87,7 +87,7 @@ export function seedJournalDecisions(): JournalDecision[] {
       consequenceSiChange:
         "Fusionner les deux types ramène du feedback vague et casse la traçabilité indicateur.",
       moduleLie: "Compétences",
-      moduleHref: "/admin/competences",
+      moduleHref: "/admin/systeme/competences",
       locked: true,
       seed: true,
     },
@@ -101,7 +101,7 @@ export function seedJournalDecisions(): JournalDecision[] {
       consequenceSiChange:
         "Des fiches courtes produisent des Cœurs génériques et des décisions peu crédibles.",
       moduleLie: "Fiches",
-      moduleHref: "/admin/fiches",
+      moduleHref: "/admin/atelier/briefs",
       locked: true,
       seed: true,
     },
@@ -152,12 +152,12 @@ export function createLockedJournalDecision(input: {
 }
 
 export const JOURNAL_MODULE_HREFS: Record<JournalModuleLie, string> = {
-  Cœur: "/admin/coeur/langage",
-  Workflow: "/admin/workflow/scenarios",
-  Compétences: "/admin/competences",
-  Fiches: "/admin/fiches",
-  Agents: "/admin/coeur/agents",
-  Architecture: "/admin/workflow/architecture",
-  Glossaire: "/admin/workflow/glossaire",
-  Système: "/admin/parametres",
+  Cœur: "/admin/systeme/coeur",
+  Workflow: "/admin/atelier/scenarios",
+  Compétences: "/admin/systeme/competences",
+  Fiches: "/admin/atelier/briefs",
+  Agents: "/admin/controle/agents",
+  Architecture: "/admin/systeme/architecture",
+  Glossaire: "/admin/systeme/glossaire",
+  Système: "/admin/systeme/architecture",
 };

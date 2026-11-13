@@ -26,11 +26,7 @@ import {
 } from "./gameState";
 import { RELATION_ALIASES } from "./gameState";
 import { applyMissedDecision, checkEvenements } from "./evenements";
-import {
-  addSkillXp,
-  applyCompetenceImpacts,
-  skillLabel,
-} from "./progression";
+import { applyCompetenceImpacts, skillLabel } from "./progression";
 import { getCompetenceDef } from "./competences";
 
 const XP_PER_LEVEL = 500;

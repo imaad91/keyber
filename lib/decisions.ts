@@ -2,6 +2,8 @@
  * Declarative decision schema — data only, no business logic.
  */
 
+import type { CompetenceImpact } from "./competences";
+
 export type Consequence = {
   /** Path cible: tresorerie, confiance.marie, visibilite.erp, temps, xp, flags.*, machine.<id>.etat (set string via setValeur) */
   cible: string;
@@ -36,6 +38,8 @@ export type DecisionChoix = {
   messageVerrouillage?: string;
   feedbackTexte: string;
   impacts?: { label: string; value: string; tone: "pos" | "neg" | "neu" }[];
+  /** Skills affected by this choice — precise feedback required per skill */
+  competencesImpactees?: CompetenceImpact[];
 };
 
 export type Decision = {

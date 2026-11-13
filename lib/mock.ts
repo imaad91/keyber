@@ -10,6 +10,12 @@ import type { GameState } from "./gameState";
 import { syncMetaClock } from "./gameState";
 import { checkEvenements } from "./evenements";
 import {
+  COMPETENCES_CIBLEES_PROD,
+  COMPETENCES_GENERALES,
+  emptyCibleesProgress,
+  emptyGeneralesProgress,
+} from "./competences";
+import {
   createNovacierInitialState,
   novacierDecisions,
   SCENARIO_ID,
@@ -44,58 +50,34 @@ export const exampleNewMachine = {
   y: 62,
 };
 
+const SKILL_ICONS: Record<string, string> = {
+  negociation: "Handshake",
+  gestion_crise: "Siren",
+  leadership: "Users",
+  decision_incertitude: "Eye",
+  communication: "MessagesSquare",
+  priorisation: "ListOrdered",
+  planification_mrp: "CalendarRange",
+  gestion_stocks: "Package",
+  maintenance: "Wrench",
+  qualite: "BadgeCheck",
+  ordonnancement: "Factory",
+};
+
+/** Flat list for legacy UI — préférer COMPETENCES_GENERALES / CIBLEES. */
 export const skills: Skill[] = [
-  {
-    id: "negociation",
-    nom: "Négociation",
-    description: "Contrats et clients sous pression.",
-    niveau: 1,
-    xp: 40,
-    xpMax: 400,
-    scenarioIds: ["novacier"],
-    icone: "Handshake",
-  },
-  {
-    id: "crise",
-    nom: "Gestion de crise",
-    description: "Pannes, rebuts, délais.",
-    niveau: 1,
-    xp: 20,
-    xpMax: 400,
-    scenarioIds: ["novacier"],
-    icone: "Siren",
-  },
-  {
-    id: "leadership",
-    nom: "Leadership",
-    description: "Marie, Karim, l'atelier.",
-    niveau: 1,
-    xp: 30,
-    xpMax: 400,
-    scenarioIds: ["novacier"],
-    icone: "Users",
-  },
-  {
-    id: "stock",
-    nom: "Gestion de stock",
-    description: "Acier, sécurité, flux.",
-    niveau: 1,
-    xp: 10,
-    xpMax: 400,
-    scenarioIds: ["novacier"],
-    icone: "Package",
-  },
-  {
-    id: "data",
-    nom: "Data & visibilité",
-    description: "Capteurs, KPIs, brouillard.",
-    niveau: 1,
-    xp: 10,
-    xpMax: 400,
-    scenarioIds: ["novacier"],
-    icone: "Eye",
-  },
-];
+  ...COMPETENCES_GENERALES,
+  ...COMPETENCES_CIBLEES_PROD,
+].map((c) => ({
+  id: c.id,
+  nom: c.nom,
+  description: c.descriptionPrecise,
+  niveau: 1,
+  xp: 0,
+  xpMax: 500,
+  scenarioIds: ["novacier"],
+  icone: SKILL_ICONS[c.id] ?? "Package",
+}));
 
 export const roles: Role[] = [
   {
@@ -422,12 +404,22 @@ const ALL_ACTIONS: GameState["world"]["unlockedActions"] = [
 
 export function createInitialGameState(): GameState {
   const base = createNovacierInitialState();
-  const skillProgress = Object.fromEntries(
-    skills.map((s) => [s.id, { niveau: s.niveau, xp: s.xp }])
-  );
-  const competences = Object.fromEntries(
-    skills.map((s) => [s.id, s.niveau])
-  );
+  const competencesGenerales = emptyGeneralesProgress();
+  const competencesCiblees = emptyCibleesProgress("prod");
+  const skillProgress = {
+    ...Object.fromEntries(
+      Object.entries(competencesGenerales).map(([id, p]) => [
+        id,
+        { niveau: p.niveau, xp: p.xp },
+      ])
+    ),
+    ...Object.fromEntries(
+      Object.entries(competencesCiblees).map(([id, p]) => [
+        id,
+        { niveau: p.niveau, xp: p.xp },
+      ])
+    ),
+  };
   return syncMetaClock({
     ...base,
     modeActuel: base.modeActuel ?? null,
@@ -435,7 +427,8 @@ export function createInitialGameState(): GameState {
     scenarioHistoireId: base.scenarioHistoireId ?? SCENARIO_ID,
     progression: {
       ...base.progression,
-      competences: { ...base.progression.competences, ...competences },
+      competencesGenerales,
+      competencesCiblees,
     },
     flags: { ...base.flags, tauxPanne: 5 },
     world: {
@@ -451,6 +444,7 @@ export function createInitialGameState(): GameState {
       trainingsCompleted: base.world.trainingsCompleted ?? [],
       histoiresCompleted: base.world.histoiresCompleted ?? [],
       trainingPrompt: null,
+      lastSkillDebrief: [],
       eventNotifications: base.world.eventNotifications ?? [],
       urgentBanner: base.world.urgentBanner ?? null,
       showDayEnd: false,

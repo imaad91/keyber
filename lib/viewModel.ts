@@ -66,6 +66,9 @@ export type GameView = {
   trainingsCompleted: GameState["world"]["trainingsCompleted"];
   histoiresCompleted: GameState["world"]["histoiresCompleted"];
   trainingPrompt: GameState["world"]["trainingPrompt"];
+  lastSkillDebrief: string[];
+  competencesGenerales: GameState["progression"]["competencesGenerales"];
+  competencesCiblees: GameState["progression"]["competencesCiblees"];
   eventNotifications: GameState["world"]["eventNotifications"];
   urgentBanner: GameState["world"]["urgentBanner"];
   showDayEnd: boolean;
@@ -174,6 +177,9 @@ export function toGameView(state: GameState): GameView {
     trainingsCompleted: state.world.trainingsCompleted ?? [],
     histoiresCompleted: state.world.histoiresCompleted ?? [],
     trainingPrompt: state.world.trainingPrompt ?? null,
+    lastSkillDebrief: state.world.lastSkillDebrief ?? [],
+    competencesGenerales: state.progression.competencesGenerales ?? {},
+    competencesCiblees: state.progression.competencesCiblees ?? {},
     eventNotifications: state.world.eventNotifications ?? [],
     urgentBanner: state.world.urgentBanner ?? null,
     showDayEnd: Boolean(state.world.showDayEnd),

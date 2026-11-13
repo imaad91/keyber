@@ -65,10 +65,19 @@ export type GameHumain = {
   confianceClient: number; // AutoVolt-like client trust (generic)
 };
 
+export type CompetenceProgressState = {
+  niveau: number;
+  xp: number;
+  indicateursValides?: boolean[];
+};
+
 export type GameProgression = {
   xp: number;
   niveau: number;
-  competences: Record<string, number>;
+  /** @deprecated use competencesGenerales / competencesCiblees */
+  competences?: Record<string, number>;
+  competencesGenerales: Record<string, CompetenceProgressState>;
+  competencesCiblees: Record<string, CompetenceProgressState>;
 };
 
 export type GameHistorique = {
@@ -256,10 +265,13 @@ export type GameState = {
     events: CompanyEventState[];
     rumors: RumorState[];
     unlockedInfos: string[];
+    /** @deprecated mirrored from competencesGenerales + competencesCiblees */
     skillProgress: Record<string, { niveau: number; xp: number }>;
     trainingsCompleted: TrainingCompletion[];
     histoiresCompleted: HistoireCompletion[];
     trainingPrompt: TrainingPrompt | null;
+    /** Precise debrief lines after a decision / training */
+    lastSkillDebrief: string[];
     eventNotifications: EventNotificationState[];
     urgentBanner: UrgentBannerState | null;
     showDayEnd: boolean;
@@ -310,6 +322,14 @@ export function syncMetaClock(state: GameState): GameState {
 /** Resolve dotted path on GameState (finance.tresorerie, confiance.marie → relations.marie, etc.) */
 export function getPath(state: GameState, cible: string): number | string | undefined {
   const path = normalizeCible(cible);
+  if (path.startsWith("competenceLevel.")) {
+    const id = path.slice("competenceLevel.".length);
+    const g = state.progression.competencesGenerales?.[id];
+    if (g) return g.niveau;
+    const c = state.progression.competencesCiblees?.[id];
+    if (c) return c.niveau;
+    return state.progression.competences?.[id] ?? 1;
+  }
   const parts = path.split(".");
   let cur: unknown = state;
   for (const p of parts) {
@@ -388,7 +408,9 @@ export function normalizeCible(cible: string): string {
   if (cible.startsWith("finance.") || cible.startsWith("humain.") || cible.startsWith("relations.") || cible.startsWith("progression.") || cible.startsWith("meta.") || cible.startsWith("world."))
     return cible;
   if (cible.startsWith("competence.")) {
-    return `progression.competences.${cible.slice("competence.".length)}`;
+    const id = cible.slice("competence.".length);
+    // Resolved specially in getPath — keep as marker
+    return `competenceLevel.${id}`;
   }
   // bare flag name
   if (!cible.includes(".")) return `flags.${cible}`;

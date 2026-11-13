@@ -1,7 +1,13 @@
 /**
- * Save slots + global progression (local + optional Supabase).
+ * Save slots + global progression (localStorage).
  */
 
+import {
+  canonicalizeSkillId,
+  emptyCibleesProgress,
+  emptyGeneralesProgress,
+  getCompetenceDef,
+} from "./competences";
 import type { GameState, ModeJeu } from "./gameState";
 
 export type SlotNumber = 1 | 2 | 3;
@@ -22,7 +28,8 @@ export type ProgressionGlobale = {
   userId: string;
   niveauGlobal: number;
   xpTotal: number;
-  competences: Record<string, { niveau: number; xp: number }>;
+  /** Flat merge for persistence — split on apply */
+  competences: Record<string, { niveau: number; xp: number; indicateursValides?: boolean[] }>;
   histoiresTerminees: string[];
   entrainementsTermines: string[];
   updatedAt: string;
@@ -36,7 +43,7 @@ export const USER_ID_KEY = "keyber-user-id";
 export function computePourcentage(state: GameState): number {
   if (state.modeActuel === "competence") {
     const done = state.world.trainingsCompleted?.length ?? 0;
-    return Math.min(100, Math.round((done / 5) * 100));
+    return Math.min(100, Math.round((done / 11) * 100));
   }
   const jour = Math.max(0, state.meta.jourActuel);
   if (state.world.showDebrief || state.world.ending) return 100;
@@ -62,11 +69,36 @@ export function progressionFromState(
 ): ProgressionGlobale {
   const base = prev ?? emptyProgression(userId);
   const competences = { ...base.competences };
-  for (const [id, prog] of Object.entries(state.world.skillProgress ?? {})) {
-    const cur = competences[id];
-    if (!cur || prog.niveau > cur.niveau || (prog.niveau === cur.niveau && prog.xp > cur.xp)) {
-      competences[id] = { niveau: prog.niveau, xp: prog.xp };
+  const merge = (
+    id: string,
+    prog: { niveau: number; xp: number; indicateursValides?: boolean[] }
+  ) => {
+    const canon = canonicalizeSkillId(id);
+    const cur = competences[canon];
+    if (
+      !cur ||
+      prog.niveau > cur.niveau ||
+      (prog.niveau === cur.niveau && prog.xp > cur.xp)
+    ) {
+      competences[canon] = {
+        niveau: prog.niveau,
+        xp: prog.xp,
+        indicateursValides: prog.indicateursValides,
+      };
     }
+  };
+  for (const [id, prog] of Object.entries(
+    state.progression.competencesGenerales ?? {}
+  )) {
+    merge(id, prog);
+  }
+  for (const [id, prog] of Object.entries(
+    state.progression.competencesCiblees ?? {}
+  )) {
+    merge(id, prog);
+  }
+  for (const [id, prog] of Object.entries(state.world.skillProgress ?? {})) {
+    merge(id, prog);
   }
   const histoires = new Set(base.histoiresTerminees);
   for (const h of state.world.histoiresCompleted ?? []) {
@@ -82,7 +114,10 @@ export function progressionFromState(
   return {
     userId,
     niveauGlobal: Math.max(base.niveauGlobal, state.progression.niveau),
-    xpTotal: Math.max(base.xpTotal, state.progression.xp + (state.progression.niveau - 1) * 500),
+    xpTotal: Math.max(
+      base.xpTotal,
+      state.progression.xp + (state.progression.niveau - 1) * 500
+    ),
     competences,
     histoiresTerminees: Array.from(histoires),
     entrainementsTermines: Array.from(trains),
@@ -95,18 +130,37 @@ export function applyProgressionToState(
   state: GameState,
   progression: ProgressionGlobale
 ): GameState {
+  const competencesGenerales = {
+    ...(state.progression.competencesGenerales ?? emptyGeneralesProgress()),
+  };
+  const competencesCiblees = {
+    ...(state.progression.competencesCiblees ?? emptyCibleesProgress()),
+  };
   const skillProgress = { ...state.world.skillProgress };
-  const competences = { ...state.progression.competences };
-  for (const [id, prog] of Object.entries(progression.competences)) {
+  for (const [rawId, prog] of Object.entries(progression.competences)) {
+    const id = canonicalizeSkillId(rawId);
+    const def = getCompetenceDef(id);
+    const entry = {
+      niveau: prog.niveau,
+      xp: prog.xp,
+      ...(def?.type === "ciblee"
+        ? {
+            indicateursValides:
+              prog.indicateursValides ?? [false, false, false],
+          }
+        : {}),
+    };
+    if (def?.type === "ciblee") competencesCiblees[id] = entry;
+    else if (def?.type === "generale") competencesGenerales[id] = entry;
     skillProgress[id] = { niveau: prog.niveau, xp: prog.xp };
-    competences[id] = prog.niveau;
   }
   return {
     ...state,
     progression: {
       ...state.progression,
       niveau: Math.max(state.progression.niveau, progression.niveauGlobal),
-      competences,
+      competencesGenerales,
+      competencesCiblees,
     },
     world: {
       ...state.world,

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Award, History } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Award, Check, History, X } from "lucide-react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { CharacterPortrait } from "@/components/characters/CharacterPortrait";
 import { ProgressionChart } from "@/components/ProgressionChart";
@@ -10,8 +11,14 @@ import {
   CHARACTER_META,
   type CharacterVisualId,
 } from "@/lib/characterStyle";
-import { roles, skills } from "@/lib/mock";
+import {
+  COMPETENCES_CIBLEES_PROD,
+  COMPETENCES_GENERALES,
+} from "@/lib/competences";
+import { roles } from "@/lib/mock";
+import { XP_PER_SKILL_LEVEL } from "@/lib/progression";
 import { useGameStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
 
 const CAST: CharacterVisualId[] = [
   "pers-marie",
@@ -23,6 +30,7 @@ const CAST: CharacterVisualId[] = [
 export default function ProfilPage() {
   const { gameState } = useGameStore();
   const role = roles.find((r) => r.id === gameState.roleId);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen atmosphere-play text-foreground">
@@ -99,33 +107,139 @@ export default function ProfilPage() {
           </div>
         </div>
 
-        <div className="mb-6 grid gap-4 md:grid-cols-2">
-          {skills.map((skill) => {
-            const progress = gameState.skillProgress[skill.id] ?? {
-              niveau: skill.niveau,
-              xp: skill.xp,
-            };
-            return (
-              <div
-                key={skill.id}
-                className="rounded-xl border border-white/10 bg-panel-2 px-4 py-3"
-              >
-                <div className="flex justify-between text-sm">
-                  <span className="font-semibold">{skill.nom}</span>
-                  <span className="text-muted">Niv. {progress.niveau}</span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-accent-warm"
-                    style={{
-                      width: `${Math.min(100, (progress.xp / skill.xpMax) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <section className="mb-6 rounded-2xl border border-white/10 bg-panel p-5">
+          <h2 className="mb-4 font-display text-lg font-semibold">
+            Compétences Générales
+          </h2>
+          <div className="grid gap-3 md:grid-cols-2">
+            {COMPETENCES_GENERALES.map((skill) => {
+              const progress = gameState.competencesGenerales[skill.id] ?? {
+                niveau: 1,
+                xp: 0,
+              };
+              const open = openId === skill.id;
+              return (
+                <button
+                  key={skill.id}
+                  type="button"
+                  onClick={() => setOpenId(open ? null : skill.id)}
+                  className="rounded-xl border border-white/10 bg-panel-2 px-4 py-3 text-left transition hover:border-accent/40"
+                >
+                  <div className="flex justify-between text-sm">
+                    <span className="font-semibold">{skill.nom}</span>
+                    <span className="text-muted">Niv. {progress.niveau}/5</span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-accent"
+                      style={{
+                        width: `${Math.min(100, (progress.xp / XP_PER_SKILL_LEVEL) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted">
+                    {progress.xp}/{XP_PER_SKILL_LEVEL} XP
+                  </p>
+                  {open ? (
+                    <p className="mt-2 text-xs leading-relaxed text-foreground">
+                      {skill.descriptionPrecise}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-[11px] text-accent">
+                      Cliquer pour la description précise
+                    </p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="mb-6 rounded-2xl border border-white/10 bg-panel p-5">
+          <h2 className="mb-1 font-display text-lg font-semibold">
+            Compétences Ciblées — Responsable de Production
+          </h2>
+          <p className="mb-4 text-xs text-muted">
+            Indicateurs observables · erreurs fréquentes
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {COMPETENCES_CIBLEES_PROD.map((skill) => {
+              const progress = gameState.competencesCiblees[skill.id] ?? {
+                niveau: 1,
+                xp: 0,
+                indicateursValides: [false, false, false],
+              };
+              const flags = progress.indicateursValides ?? [false, false, false];
+              const open = openId === skill.id;
+              return (
+                <button
+                  key={skill.id}
+                  type="button"
+                  onClick={() => setOpenId(open ? null : skill.id)}
+                  className="rounded-xl border border-white/10 bg-panel-2 px-4 py-3 text-left transition hover:border-accent/40"
+                >
+                  <div className="flex justify-between text-sm">
+                    <span className="font-semibold">{skill.nom}</span>
+                    <span className="text-muted">Niv. {progress.niveau}/5</span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-accent-warm"
+                      style={{
+                        width: `${Math.min(100, (progress.xp / XP_PER_SKILL_LEVEL) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted">
+                    {progress.xp}/{XP_PER_SKILL_LEVEL} XP
+                  </p>
+                  {open ? (
+                    <div className="mt-2 space-y-2 text-xs">
+                      <p className="leading-relaxed text-foreground">
+                        {skill.descriptionPrecise}
+                      </p>
+                      <ul className="space-y-1">
+                        {skill.indicateurs.map((ind, i) => (
+                          <li
+                            key={ind}
+                            className="flex items-start gap-2 text-muted"
+                          >
+                            {flags[i] ? (
+                              <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" />
+                            ) : (
+                              <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-danger" />
+                            )}
+                            <span
+                              className={cn(
+                                flags[i] && "text-foreground"
+                              )}
+                            >
+                              {ind}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          Erreurs fréquentes
+                        </p>
+                        <ul className="mt-1 list-disc space-y-0.5 pl-4 text-muted">
+                          {skill.erreursFrequentes.map((e) => (
+                            <li key={e}>{e}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-[11px] text-accent">
+                      Cliquer pour description, indicateurs et erreurs
+                    </p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         <ProgressionChart />
 
@@ -139,7 +253,7 @@ export default function ProfilPage() {
             </div>
             {gameState.trainingsCompleted.length === 0 ? (
               <p className="text-sm text-muted">
-                Aucun entraînement terminé. Même XP que l&apos;Histoire.
+                Aucun entraînement terminé.
               </p>
             ) : (
               <ul className="space-y-2">

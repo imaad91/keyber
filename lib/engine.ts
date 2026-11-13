@@ -26,7 +26,12 @@ import {
 } from "./gameState";
 import { RELATION_ALIASES } from "./gameState";
 import { applyMissedDecision, checkEvenements } from "./evenements";
-import { addSkillXp, skillLabel } from "./progression";
+import {
+  addSkillXp,
+  applyCompetenceImpacts,
+  skillLabel,
+} from "./progression";
+import { getCompetenceDef } from "./competences";
 
 const XP_PER_LEVEL = 500;
 
@@ -470,12 +475,12 @@ export function applyDecision(
     decision.jour === 5
       ? "negociation"
       : decision.jour === 3
-        ? "crise"
+        ? "gestion_crise"
         : decision.jour === 4
           ? "leadership"
           : decision.categorie?.toLowerCase().includes("négociation")
             ? "negociation"
-            : "crise";
+            : "gestion_crise";
 
   next = {
     ...next,
@@ -498,6 +503,11 @@ export function applyDecision(
         : next.world.trainingPrompt,
     },
   };
+
+  if (choix.competencesImpactees?.length) {
+    const applied = applyCompetenceImpacts(next, choix.competencesImpactees);
+    next = applied.state;
+  }
 
   if (decision.bankProduction) {
     next = bankDailyProduction(next);
@@ -557,18 +567,33 @@ export function applyCompetenceTraining(
     next = applyConsequence(next, cons);
   }
 
-  const xpFromChoice =
-    choix.consequences
-      .filter((c) => c.cible === "xp" || c.cible === "progression.xp")
-      .reduce((s, c) => s + c.valeur, 0) || decision.xpGagne;
+  const impacts =
+    choix.competencesImpactees?.length
+      ? choix.competencesImpactees
+      : [
+          {
+            competenceId,
+            type: (getCompetenceDef(competenceId)?.type ?? "generale") as
+              | "generale"
+              | "ciblee",
+            xp: Math.max(
+              60,
+              choix.consequences
+                .filter((c) => c.cible === "xp" || c.cible === "progression.xp")
+                .reduce((s, c) => s + c.valeur, 0) || decision.xpGagne
+            ),
+            feedback: choix.feedbackTexte,
+          },
+        ];
 
-  // Skill XP: enough that one solid drill can push Niveau 2 from the seed bar
-  const skillXpGain = Math.max(60, xpFromChoice);
-  next = addSkillXp(next, competenceId, skillXpGain);
+  const applied = applyCompetenceImpacts(next, impacts);
+  next = applied.state;
   next = normalizeXp(next);
 
+  const skillXpGain = impacts.reduce((s, i) => s + i.xp, 0);
   const heure = next.meta.heureActuelle;
   const modeLabel = skillLabel(competenceId);
+  const debriefNarration = applied.debrief.join("\n");
 
   next = {
     ...next,
@@ -589,13 +614,14 @@ export function applyCompetenceTraining(
     },
     world: {
       ...next.world,
-      feedbackFlash: choix.feedbackTexte,
+      feedbackFlash: applied.debrief[0] ?? choix.feedbackTexte,
+      lastSkillDebrief: applied.debrief,
       journal: [
         {
           id: `j-train-${decision.id}-${Date.now()}`,
           day: 0,
           titre: choix.label,
-          narration: choix.feedbackTexte,
+          narration: debriefNarration || choix.feedbackTexte,
           xp: skillXpGain,
           at: heure,
           mode: "competence",

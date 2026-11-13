@@ -4,6 +4,10 @@
  */
 
 import type { Decision } from "@/lib/decisions";
+import {
+  emptyCibleesProgress,
+  emptyGeneralesProgress,
+} from "@/lib/competences";
 import type { GameState, ScenarioRules } from "@/lib/gameState";
 import { formatClockFromMinutes } from "@/lib/gameState";
 
@@ -79,6 +83,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Cette semaine", value: "Aucun gain", tone: "neg" },
           { label: "Visibilité", value: "Inchangée", tone: "neu" },
         ],
+        competencesImpactees: [
+          {
+            competenceId: "priorisation",
+            type: "generale",
+            xp: 10,
+            feedback: "Tu as priorisé un capex long terme alors que l'échéance contrat est cette semaine.",
+          },
+          {
+            competenceId: "planification_mrp",
+            type: "ciblee",
+            xp: 5,
+            indicateurIndex: 2,
+            feedback: "Tu n'as pas recalculé le besoin net de la semaine : la machine n'arrive pas à temps.",
+          },
+        ],
         consequences: [
           { cible: "tresorerie", valeur: -80000 },
           { cible: "temps", valeur: 30 },
@@ -95,6 +114,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Trésorerie", value: "-5 000 €", tone: "neg" },
           { label: "Visibilité", value: "PRÉCIS / LIVE", tone: "pos" },
           { label: "Vérité", value: "Rebut 18 %", tone: "pos" },
+        ],
+        competencesImpactees: [
+          {
+            competenceId: "decision_incertitude",
+            type: "generale",
+            xp: 25,
+            feedback: "Tu as levé l'incertitude avec une mesure réelle (rebut, cadence) avant d'agir.",
+          },
+          {
+            competenceId: "qualite",
+            type: "ciblee",
+            xp: 20,
+            indicateurIndex: 0,
+            feedback: "Tu as mesuré le taux de défaut réel (18 %) au lieu de décider à l'aveugle.",
+          },
         ],
         consequences: [
           { cible: "tresorerie", valeur: -5000 },
@@ -119,6 +153,20 @@ export const novacierDecisions: Decision[] = [
           { label: "Cash", value: "Préservé", tone: "pos" },
           { label: "Visibilité", value: "Toujours ???", tone: "neg" },
           { label: "Risque", value: "Élevé", tone: "neg" },
+        ],
+        competencesImpactees: [
+          {
+            competenceId: "decision_incertitude",
+            type: "generale",
+            xp: 5,
+            feedback: "Tu as maintenu l'incertitude sans critère d'arrêt ni hypothèse explicite.",
+          },
+          {
+            competenceId: "priorisation",
+            type: "generale",
+            xp: 5,
+            feedback: "Tu as reporté l'action critique sans ordonner les risques contrat / rebut.",
+          },
         ],
         consequences: [
           { cible: "temps", valeur: 10 },
@@ -147,6 +195,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Moral", value: "-15", tone: "neg" },
           { label: "Marie", value: "-10 confiance", tone: "neg" },
         ],
+        competencesImpactees: [
+          {
+            competenceId: "leadership",
+            type: "generale",
+            xp: 15,
+            feedback: "Tu as imposé une priorité volume sans sécuriser la confiance de l'équipe.",
+          },
+          {
+            competenceId: "ordonnancement",
+            type: "ciblee",
+            xp: 15,
+            indicateurIndex: 2,
+            feedback: "Tu as poussé le volume AutoVolt via HS, sans séquence OF publiée.",
+          },
+        ],
         consequences: [
           { cible: "tresorerie", valeur: -15000 },
           { cible: "moral", valeur: -15 },
@@ -166,6 +229,20 @@ export const novacierDecisions: Decision[] = [
           { label: "Moral", value: "Stable / +5", tone: "pos" },
           { label: "Marie", value: "+8 confiance", tone: "pos" },
           { label: "Volume", value: "Pas de boost", tone: "neu" },
+        ],
+        competencesImpactees: [
+          {
+            competenceId: "leadership",
+            type: "generale",
+            xp: 20,
+            feedback: "Tu as préservé la confiance atelier en refusant de brûler l'équipe.",
+          },
+          {
+            competenceId: "communication",
+            type: "generale",
+            xp: 15,
+            feedback: "Tu as clarifié le non aux HS avec un statut moral / volume compréhensible.",
+          },
         ],
         consequences: [
           { cible: "moral", valeur: 5 },
@@ -187,6 +264,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Coût", value: "0 €", tone: "pos" },
         ],
         requis: [{ si: "confiance.marie", superieurA: 60 }],
+        competencesImpactees: [
+          {
+            competenceId: "leadership",
+            type: "generale",
+            xp: 30,
+            feedback: "Tu as aligné l'atelier sur une réorganisation portée par Marie, sans HS.",
+          },
+          {
+            competenceId: "ordonnancement",
+            type: "ciblee",
+            xp: 25,
+            indicateurIndex: 0,
+            feedback: "Tu as publié une séquence de journée (+2 h utiles) sans surcharger en HS.",
+          },
+        ],
         consequences: [
           { cible: "moral", valeur: 8 },
           { cible: "production", valeur: 15 },
@@ -216,6 +308,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Arrêt", value: "1 jour", tone: "neg" },
           { label: "Qualité", value: "Préservée", tone: "pos" },
         ],
+        competencesImpactees: [
+          {
+            competenceId: "gestion_crise",
+            type: "generale",
+            xp: 25,
+            feedback: "Tu as contenu le risque qualité en acceptant un arrêt planifié plutôt qu'un bypass.",
+          },
+          {
+            competenceId: "maintenance",
+            type: "ciblee",
+            xp: 30,
+            indicateurIndex: 1,
+            feedback: "Tu as estimé une fenêtre d'arrêt (1 jour) et un coût MTTR avant de relancer.",
+          },
+        ],
         consequences: [
           { cible: "tresorerie", valeur: -12000 },
           { cible: "production", valeur: -15 },
@@ -235,6 +342,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Volume", value: "Maintenu", tone: "pos" },
           { label: "Qualité", value: "-10 %", tone: "neg" },
           { label: "Rebut", value: "+8 pts", tone: "neg" },
+        ],
+        competencesImpactees: [
+          {
+            competenceId: "gestion_crise",
+            type: "generale",
+            xp: 15,
+            feedback: "Tu as réagi vite, mais sans isoler la cause avant de contourner.",
+          },
+          {
+            competenceId: "maintenance",
+            type: "ciblee",
+            xp: 10,
+            indicateurIndex: 2,
+            feedback: "Tu as documenté un bypass avec risque rebut (+8 pts) — sans plan de réparation.",
+          },
         ],
         consequences: [
           { cible: "production", valeur: 5 },
@@ -256,6 +378,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Coût", value: "-25 000 €", tone: "neg" },
           { label: "Délai", value: "4 h", tone: "pos" },
           { label: "Machine 3", value: "PRODUCTION", tone: "pos" },
+        ],
+        competencesImpactees: [
+          {
+            competenceId: "gestion_crise",
+            type: "generale",
+            xp: 30,
+            feedback: "Tu as contenu l'arrêt sous 4 h avec un plan prestataire clair.",
+          },
+          {
+            competenceId: "maintenance",
+            type: "ciblee",
+            xp: 25,
+            indicateurIndex: 0,
+            feedback: "Tu as nommé la cause et externalisé le diagnostic pour un retour PRODUCTION le jour même.",
+          },
         ],
         consequences: [
           { cible: "tresorerie", valeur: -25000 },
@@ -288,6 +425,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Éthique", value: "-30", tone: "neg" },
           { label: "AutoVolt", value: "Risque élevé", tone: "neg" },
         ],
+        competencesImpactees: [
+          {
+            competenceId: "priorisation",
+            type: "generale",
+            xp: 10,
+            feedback: "Tu as priorisé le volume contrat au détriment du risque client.",
+          },
+          {
+            competenceId: "qualite",
+            type: "ciblee",
+            xp: 5,
+            indicateurIndex: 2,
+            feedback: "Tu as chiffré l'impact éthique (−30) mais choisi de livrer sans tri.",
+          },
+        ],
         consequences: [
           { cible: "ethique", valeur: -30 },
           { cible: "confianceClient", valeur: -15 },
@@ -307,6 +459,21 @@ export const novacierDecisions: Decision[] = [
           { label: "Éthique", value: "+20", tone: "pos" },
           { label: "AutoVolt", value: "+10 confiance", tone: "pos" },
           { label: "Volume", value: "-40 à refaire", tone: "neg" },
+        ],
+        competencesImpactees: [
+          {
+            competenceId: "communication",
+            type: "generale",
+            xp: 20,
+            feedback: "Tu as formulé un statut honnête vers AutoVolt : rebut + négociation de délai.",
+          },
+          {
+            competenceId: "qualite",
+            type: "ciblee",
+            xp: 30,
+            indicateurIndex: 1,
+            feedback: "Tu as décidé rebut argumenté plutôt que livraison de micro-défauts.",
+          },
         ],
         consequences: [
           { cible: "ethique", valeur: 20 },
@@ -338,6 +505,20 @@ export const novacierDecisions: Decision[] = [
           { label: "Pression", value: "Maximale", tone: "neg" },
         ],
         // Base -5; if éthique≥50 AND qualité≥400 → +10 more (net +5)
+        competencesImpactees: [
+          {
+            competenceId: "negociation",
+            type: "generale",
+            xp: 25,
+            feedback: "Tu as tenu le cadre prix/volume sans offrir de contrepartie mesurable.",
+          },
+          {
+            competenceId: "communication",
+            type: "generale",
+            xp: 15,
+            feedback: "Tu as poussé un statut ferme ; la réception AutoVolt dépend de tes chiffres.",
+          },
+        ],
         consequences: [
           { cible: "confianceClient", valeur: -5 },
           { cible: "temps", valeur: 45 },
@@ -364,6 +545,21 @@ export const novacierDecisions: Decision[] = [
           { label: "AutoVolt", value: "+15 si honnête", tone: "pos" },
           { label: "Délai", value: "Possible souplesse", tone: "pos" },
         ],
+        competencesImpactees: [
+          {
+            competenceId: "negociation",
+            type: "generale",
+            xp: 30,
+            feedback: "Tu as échangé transparence (écarts + plan) contre écoute client.",
+          },
+          {
+            competenceId: "qualite",
+            type: "ciblee",
+            xp: 20,
+            indicateurIndex: 2,
+            feedback: "Tu as chiffré l'impact client et proposé un plan qualité explicite.",
+          },
+        ],
         consequences: [
           { cible: "ethique", valeur: 10 },
           { cible: "confianceClient", valeur: 15 },
@@ -385,6 +581,20 @@ export const novacierDecisions: Decision[] = [
           { label: "AutoVolt", value: "+12", tone: "pos" },
           { label: "Trésorerie", value: "+8 000 €", tone: "pos" },
           { label: "Relation", value: "Tendue", tone: "neg" },
+        ],
+        competencesImpactees: [
+          {
+            competenceId: "negociation",
+            type: "generale",
+            xp: 35,
+            feedback: "Tu as obtenu volume + cash (+8 k€) avec une contrepartie relationnelle tendue.",
+          },
+          {
+            competenceId: "priorisation",
+            type: "generale",
+            xp: 15,
+            feedback: "Tu as priorisé le levier commercial immédiat sur la relation long terme.",
+          },
         ],
         consequences: [
           { cible: "confianceClient", valeur: 12 },
@@ -447,13 +657,8 @@ export function createNovacierInitialState(): GameState {
     progression: {
       xp: 0,
       niveau: 1,
-      competences: {
-        negociation: 1,
-        crise: 1,
-        leadership: 1,
-        stock: 1,
-        data: 1,
-      },
+      competencesGenerales: emptyGeneralesProgress(),
+      competencesCiblees: emptyCibleesProgress("prod"),
     },
     visibilite: {
       erp: 0,
@@ -500,6 +705,7 @@ export function createNovacierInitialState(): GameState {
       trainingsCompleted: [],
       histoiresCompleted: [],
       trainingPrompt: null,
+      lastSkillDebrief: [],
       eventNotifications: [],
       urgentBanner: null,
       showDayEnd: false,

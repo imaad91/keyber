@@ -33,9 +33,9 @@ export function ProgressionChart() {
           />
           <Legend />
           <Line type="monotone" dataKey="nego" name="Négociation" stroke="#3dd6c6" strokeWidth={2} />
-          <Line type="monotone" dataKey="crise" name="Crise" stroke="#f07178" strokeWidth={2} />
+          <Line type="monotone" dataKey="crise" name="Gestion de crise" stroke="#f07178" strokeWidth={2} />
           <Line type="monotone" dataKey="lead" name="Leadership" stroke="#f0a05a" strokeWidth={2} />
-          <Line type="monotone" dataKey="stock" name="Stock" stroke="#7dd3fc" strokeWidth={2} />
+          <Line type="monotone" dataKey="stock" name="Gestion des stocks" stroke="#7dd3fc" strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
     </div>

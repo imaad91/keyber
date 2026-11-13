@@ -7,7 +7,9 @@ export default function LegacyLogiqueRedirect() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   useEffect(() => {
-    router.replace(`/admin/logique/${id}`);
+    router.replace(`/admin/workflow/scenarios/${id}`);
   }, [id, router]);
-  return <p className="text-sm text-slate-500">Redirection…</p>;
+  return (
+    <p className="text-sm text-slate-500">Redirection vers Workflow…</p>
+  );
 }

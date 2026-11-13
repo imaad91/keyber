@@ -86,7 +86,7 @@ export function CoeurLangageLocked({
         <Meta label="Hash" value={version?.hash ?? "—"} mono />
         <div className="sm:col-span-2 lg:col-span-4">
           <span className="inline-flex rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-            Synchronisé avec Logique ✓
+            Synchronisé avec Workflow ✓
           </span>
         </div>
       </div>

@@ -13,6 +13,7 @@ import {
   Settings,
   Shield,
   Bot,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +37,27 @@ const NAV: NavItem[] = [
       { href: "/admin/fiches/suivi", label: "Suivi Validation" },
     ],
   },
-  { href: "/admin/logique", label: "Logique", icon: Network },
+  {
+    href: "/admin/competences",
+    label: "Compétences",
+    icon: Target,
+    children: [
+      { href: "/admin/competences/generales", label: "Générales" },
+      { href: "/admin/competences/ciblees", label: "Ciblées" },
+    ],
+  },
+  {
+    href: "/admin/workflow",
+    label: "Workflow",
+    icon: Network,
+    children: [
+      { href: "/admin/workflow/scenarios", label: "Scénarios" },
+      {
+        href: "/admin/workflow/architecture",
+        label: "Architecture de l'application",
+      },
+    ],
+  },
   {
     href: "/admin/coeur",
     label: "Cœur",

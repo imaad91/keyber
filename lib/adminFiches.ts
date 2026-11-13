@@ -5,22 +5,13 @@
 
 import { SCENARIO_ID, SCENARIO_TITLE } from "@/data/scenarioNovacier";
 import { uid } from "./adminTypes";
-
-export type AdminFicheStatus =
-  | "brouillon"
-  | "en_cours"
-  | "complete"
-  | "validee";
-
-export const ADMIN_FICHE_STATUTS: {
-  value: AdminFicheStatus;
-  label: string;
-}[] = [
-  { value: "brouillon", label: "Brouillon" },
-  { value: "en_cours", label: "En cours" },
-  { value: "complete", label: "Complète" },
-  { value: "validee", label: "Validée" },
-];
+import {
+  makeTransition,
+  migrateLegacyFicheStatut,
+  type FicheAgentReport,
+  type StatutWorkflow,
+  type WorkflowTransition,
+} from "./adminWorkflow";
 
 export type AdminFicheSections = {
   contexteEntreprise: string;
@@ -35,11 +26,20 @@ export type AdminFiche = {
   scenarioId: string;
   entrepriseNom: string;
   role: string;
-  statut: AdminFicheStatus;
+  /** Closed validation workflow status (synced with scénario / Cœur). */
+  statutWorkflow: StatutWorkflow;
   updatedAt: string;
+  /** Last workflow transition timestamp. */
+  lastStepAt: string;
   sections: AdminFicheSections;
-  /** Set after « Générer le Cœur à partir de cette Fiche » */
+  /** Set after génération du Scénario Provisoire / Cœur. */
   coeurGenere: boolean;
+  historique: WorkflowTransition[];
+  commentaireCorrection?: string;
+  raisonRejet?: string;
+  agentTestReports?: FicheAgentReport[];
+  /** Badge PROVISOIRE when scénario provisoire créé. */
+  provisoire?: boolean;
 };
 
 export const FICHE_SECTION_META: {
@@ -72,10 +72,6 @@ export const FICHE_SECTION_META: {
 export const FICHE_SECTION_HINT =
   "Raconte le réel, avec des anecdotes, des chiffres, des exemples vrais. Plus c'est riche, plus le scénario sera réel.";
 
-export function ficheStatusLabel(s: AdminFicheStatus) {
-  return ADMIN_FICHE_STATUTS.find((x) => x.value === s)?.label ?? s;
-}
-
 export function emptyFicheSections(): AdminFicheSections {
   return {
     contexteEntreprise: "",
@@ -86,16 +82,39 @@ export function emptyFicheSections(): AdminFicheSections {
 }
 
 export function emptyFiche(scenarioId = ""): AdminFiche {
+  const now = new Date().toISOString();
   return {
     id: uid("fiche"),
     titre: "Nouvelle fiche",
     scenarioId,
     entrepriseNom: "",
     role: "Responsable de Production",
-    statut: "brouillon",
-    updatedAt: new Date().toISOString(),
+    statutWorkflow: "brouillon",
+    updatedAt: now,
+    lastStepAt: now,
     sections: emptyFicheSections(),
     coeurGenere: false,
+    historique: [
+      makeTransition("brouillon", "brouillon", "Système", "Création de la fiche"),
+    ],
+  };
+}
+
+/** Normalize persisted / partial fiches (legacy statut → statutWorkflow). */
+export function normalizeAdminFiche(raw: Partial<AdminFiche> & { statut?: unknown }): AdminFiche {
+  const base = emptyFiche(raw.scenarioId ?? "");
+  const statutWorkflow =
+    raw.statutWorkflow ??
+    migrateLegacyFicheStatut(raw.statut ?? "brouillon");
+  return {
+    ...base,
+    ...raw,
+    statutWorkflow,
+    sections: { ...emptyFicheSections(), ...(raw.sections ?? {}) },
+    historique: Array.isArray(raw.historique) ? raw.historique : base.historique,
+    updatedAt: raw.updatedAt ?? base.updatedAt,
+    lastStepAt: raw.lastStepAt ?? raw.updatedAt ?? base.lastStepAt,
+    coeurGenere: Boolean(raw.coeurGenere),
   };
 }
 
@@ -113,14 +132,36 @@ export function ficheMissingSections(fiche: AdminFiche): string[] {
 }
 
 export function seedNovacierFiche(): AdminFiche {
+  const now = new Date().toISOString();
+  const hist: WorkflowTransition[] = [
+    makeTransition("brouillon", "soumise", "Utilisateur", "Fiche complète soumise"),
+    makeTransition("soumise", "fiche_validee", "Utilisateur", "Réel et chiffres OK"),
+    makeTransition(
+      "fiche_validee",
+      "provisoire_cree",
+      "Système",
+      "Cœur + Scénario Provisoire générés"
+    ),
+    makeTransition("provisoire_cree", "en_test", "Utilisateur", "Lancement tests Agents"),
+    makeTransition(
+      "en_test",
+      "retenu_publie",
+      "Utilisateur",
+      "4 Agents validés — scénario publié"
+    ),
+  ].map((t, i) => ({
+    ...t,
+    at: new Date(Date.now() - (5 - i) * 86400000).toISOString(),
+  }));
   return {
     id: "fiche-novacier",
     titre: "Fiche Novacier",
     scenarioId: SCENARIO_ID,
     entrepriseNom: "Novacier Industrie",
     role: "Responsable de Production",
-    statut: "validee",
-    updatedAt: new Date().toISOString(),
+    statutWorkflow: "retenu_publie",
+    updatedAt: now,
+    lastStepAt: hist[hist.length - 1]!.at,
     sections: {
       contexteEntreprise: `Novacier Industrie — Saint-Étienne. PME métallurgique (~120 employés), 4 machines, AutoVolt = 45 % du CA. Quasi-faillite 2022. Cette semaine : 500 pièces qualité avant vendredi 16h. ${SCENARIO_TITLE}`,
       personnagesRiches:
@@ -130,6 +171,143 @@ export function seedNovacierFiche(): AdminFiche {
       donneesReelles:
         "Trésorerie ~420 k€, stock acier ~850 kg, prod ~60/j, rebut réel ~18 % une fois le brouillard levé. Objectif : 500 pièces qualité.",
     },
+    coeurGenere: true,
+    historique: hist,
+    provisoire: false,
+    agentTestReports: [
+      {
+        agentId: "agent-testeur",
+        nom: "Testeur Joueur",
+        score: 88,
+        statut: "valide",
+        issues: [],
+        ranAt: hist[3]!.at,
+      },
+      {
+        agentId: "agent-metier",
+        nom: "Expert Métier",
+        score: 82,
+        statut: "valide",
+        issues: [],
+        ranAt: hist[3]!.at,
+      },
+      {
+        agentId: "agent-pedagogue",
+        nom: "Pédagogue",
+        score: 85,
+        statut: "valide",
+        issues: [],
+        ranAt: hist[3]!.at,
+      },
+      {
+        agentId: "agent-coherence-erp",
+        nom: "Cohérence ERP",
+        score: 90,
+        statut: "valide",
+        issues: [],
+        ranAt: hist[3]!.at,
+      },
+    ],
+  };
+}
+
+export function seedAtelierNordFiche(scenarioId: string): AdminFiche {
+  const now = new Date().toISOString();
+  const hist: WorkflowTransition[] = [
+    makeTransition("brouillon", "soumise", "Utilisateur"),
+    makeTransition("soumise", "fiche_validee", "Utilisateur"),
+    makeTransition("fiche_validee", "provisoire_cree", "Système"),
+    makeTransition("provisoire_cree", "en_test", "Utilisateur", "Tests Agents lancés"),
+  ].map((t, i) => ({
+    ...t,
+    at: new Date(Date.now() - (4 - i) * 3600000).toISOString(),
+  }));
+  return {
+    id: "fiche-atelier-nord",
+    titre: "Fiche Atelier Nord",
+    scenarioId,
+    entrepriseNom: "Atelier Nord",
+    role: "Chef d'atelier",
+    statutWorkflow: "en_test",
+    updatedAt: now,
+    lastStepAt: hist[hist.length - 1]!.at,
+    sections: {
+      contexteEntreprise:
+        "Atelier Nord — Lille. Sous-traitant usinage (80 pers.). Contrat urgent pièces aéronautiques, délai 4 jours.",
+      personnagesRiches:
+        "Sophie (qualité) exige zéro défaut. Marc (planning) surcharge les postes. Amine (opérateur) connaît la machine 2.",
+      decisionsRiches:
+        "Prioriser lot A vs B, heures nuit, faire appel à un sous-traitant externe.",
+      donneesReelles:
+        "OEE 62 %, rebut 4,2 %, stock outillage critique 2 jours.",
+    },
+    coeurGenere: true,
+    historique: hist,
+    provisoire: true,
+    agentTestReports: [
+      {
+        agentId: "agent-testeur",
+        nom: "Testeur Joueur",
+        score: 76,
+        statut: "valide",
+        issues: [
+          {
+            priorite: "basse",
+            titre: "Feedback J1 faible",
+            detail: "Le joueur ne comprend pas le coût du retard.",
+          },
+        ],
+        ranAt: hist[3]!.at,
+      },
+      {
+        agentId: "agent-metier",
+        nom: "Expert Métier",
+        score: 58,
+        statut: "bloque",
+        issues: [
+          {
+            priorite: "haute",
+            titre: "Délai aéronautique irréaliste",
+            detail: "4 jours pour lot critique sans buffer qualité.",
+          },
+        ],
+        ranAt: hist[3]!.at,
+      },
+      {
+        agentId: "agent-pedagogue",
+        nom: "Pédagogue",
+        score: 80,
+        statut: "valide",
+        issues: [],
+        ranAt: hist[3]!.at,
+      },
+      {
+        agentId: "agent-coherence-erp",
+        nom: "Cohérence ERP",
+        score: 84,
+        statut: "valide",
+        issues: [],
+        ranAt: hist[3]!.at,
+      },
+    ],
+  };
+}
+
+export function seedNouveauProjetFiche(scenarioId: string): AdminFiche {
+  const now = new Date().toISOString();
+  return {
+    id: "fiche-nouveau-projet",
+    titre: "Fiche Nouveau Projet",
+    scenarioId,
+    entrepriseNom: "À définir",
+    role: "Responsable de Production",
+    statutWorkflow: "brouillon",
+    updatedAt: now,
+    lastStepAt: now,
+    sections: emptyFicheSections(),
     coeurGenere: false,
+    historique: [
+      makeTransition("brouillon", "brouillon", "Système", "Création de la fiche"),
+    ],
   };
 }

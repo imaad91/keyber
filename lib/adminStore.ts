@@ -21,6 +21,7 @@ import {
 import {
   emptyFiche,
   ficheFillPercent,
+  normalizeAdminFiche,
   type AdminFiche,
 } from "./adminFiches";
 import {
@@ -40,6 +41,14 @@ import type {
   AdminScenario,
   AdminState,
 } from "./adminTypes";
+import {
+  agentReportStatus,
+  allAgentsValidated,
+  isFicheContentEditable,
+  makeTransition,
+  type StatutWorkflow,
+  type WorkflowActor,
+} from "./adminWorkflow";
 
 const STORAGE_KEY = "keyber-admin-v1";
 
@@ -82,6 +91,9 @@ function loadState(): AdminState {
     const parsed = JSON.parse(raw) as Partial<AdminState>;
     const seed = createAdminSeed();
     const coeurs = migrateCoeurs(parsed, seed);
+    for (const [id, c] of Object.entries(seed.coeurs)) {
+      if (!coeurs[id]) coeurs[id] = c;
+    }
     const coeurMeta = { ...seed.coeurMeta, ...(parsed.coeurMeta ?? {}) };
     for (const id of Object.keys(coeurs)) {
       if (!coeurMeta[id]) {
@@ -99,12 +111,46 @@ function loadState(): AdminState {
       }
     }
     return {
-      scenarios: parsed.scenarios ?? seed.scenarios,
+      scenarios: (() => {
+        const loaded = parsed.scenarios ?? seed.scenarios;
+        const byId = new Map(loaded.map((s) => [s.id, s]));
+        for (const demo of seed.scenarios) {
+          if (!byId.has(demo.id)) byId.set(demo.id, demo);
+        }
+        return Array.from(byId.values()).map((s) => {
+          const fiche = (parsed.fiches ?? seed.fiches).find(
+            (f) =>
+              (f as AdminFiche).scenarioId === s.id ||
+              (f as { scenarioId?: string }).scenarioId === s.id
+          );
+          const wf =
+            s.statutWorkflow ??
+            (fiche
+              ? normalizeAdminFiche(
+                  fiche as Partial<AdminFiche> & { statut?: unknown }
+                ).statutWorkflow
+              : "brouillon");
+          return { ...s, statutWorkflow: wf };
+        });
+      })(),
       entreprises: parsed.entreprises ?? seed.entreprises,
       personnages: parsed.personnages ?? seed.personnages,
       decisions: parsed.decisions ?? seed.decisions,
       events: parsed.events ?? seed.events,
-      fiches: parsed.fiches?.length ? parsed.fiches : seed.fiches,
+      fiches: (() => {
+        const loaded = (parsed.fiches?.length ? parsed.fiches : seed.fiches).map(
+          (f) =>
+            normalizeAdminFiche(
+              f as Partial<AdminFiche> & { statut?: unknown }
+            )
+        );
+        // Ensure demo workflow fiches exist for Suivi Validation examples
+        const byId = new Map(loaded.map((f) => [f.id, f]));
+        for (const demo of seed.fiches) {
+          if (!byId.has(demo.id)) byId.set(demo.id, demo);
+        }
+        return Array.from(byId.values());
+      })(),
       coeurs,
       coeurMeta,
       agents: parsed.agents?.length
@@ -308,29 +354,145 @@ export function markCoeurHighlightsSeen(scenarioId: string) {
   toast("Highlights marqués comme vus");
 }
 
-/* —— Fiches (rich intake) —— */
+/* —— Fiches (rich intake) + closed workflow —— */
+
+function syncWorkflowToScenarioAndCoeur(
+  scenarioId: string,
+  statutWorkflow: StatutWorkflow,
+  provisoire: boolean,
+  publishScenarioFlag?: boolean
+) {
+  if (!scenarioId) return;
+  const scenarios = state.scenarios.map((s) => {
+    if (s.id !== scenarioId) return s;
+    const next: AdminScenario = {
+      ...s,
+      statutWorkflow,
+      provisoire,
+    };
+    if (publishScenarioFlag === true) next.statut = "publie";
+    if (publishScenarioFlag === false && provisoire) next.statut = "en_attente";
+    return next;
+  });
+  const existing = state.coeurs[scenarioId];
+  const coeurs = existing
+    ? {
+        ...state.coeurs,
+        [scenarioId]: {
+          ...existing,
+          scenario: {
+            ...existing.scenario,
+            statutWorkflow,
+            provisoire,
+          },
+        },
+      }
+    : state.coeurs;
+  state = { ...state, scenarios, coeurs };
+}
+
+function applyFicheWorkflow(
+  ficheId: string,
+  to: StatutWorkflow,
+  opts: {
+    by?: WorkflowActor;
+    commentaire?: string;
+    patchFiche?: Partial<AdminFiche>;
+    provisoire?: boolean;
+    publish?: boolean;
+  } = {}
+): boolean {
+  ensureHydrated();
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche) {
+    toast("Fiche introuvable");
+    return false;
+  }
+  const from = fiche.statutWorkflow;
+  const transition = makeTransition(
+    from,
+    to,
+    opts.by ?? "Utilisateur",
+    opts.commentaire
+  );
+  const now = transition.at;
+  const nextFiche: AdminFiche = {
+    ...fiche,
+    ...opts.patchFiche,
+    statutWorkflow: to,
+    lastStepAt: now,
+    updatedAt: now,
+    historique: [...(fiche.historique ?? []), transition],
+  };
+  if (opts.commentaire && to === "corrections_demandees") {
+    nextFiche.commentaireCorrection = opts.commentaire;
+  }
+  if (opts.commentaire && to === "rejete") {
+    nextFiche.raisonRejet = opts.commentaire;
+  }
+  if (typeof opts.provisoire === "boolean") {
+    nextFiche.provisoire = opts.provisoire;
+  }
+
+  state = {
+    ...state,
+    fiches: state.fiches.map((f) => (f.id === ficheId ? nextFiche : f)),
+  };
+  syncWorkflowToScenarioAndCoeur(
+    nextFiche.scenarioId,
+    to,
+    Boolean(nextFiche.provisoire),
+    opts.publish
+  );
+  persist(state);
+  return true;
+}
+
 export function createFiche(scenarioId?: string) {
   ensureHydrated();
   const scn =
     state.scenarios.find((s) => s.id === scenarioId) ?? state.scenarios[0];
   const ent = state.entreprises.find((e) => e.id === scn?.entrepriseId);
   const fiche = emptyFiche(scn?.id ?? "");
-  fiche.titre = scn ? `Fiche ${scn.titre.split("—")[0]?.trim() || scn.titre}` : "Nouvelle fiche";
+  fiche.titre = scn
+    ? `Fiche ${scn.titre.split("—")[0]?.trim() || scn.titre}`
+    : "Nouvelle fiche";
   fiche.entrepriseNom = ent?.nom ?? "";
   fiche.role = scn?.competence || "Responsable de Production";
-  patch({ fiches: [...state.fiches, fiche] });
+  state = { ...state, fiches: [...state.fiches, fiche] };
+  if (fiche.scenarioId) {
+    syncWorkflowToScenarioAndCoeur(fiche.scenarioId, "brouillon", false);
+  }
+  persist(state);
   toast("Fiche créée");
   return fiche.id;
 }
 
 export function updateFiche(id: string, data: Partial<AdminFiche>) {
   ensureHydrated();
+  const fiche = state.fiches.find((f) => f.id === id);
+  if (!fiche) return;
+  const editable = isFicheContentEditable(fiche.statutWorkflow);
+  const contentKeys =
+    data.sections !== undefined ||
+    data.titre !== undefined ||
+    data.entrepriseNom !== undefined ||
+    data.role !== undefined ||
+    data.scenarioId !== undefined;
+  if (!editable && contentKeys) {
+    toast("Fiche figée — repassez en brouillon pour modifier");
+    return;
+  }
+  // Never allow free-form statutWorkflow via updateFiche
+  const { statutWorkflow: _ignore, historique: _h, ...safe } = data;
+  void _ignore;
+  void _h;
   patch({
     fiches: state.fiches.map((f) =>
       f.id === id
         ? {
             ...f,
-            ...data,
+            ...safe,
             sections: data.sections
               ? { ...f.sections, ...data.sections }
               : f.sections,
@@ -343,8 +505,7 @@ export function updateFiche(id: string, data: Partial<AdminFiche>) {
 }
 
 /**
- * Draft Cœur from Fiche content — visible in Logique & Langage Cœur.
- * Full generation logic comes later; for now stamps a draft event + commits.
+ * Draft Cœur from Fiche — used by workflow « Générer le Scénario Provisoire ».
  */
 export function generateCoeurFromFiche(ficheId: string): boolean {
   ensureHydrated();
@@ -357,7 +518,7 @@ export function generateCoeurFromFiche(ficheId: string): boolean {
   let coeur = getScenarioCoeur(fiche.scenarioId);
   const draftId = `adm-ev-fiche-${fiche.id}`;
   const draftTexte = [
-    `Brouillon généré depuis « ${fiche.titre} » (${pct}%).`,
+    `Provisoire généré depuis « ${fiche.titre} » (${pct}%).`,
     fiche.sections.contexteEntreprise.slice(0, 280),
     fiche.sections.personnagesRiches.slice(0, 200),
     fiche.sections.decisionsRiches.slice(0, 200),
@@ -376,6 +537,8 @@ export function generateCoeurFromFiche(ficheId: string): boolean {
         coeur.scenario.entrepriseId ||
         state.scenarios.find((s) => s.id === fiche.scenarioId)?.entrepriseId ||
         "",
+      statutWorkflow: "provisoire_cree",
+      provisoire: true,
     },
     evenements: [
       {
@@ -383,7 +546,7 @@ export function generateCoeurFromFiche(ficheId: string): boolean {
         jour: 1,
         heure: "08:00",
         type: "Autre",
-        titre: `Brouillon Fiche — ${fiche.titre}`,
+        titre: `Provisoire Fiche — ${fiche.titre}`,
         texte: draftTexte || "Fiche encore vide — à enrichir.",
       },
       ...others,
@@ -392,16 +555,17 @@ export function generateCoeurFromFiche(ficheId: string): boolean {
 
   const ok = applyCoeurFromFiche(
     coeur,
-    `Cœur brouillon généré depuis la Fiche « ${fiche.titre} »`
+    `Scénario provisoire généré depuis la Fiche « ${fiche.titre} »`
   );
   if (ok) {
-    patch({
-      fiches: state.fiches.map((f) =>
-        f.id === ficheId
-          ? { ...f, coeurGenere: true, updatedAt: new Date().toISOString() }
-          : f
-      ),
+    applyFicheWorkflow(ficheId, "provisoire_cree", {
+      by: "Système",
+      commentaire: "Cœur + Scénario Provisoire générés",
+      provisoire: true,
+      publish: false,
+      patchFiche: { coeurGenere: true },
     });
+    toast("Scénario Provisoire créé (badge PROVISOIRE)");
   }
   return ok;
 }
@@ -409,6 +573,188 @@ export function generateCoeurFromFiche(ficheId: string): boolean {
 export function ficheForScenario(scenarioId: string): AdminFiche | undefined {
   ensureHydrated();
   return state.fiches.find((f) => f.scenarioId === scenarioId);
+}
+
+export function soumettreFiche(ficheId: string) {
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "brouillon") {
+    toast("Transition interdite");
+    return false;
+  }
+  const ok = applyFicheWorkflow(ficheId, "soumise", {
+    commentaire: "Fiche soumise — figée en attente de validation",
+  });
+  if (ok) toast("Fiche soumise");
+  return ok;
+}
+
+export function validerFiche(ficheId: string) {
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "soumise") {
+    toast("Transition interdite");
+    return false;
+  }
+  const ok = applyFicheWorkflow(ficheId, "fiche_validee", {
+    commentaire: "Fiche validée — réel et chiffres cohérents",
+  });
+  if (ok) toast("Fiche validée");
+  return ok;
+}
+
+export function demanderCorrectionsFiche(ficheId: string, commentaire: string) {
+  if (!commentaire.trim()) {
+    toast("Commentaire de correction obligatoire");
+    return false;
+  }
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "soumise") {
+    toast("Transition interdite");
+    return false;
+  }
+  const ok = applyFicheWorkflow(ficheId, "corrections_demandees", {
+    commentaire: commentaire.trim(),
+  });
+  if (ok) toast("Corrections demandées");
+  return ok;
+}
+
+export function repasserFicheEnBrouillon(ficheId: string) {
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "corrections_demandees") {
+    toast("Transition interdite");
+    return false;
+  }
+  const ok = applyFicheWorkflow(ficheId, "brouillon", {
+    commentaire: "Retour en brouillon pour corrections",
+  });
+  if (ok) toast("Fiche repassée en brouillon");
+  return ok;
+}
+
+export function genererScenarioProvisoire(ficheId: string) {
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "fiche_validee") {
+    toast("Transition interdite — validez d'abord la Fiche");
+    return false;
+  }
+  return generateCoeurFromFiche(ficheId);
+}
+
+export function lancerTestsAgents(ficheId: string) {
+  ensureHydrated();
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (
+    !fiche ||
+    (fiche.statutWorkflow !== "provisoire_cree" &&
+      fiche.statutWorkflow !== "en_test")
+  ) {
+    toast("Transition interdite");
+    return false;
+  }
+  if (!fiche.scenarioId) {
+    toast("Aucun scénario lié");
+    return false;
+  }
+  const reports = runAgentsOnScenario(fiche.scenarioId);
+  const agents = state.agents;
+  const agentTestReports = reports.map((r) => {
+    const agent = agents.find((a) => a.id === r.agentId);
+    return {
+      agentId: r.agentId,
+      nom: agent?.nom ?? r.agentId,
+      score: r.score,
+      statut: agentReportStatus(r.score, r.issues),
+      issues: r.issues.map((i) => ({
+        priorite: i.priorite,
+        titre: i.titre,
+        detail: i.detail,
+      })),
+      ranAt: r.ranAt,
+    };
+  });
+  const ok = applyFicheWorkflow(ficheId, "en_test", {
+    commentaire: "Tests Agents lancés",
+    provisoire: true,
+    publish: false,
+    patchFiche: { agentTestReports },
+  });
+  if (ok) toast("Tests Agents en cours");
+  return ok;
+}
+
+export function retenirScenario(ficheId: string) {
+  ensureHydrated();
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "en_test") {
+    toast("Transition interdite");
+    return false;
+  }
+  const reports = fiche.agentTestReports ?? [];
+  if (!allAgentsValidated(reports)) {
+    toast("En attente de validation des Agents");
+    return false;
+  }
+  const ok = applyFicheWorkflow(ficheId, "retenu_publie", {
+    commentaire: "Scénario retenu et publié",
+    provisoire: false,
+    publish: true,
+  });
+  if (ok) toast("Scénario retenu / publié");
+  return ok;
+}
+
+export function rejeterScenario(ficheId: string, raison: string) {
+  if (!raison.trim()) {
+    toast("Raison du rejet obligatoire");
+    return false;
+  }
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "en_test") {
+    toast("Transition interdite");
+    return false;
+  }
+  const ok = applyFicheWorkflow(ficheId, "rejete", {
+    commentaire: raison.trim(),
+    provisoire: false,
+    publish: false,
+  });
+  if (ok) toast("Scénario rejeté");
+  return ok;
+}
+
+export function archiverFicheWorkflow(ficheId: string) {
+  ensureHydrated();
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "retenu_publie") {
+    toast("Transition interdite");
+    return false;
+  }
+  if (fiche.scenarioId) {
+    updateScenario(fiche.scenarioId, { statut: "archive" });
+  }
+  toast("Scénario archivé");
+  return true;
+}
+
+export function dupliquerFichePourRecommencer(ficheId: string) {
+  ensureHydrated();
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche || fiche.statutWorkflow !== "rejete") {
+    toast("Disponible uniquement pour une fiche rejetée");
+    return null;
+  }
+  const copy = emptyFiche(fiche.scenarioId);
+  copy.titre = `${fiche.titre} (copie)`;
+  copy.entrepriseNom = fiche.entrepriseNom;
+  copy.role = fiche.role;
+  copy.sections = { ...fiche.sections };
+  state = { ...state, fiches: [...state.fiches, copy] };
+  if (copy.scenarioId) {
+    syncWorkflowToScenarioAndCoeur(copy.scenarioId, "brouillon", false);
+  }
+  persist(state);
+  toast("Fiche dupliquée — recommencez le workflow");
+  return copy.id;
 }
 
 /* —— Scenarios —— */
@@ -871,6 +1217,16 @@ export function useAdminStore() {
     updateFiche,
     generateCoeurFromFiche,
     ficheForScenario,
+    soumettreFiche,
+    validerFiche,
+    demanderCorrectionsFiche,
+    repasserFicheEnBrouillon,
+    genererScenarioProvisoire,
+    lancerTestsAgents,
+    retenirScenario,
+    rejeterScenario,
+    archiverFicheWorkflow,
+    dupliquerFichePourRecommencer,
     createEntreprise,
     updateEntreprise,
     createPersonnage,

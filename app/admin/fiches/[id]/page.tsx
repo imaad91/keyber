@@ -11,32 +11,60 @@ import {
   selectClass,
   textareaClass,
 } from "@/components/admin/AdminPrimitives";
+import { FicheAgentTestReport } from "@/components/admin/FicheAgentTestReport";
+import { WorkflowStatusBadge } from "@/components/admin/WorkflowStatusBadge";
 import {
-  ADMIN_FICHE_STATUTS,
+  WorkflowHistoryList,
+  WorkflowTimeline,
+} from "@/components/admin/WorkflowTimeline";
+import {
   FICHE_SECTION_HINT,
   FICHE_SECTION_META,
   ficheFillPercent,
   ficheMissingSections,
   type AdminFicheSections,
-  type AdminFicheStatus,
 } from "@/lib/adminFiches";
 import { useAdminStore } from "@/lib/adminStore";
+import {
+  allAgentsValidated,
+  isFicheContentEditable,
+  workflowProgressLabel,
+} from "@/lib/adminWorkflow";
 
 export default function AdminFicheDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const store = useAdminStore();
   const {
     fiches,
     scenarios,
     entreprises,
+    agents,
     updateFiche,
-    generateCoeurFromFiche,
-  } = useAdminStore();
+    soumettreFiche,
+    validerFiche,
+    demanderCorrectionsFiche,
+    repasserFicheEnBrouillon,
+    genererScenarioProvisoire,
+    lancerTestsAgents,
+    retenirScenario,
+    rejeterScenario,
+    archiverFicheWorkflow,
+    dupliquerFichePourRecommencer,
+  } = store;
   const fiche = fiches.find((f) => f.id === id);
-  const [generating, setGenerating] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [correctionText, setCorrectionText] = useState("");
+  const [showCorrection, setShowCorrection] = useState(false);
+  const [rejectText, setRejectText] = useState("");
+  const [showReject, setShowReject] = useState(false);
 
   const pct = fiche ? ficheFillPercent(fiche) : 0;
   const missing = fiche ? ficheMissingSections(fiche) : [];
+  const editable = fiche ? isFicheContentEditable(fiche.statutWorkflow) : false;
+  const agentsOk = fiche
+    ? allAgentsValidated(fiche.agentTestReports ?? [])
+    : false;
 
   const scenarioOptions = useMemo(
     () => [...scenarios].sort((a, b) => a.order - b.order),
@@ -60,16 +88,21 @@ export default function AdminFicheDetailPage() {
     });
   }
 
-  function onGenerate() {
-    setGenerating(true);
+  function run(action: () => boolean | null | string | void, delay = 0) {
+    setBusy(true);
     window.setTimeout(() => {
-      const ok = generateCoeurFromFiche(fiche!.id);
-      setGenerating(false);
-      if (ok) {
-        router.push(`/admin/coeur/langage/${fiche!.scenarioId}`);
-      }
-    }, 600);
+      const result = action();
+      setBusy(false);
+      if (typeof result === "string") router.push(`/admin/fiches/${result}`);
+    }, delay);
   }
+
+  const alertMessage =
+    fiche.statutWorkflow === "corrections_demandees"
+      ? fiche.commentaireCorrection
+      : fiche.statutWorkflow === "rejete"
+        ? fiche.raisonRejet
+        : undefined;
 
   return (
     <div>
@@ -84,30 +117,163 @@ export default function AdminFicheDetailPage() {
         title={`Fiche — ${fiche.titre.replace(/^Fiche\s+/i, "") || fiche.titre}`}
       />
 
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <WorkflowStatusBadge status={fiche.statutWorkflow} showStep />
+        {fiche.provisoire ? (
+          <span className="rounded-md bg-orange-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+            Provisoire
+          </span>
+        ) : null}
+        <span className="text-xs text-slate-500">
+          {workflowProgressLabel(fiche.statutWorkflow)}
+        </span>
+        <Link
+          href={`/admin/fiches/suivi?focus=${fiche.id}`}
+          className="ml-auto text-xs font-semibold text-slate-700 underline"
+        >
+          Voir dans Suivi Validation
+        </Link>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <WorkflowTimeline
+          status={fiche.statutWorkflow}
+          alertMessage={alertMessage}
+        />
+      </div>
+
       <div className="mb-6 flex flex-wrap gap-2">
-        <AdminButton
-          onClick={() => {
-            updateFiche(fiche.id, {
-              titre: fiche.titre,
-              scenarioId: fiche.scenarioId,
-              entrepriseNom: fiche.entrepriseNom,
-              role: fiche.role,
-              statut: fiche.statut,
-              sections: fiche.sections,
-            });
-          }}
-        >
-          Enregistrer la Fiche
-        </AdminButton>
-        <AdminButton
-          variant="secondary"
-          onClick={onGenerate}
-          disabled={generating}
-        >
-          {generating
-            ? "Génération du Cœur en cours…"
-            : "Générer le Cœur à partir de cette Fiche"}
-        </AdminButton>
+        {editable ? (
+          <AdminButton
+            onClick={() =>
+              updateFiche(fiche.id, {
+                titre: fiche.titre,
+                scenarioId: fiche.scenarioId,
+                entrepriseNom: fiche.entrepriseNom,
+                role: fiche.role,
+                sections: fiche.sections,
+              })
+            }
+          >
+            Enregistrer la Fiche
+          </AdminButton>
+        ) : null}
+
+        {fiche.statutWorkflow === "brouillon" ? (
+          <AdminButton onClick={() => run(() => soumettreFiche(fiche.id))}>
+            Soumettre la Fiche
+          </AdminButton>
+        ) : null}
+
+        {fiche.statutWorkflow === "soumise" ? (
+          <>
+            <AdminButton onClick={() => run(() => validerFiche(fiche.id))}>
+              Valider la Fiche
+            </AdminButton>
+            <AdminButton
+              variant="secondary"
+              onClick={() => setShowCorrection((v) => !v)}
+            >
+              Demander des corrections
+            </AdminButton>
+          </>
+        ) : null}
+
+        {fiche.statutWorkflow === "corrections_demandees" ? (
+          <AdminButton
+            onClick={() => run(() => repasserFicheEnBrouillon(fiche.id))}
+          >
+            Repasser en Brouillon pour corriger
+          </AdminButton>
+        ) : null}
+
+        {fiche.statutWorkflow === "fiche_validee" ? (
+          <AdminButton
+            onClick={() =>
+              run(() => genererScenarioProvisoire(fiche.id), 500)
+            }
+            disabled={busy}
+          >
+            {busy
+              ? "Génération du Cœur en cours…"
+              : "Générer le Scénario Provisoire"}
+          </AdminButton>
+        ) : null}
+
+        {fiche.statutWorkflow === "provisoire_cree" ? (
+          <AdminButton onClick={() => run(() => lancerTestsAgents(fiche.id))}>
+            Lancer les tests Agents
+          </AdminButton>
+        ) : null}
+
+        {fiche.statutWorkflow === "en_test" ? (
+          <>
+            <AdminButton
+              onClick={() => run(() => retenirScenario(fiche.id))}
+              disabled={!agentsOk}
+            >
+              {agentsOk
+                ? "Retenir le Scénario"
+                : "En attente de validation des Agents"}
+            </AdminButton>
+            {!agentsOk ? (
+              <>
+                <AdminButton
+                  variant="secondary"
+                  onClick={() => {
+                    document
+                      .getElementById("rapport-agents")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  Voir les problèmes
+                </AdminButton>
+                <AdminButton
+                  variant="secondary"
+                  onClick={() => run(() => lancerTestsAgents(fiche.id))}
+                >
+                  Corriger et relancer les tests
+                </AdminButton>
+              </>
+            ) : null}
+            <AdminButton
+              variant="secondary"
+              onClick={() => setShowReject((v) => !v)}
+            >
+              Rejeter le Scénario
+            </AdminButton>
+          </>
+        ) : null}
+
+        {fiche.statutWorkflow === "retenu_publie" ? (
+          <>
+            {fiche.scenarioId ? (
+              <Link
+                href={`/admin/scenarios/${fiche.scenarioId}`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white"
+              >
+                Voir le Scénario Publié
+              </Link>
+            ) : null}
+            <AdminButton
+              variant="secondary"
+              onClick={() => run(() => archiverFicheWorkflow(fiche.id))}
+            >
+              Archiver
+            </AdminButton>
+          </>
+        ) : null}
+
+        {fiche.statutWorkflow === "rejete" ? (
+          <AdminButton
+            onClick={() =>
+              run(() => dupliquerFichePourRecommencer(fiche.id))
+            }
+          >
+            Dupliquer la Fiche pour recommencer
+          </AdminButton>
+        ) : null}
+
         {fiche.coeurGenere && fiche.scenarioId ? (
           <>
             <Link
@@ -124,6 +290,98 @@ export default function AdminFicheDetailPage() {
             </Link>
           </>
         ) : null}
+      </div>
+
+      {showCorrection ? (
+        <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+          <Field label="Commentaire de correction (obligatoire)">
+            <textarea
+              className={textareaClass}
+              value={correctionText}
+              onChange={(e) => setCorrectionText(e.target.value)}
+              placeholder="Précisez les corrections demandées…"
+            />
+          </Field>
+          <div className="mt-3 flex gap-2">
+            <AdminButton
+              onClick={() => {
+                run(() => {
+                  const ok = demanderCorrectionsFiche(
+                    fiche.id,
+                    correctionText
+                  );
+                  if (ok) {
+                    setShowCorrection(false);
+                    setCorrectionText("");
+                  }
+                  return ok;
+                });
+              }}
+            >
+              Envoyer les corrections
+            </AdminButton>
+            <AdminButton
+              variant="secondary"
+              onClick={() => setShowCorrection(false)}
+            >
+              Annuler
+            </AdminButton>
+          </div>
+        </div>
+      ) : null}
+
+      {showReject ? (
+        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <Field label="Raison du rejet (obligatoire)">
+            <textarea
+              className={textareaClass}
+              value={rejectText}
+              onChange={(e) => setRejectText(e.target.value)}
+              placeholder="Pourquoi rejeter ce scénario ?"
+            />
+          </Field>
+          <div className="mt-3 flex gap-2">
+            <AdminButton
+              onClick={() => {
+                run(() => {
+                  const ok = rejeterScenario(fiche.id, rejectText);
+                  if (ok) {
+                    setShowReject(false);
+                    setRejectText("");
+                  }
+                  return ok;
+                });
+              }}
+            >
+              Confirmer le rejet
+            </AdminButton>
+            <AdminButton
+              variant="secondary"
+              onClick={() => setShowReject(false)}
+            >
+              Annuler
+            </AdminButton>
+          </div>
+        </div>
+      ) : null}
+
+      {fiche.statutWorkflow === "en_test" ? (
+        <div id="rapport-agents" className="mb-8 space-y-3">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Rapport de test Agents
+          </h2>
+          <FicheAgentTestReport
+            reports={fiche.agentTestReports ?? []}
+            agents={agents}
+          />
+        </div>
+      ) : null}
+
+      <div className="mb-8">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Historique des étapes
+        </h2>
+        <WorkflowHistoryList historique={fiche.historique ?? []} />
       </div>
 
       <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -149,6 +407,7 @@ export default function AdminFicheDetailPage() {
           <input
             className={inputClass}
             value={fiche.titre}
+            disabled={!editable}
             onChange={(e) => updateFiche(fiche.id, { titre: e.target.value })}
           />
         </Field>
@@ -156,6 +415,7 @@ export default function AdminFicheDetailPage() {
           <select
             className={selectClass}
             value={fiche.scenarioId}
+            disabled={!editable}
             onChange={(e) => {
               const scn = scenarios.find((s) => s.id === e.target.value);
               const ent = entreprises.find((x) => x.id === scn?.entrepriseId);
@@ -178,6 +438,7 @@ export default function AdminFicheDetailPage() {
           <input
             className={inputClass}
             value={fiche.entrepriseNom}
+            disabled={!editable}
             onChange={(e) =>
               updateFiche(fiche.id, { entrepriseNom: e.target.value })
             }
@@ -187,25 +448,9 @@ export default function AdminFicheDetailPage() {
           <input
             className={inputClass}
             value={fiche.role}
+            disabled={!editable}
             onChange={(e) => updateFiche(fiche.id, { role: e.target.value })}
           />
-        </Field>
-        <Field label="Statut">
-          <select
-            className={selectClass}
-            value={fiche.statut}
-            onChange={(e) =>
-              updateFiche(fiche.id, {
-                statut: e.target.value as AdminFicheStatus,
-              })
-            }
-          >
-            {ADMIN_FICHE_STATUTS.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
         </Field>
       </div>
 
@@ -227,6 +472,7 @@ export default function AdminFicheDetailPage() {
             <textarea
               className={`${textareaClass} mt-4 min-h-[160px]`}
               value={fiche.sections[sec.key]}
+              disabled={!editable}
               onChange={(e) => patchSections({ [sec.key]: e.target.value })}
               placeholder="Anecdotes, chiffres, exemples vrais…"
             />
@@ -234,10 +480,10 @@ export default function AdminFicheDetailPage() {
         ))}
       </div>
 
-      {generating ? (
+      {busy ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="rounded-2xl bg-white px-6 py-5 text-sm font-semibold text-slate-900 shadow-lg">
-            Génération du Cœur en cours…
+            Traitement en cours…
           </div>
         </div>
       ) : null}

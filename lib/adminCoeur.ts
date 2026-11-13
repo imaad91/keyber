@@ -102,6 +102,9 @@ export type ScenarioCoeur = {
     id: string;
     titre: string;
     entrepriseId: string;
+    /** Synced with Fiche / AdminScenario workflow status. */
+    statutWorkflow?: import("./adminWorkflow").StatutWorkflow;
+    provisoire?: boolean;
   };
   gameStateInitial: CoeurGameStateInitial;
   /** Targeted skills for this scenario's role (generals are shared). */
@@ -186,6 +189,8 @@ export function emptyCoeur(scenario: AdminScenario): ScenarioCoeur {
       id: scenario.id,
       titre: scenario.titre,
       entrepriseId: scenario.entrepriseId ?? "",
+      statutWorkflow: scenario.statutWorkflow,
+      provisoire: scenario.provisoire,
     },
     gameStateInitial: defaultGameStateInitial(),
     competencesCiblees: COMPETENCES_CIBLEES_PROD.map((c) => ({

@@ -30,7 +30,7 @@ export default function WorkflowJournalDecisionsListPage() {
   const [consequence, setConsequence] = useState("");
   const [moduleLie, setModuleLie] = useState<JournalModuleLie>("Workflow");
 
-  const list = [...journalDecisions].sort(
+  const list = [...(journalDecisions ?? [])].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 

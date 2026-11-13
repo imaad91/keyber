@@ -25,7 +25,7 @@ const USAGE_HREF: Partial<Record<GlossaireUsage, string>> = {
   ERP: "/erp",
   Dialogues: "/admin/atelier/briefs",
   Cœur: "/admin/systeme/coeur",
-  Compétences: "/admin/systeme/competences",
+  Compétences: "/admin/atelier/competences",
   GameState: "/admin/systeme/architecture",
   Workflow: "/admin/systeme/architecture",
   Agents: "/admin/controle/agents",

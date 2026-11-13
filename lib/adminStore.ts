@@ -8,6 +8,10 @@ import {
 } from "./agents";
 import { runErgonomieAudit, runOrchestraAudit } from "./agentAppAudits";
 import {
+  getAtelierSnapshotForAgents,
+  isTechniqueVague,
+} from "./atelierStore";
+import {
   buildCoeurFromAdminState,
   coeurToAdminSlices,
   emptyCoeur,
@@ -1188,6 +1192,31 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
     }
     const issues = [];
     if (a.id === "agent-metier" || a.role.toLowerCase().includes("métier")) {
+      const atelier = getAtelierSnapshotForAgents();
+      for (const comp of atelier.competences) {
+        if (comp.type !== "technique") continue;
+        if (isTechniqueVague(comp)) {
+          issues.push({
+            priorite: "haute" as const,
+            titre: "Fiche technique trop vague",
+            detail: `${comp.id} (${comp.nom}) — formule ou indicateur précis manquant.`,
+            solution:
+              "Ajouter la formule exacte et au moins un indicateur mesurable.",
+            nodeId: comp.id,
+          });
+        } else if (
+          comp.id === "planification_mrp" &&
+          !/besoin\s*net\s*=\s*besoin\s*brut/i.test(comp.formule)
+        ) {
+          issues.push({
+            priorite: "moyenne" as const,
+            titre: "Formule MRP douteuse",
+            detail: `${comp.id} : attendu Besoin net = Besoin brut - Stock - En-cours`,
+            solution: "Corriger la formule dans Atelier > Compétences.",
+            nodeId: comp.id,
+          });
+        }
+      }
       const d1 = coeur.decisions.find((d) => d.jour === 1);
       const cap = d1?.choix.find((c) => /capteur/i.test(c.label));
       const cash = cap?.consequences.find((c) => c.cible === "tresorerie");

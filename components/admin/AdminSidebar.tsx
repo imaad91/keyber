@@ -25,7 +25,8 @@ const NAV: NavItem[] = [
     label: "Atelier",
     icon: Briefcase,
     children: [
-      { href: "/admin/atelier/briefs", label: "Briefs" },
+      { href: "/admin/atelier/contextes", label: "Contextes d'entreprise" },
+      { href: "/admin/atelier/competences", label: "Compétences" },
       { href: "/admin/atelier/scenarios", label: "Scénarios" },
     ],
   },
@@ -38,7 +39,6 @@ const NAV: NavItem[] = [
       { href: "/admin/systeme/architecture", label: "Architecture" },
       { href: "/admin/systeme/glossaire", label: "Glossaire" },
       { href: "/admin/systeme/journal-decisions", label: "Journal des décisions" },
-      { href: "/admin/systeme/competences", label: "Compétences" },
     ],
   },
   {

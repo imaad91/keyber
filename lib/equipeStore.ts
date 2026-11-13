@@ -29,6 +29,8 @@ export type EquipePartie = {
   userId: string;
   scenarioId: string;
   scenarioTitre: string;
+  contexteNom: string;
+  competencesTravaillees: string[];
   progression: number; // 0-100
   score: number;
   bloqueSur: string | null;

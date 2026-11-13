@@ -135,9 +135,9 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
     role: "Réalisme industriel",
     competences: ["production", "supply", "qualité", "cash", "management"],
     mission:
-      "Vérifier que les chiffres, délais et impacts métier sont crédibles pour une PME industrielle type Novacier (capteurs, rebut, HS, panne machine).",
+      "Vérifier que les chiffres, délais et impacts métier sont crédibles. Vérifier surtout que les compétences techniques Atelier sont exactes (formules correctes) et signaler toute fiche technique trop vague (sans formule ou sans indicateur précis).",
     sortieAttendue:
-      "Rapport réalisme : anomalies chiffrées (ex. machine 80k€ disproportionnée vs capteur), suggestions d'ajustement des conséquences.",
+      "Rapport réalisme + précision compétences techniques : fiches trop vagues, formules manquantes/incorrectes, anomalies chiffrées.",
     niveauExigence: "strict",
     actif: true,
     icone: "briefcase",

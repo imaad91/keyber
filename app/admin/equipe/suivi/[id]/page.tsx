@@ -52,6 +52,16 @@ export default function EquipeSuiviDetailPage() {
           )}
         </p>
         <p>
+          <span className="font-semibold">Contexte :</span>{" "}
+          {partie.contexteNom || "—"}
+        </p>
+        <p>
+          <span className="font-semibold">Compétences travaillées :</span>{" "}
+          {partie.competencesTravaillees?.length
+            ? partie.competencesTravaillees.join(", ")
+            : "—"}
+        </p>
+        <p>
           <span className="font-semibold">Progression :</span>{" "}
           {partie.progression}%
         </p>

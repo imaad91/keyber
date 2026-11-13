@@ -23,8 +23,8 @@ export default function EquipeSuiviPage() {
         title="Équipe — Suivi des parties"
       />
       <p className="mb-4 text-sm text-slate-600">
-        Progression des utilisateurs sur les scénarios. Liste vide tant qu&apos;aucune
-        partie n&apos;a été jouée (pas de faux joueurs).
+        Utilisateur, scénario, contexte, compétences travaillées, progression,
+        score, blocage.
       </p>
       {list.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-12 text-center text-sm text-slate-500">
@@ -42,10 +42,15 @@ export default function EquipeSuiviPage() {
               >
                 <p className="font-semibold text-slate-900">{p.scenarioTitre}</p>
                 <p className="mt-1 text-sm text-slate-600">
-                  {u ? `${u.prenom} ${u.nom}` : p.userId} · {p.progression}% ·
-                  score {p.score}
+                  {u ? `${u.prenom} ${u.nom}` : p.userId} · contexte{" "}
+                  {p.contexteNom || "—"} · {p.progression}% · score {p.score}
                   {p.bloqueSur ? ` · bloqué : ${p.bloqueSur}` : ""}
                 </p>
+                {p.competencesTravaillees?.length ? (
+                  <p className="mt-1 font-mono text-xs text-slate-400">
+                    {p.competencesTravaillees.join(", ")}
+                  </p>
+                ) : null}
               </Link>
             );
           })}

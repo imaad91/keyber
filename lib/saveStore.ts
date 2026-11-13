@@ -3,6 +3,7 @@
  */
 
 import type { GameState, ModeJeu } from "./gameState";
+import { migrateGameState } from "./migrateGameState";
 import {
   ACTIVE_SLOT_KEY,
   PROGRESSION_STORAGE_KEY,
@@ -47,8 +48,21 @@ export function loadSavesBundle(): SavesBundle {
     const activeSlot = activeRaw ? (Number(activeRaw) as SlotNumber) : null;
     if (!raw) return { slots: {}, activeSlot };
     const parsed = JSON.parse(raw) as SavesBundle["slots"];
+    const slots: SavesBundle["slots"] = {};
+    for (const [key, save] of Object.entries(parsed ?? {})) {
+      if (!save?.gameState) continue;
+      const slot = Number(key) as SlotNumber;
+      try {
+        slots[slot] = {
+          ...save,
+          gameState: migrateGameState(save.gameState),
+        };
+      } catch {
+        // skip corrupt slot
+      }
+    }
     return {
-      slots: parsed ?? {},
+      slots,
       activeSlot:
         activeSlot === 1 || activeSlot === 2 || activeSlot === 3
           ? activeSlot

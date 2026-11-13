@@ -9,7 +9,7 @@ export function DayEndScreen() {
 
   const missed = gameState.dayDecisionId === "non-prise";
   const nextDay = gameState.day >= 5 ? null : gameState.day + 1;
-  const eventsToday = gameState.evenementsDeclenches.length;
+  const eventsToday = gameState.evenementsDeclenches?.length ?? 0;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
@@ -48,12 +48,12 @@ export function DayEndScreen() {
             <strong className="text-foreground">{eventsToday}</strong>
           </li>
         </ul>
-        {gameState.lastSkillDebrief.length > 0 ? (
+        {(gameState.lastSkillDebrief?.length ?? 0) > 0 ? (
           <div className="mt-4 space-y-1.5 rounded-xl border border-white/10 bg-panel-2 p-3 text-sm">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">
               Débrief compétences
             </p>
-            {gameState.lastSkillDebrief.map((line) => (
+            {(gameState.lastSkillDebrief ?? []).map((line) => (
               <p key={line} className="leading-relaxed text-foreground">
                 {line}
               </p>

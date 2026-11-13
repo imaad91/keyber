@@ -128,7 +128,7 @@ export function HomeProgression() {
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {skills.map((skill) => {
             const p = skillBars[skill.id] ??
-              gameState.skillProgress[skill.id] ?? {
+              gameState.skillProgress?.[skill.id] ?? {
                 niveau: 1,
                 xp: 0,
               };

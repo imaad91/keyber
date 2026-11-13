@@ -66,6 +66,13 @@ export type GameView = {
   trainingsCompleted: GameState["world"]["trainingsCompleted"];
   histoiresCompleted: GameState["world"]["histoiresCompleted"];
   trainingPrompt: GameState["world"]["trainingPrompt"];
+  eventNotifications: GameState["world"]["eventNotifications"];
+  urgentBanner: GameState["world"]["urgentBanner"];
+  showDayEnd: boolean;
+  heureActuelle: string;
+  tempsRestantMinutes: number;
+  evenementsDeclenches: string[];
+  dashboardAlert: boolean;
   feedbackFlash: string | null;
   introSeen: boolean;
   onboardingStep: GameState["world"]["onboardingStep"];
@@ -167,6 +174,13 @@ export function toGameView(state: GameState): GameView {
     trainingsCompleted: state.world.trainingsCompleted ?? [],
     histoiresCompleted: state.world.histoiresCompleted ?? [],
     trainingPrompt: state.world.trainingPrompt ?? null,
+    eventNotifications: state.world.eventNotifications ?? [],
+    urgentBanner: state.world.urgentBanner ?? null,
+    showDayEnd: Boolean(state.world.showDayEnd),
+    heureActuelle: state.meta.heureActuelle,
+    tempsRestantMinutes: state.meta.tempsRestantMinutes,
+    evenementsDeclenches: state.historique.evenementsDeclenches,
+    dashboardAlert: (state.flags.dashboardAlert ?? 0) >= 1,
     feedbackFlash: state.world.feedbackFlash,
     introSeen: state.world.introSeen,
     onboardingStep: state.world.onboardingStep,

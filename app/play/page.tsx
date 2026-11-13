@@ -5,15 +5,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ActionSidebar } from "@/components/ActionSidebar";
 import { AtelierLiveView } from "@/components/AtelierLiveView";
 import { ComputerDesktop } from "@/components/computer/ComputerDesktop";
+import { DayEndScreen } from "@/components/DayEndScreen";
 import { DecisionCard } from "@/components/DecisionCard";
 import { EventFeed } from "@/components/EventFeed";
+import { EventNotificationToast } from "@/components/EventNotificationToast";
 import { FeedbackToast } from "@/components/FeedbackToast";
+import { GameClockBar } from "@/components/GameClockBar";
 import { InterviewView } from "@/components/InterviewView";
 import { KpiBar } from "@/components/KpiBar";
 import { ObjectivePanel } from "@/components/ObjectivePanel";
 import { DebriefView } from "@/components/DebriefView";
 import { OnboardingCoach } from "@/components/OnboardingCoach";
 import { ScenarioDayBanner } from "@/components/ScenarioDayBanner";
+import { UrgentEventBanner } from "@/components/UrgentEventBanner";
 import { VisibilityPanel } from "@/components/VisibilityPanel";
 import { exampleActions, roles } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
@@ -83,6 +87,8 @@ function PlayInner() {
     <div className="flex h-screen overflow-hidden atmosphere-play text-foreground">
       <ActionSidebar />
       <div className="flex min-w-0 flex-1 flex-col">
+        <GameClockBar />
+        <UrgentEventBanner />
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2 text-xs text-muted">
           <span>
             {role ? role.titre : "Mode libre"} · Semaine {gameState.week} · Jour{" "}
@@ -121,6 +127,8 @@ function PlayInner() {
       </div>
       <VisibilityPanel />
       <FeedbackToast />
+      <EventNotificationToast />
+      <DayEndScreen />
     </div>
   );
 }

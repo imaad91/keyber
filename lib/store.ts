@@ -13,6 +13,7 @@ import {
   resolveRumor as engineResolveRumor,
   unlockBadge,
 } from "./engine";
+import { checkEvenements } from "./evenements";
 import type { GameState, ModeJeu } from "./gameState";
 import { legacyModeFrom, toModeJeu } from "./gameState";
 import { createInitialGameState } from "./mock";
@@ -150,6 +151,40 @@ export function clearTrainingPrompt() {
   patchState((s) => engineClearTrainingPrompt(s));
 }
 
+export function dismissEventNotification(id?: string) {
+  patchState((s) => ({
+    ...s,
+    world: {
+      ...s.world,
+      eventNotifications: id
+        ? (s.world.eventNotifications ?? []).filter((n) => n.id !== id)
+        : (s.world.eventNotifications ?? []).slice(1),
+    },
+  }));
+}
+
+export function clearUrgentBanner() {
+  patchState((s) => ({
+    ...s,
+    world: { ...s.world, urgentBanner: null },
+  }));
+}
+
+export function closeDayEndAndAdvance() {
+  patchState((s) => {
+    const cleared = {
+      ...s,
+      world: { ...s.world, showDayEnd: false },
+    };
+    return advanceScenarioDay(cleared);
+  });
+  autoSave(snapshot.state);
+}
+
+export function runEventCheck() {
+  patchState((s) => checkEvenements(s));
+}
+
 export function markIntroSeen() {
   patchState((s) => {
     const withIntro: GameState = {
@@ -220,6 +255,17 @@ export function ensureActiveSlot(slot?: SlotNumber) {
 
 export function setActiveAction(action: Action | null) {
   if (action) {
+    if (snapshot.state.world.showDayEnd) {
+      patchState((s) => ({
+        ...s,
+        world: {
+          ...s.world,
+          feedbackFlash: "Fin de journée — passe au jour suivant.",
+        },
+      }));
+      return;
+    }
+
     const gated =
       snapshot.state.world.mode === "story" &&
       !snapshot.state.world.onboardingDone;
@@ -260,6 +306,7 @@ export function setActiveAction(action: Action | null) {
       computerApp: null,
       playTab: "workspace",
     });
+    autoSave(snapshot.state);
     return;
   }
 
@@ -278,7 +325,13 @@ export function openComputerApp(app: ComputerAppId) {
     }));
     return;
   }
-  const next = advanceTime(snapshot.state, cost);
+  let next = advanceTime(snapshot.state, cost);
+  if (app === "dashboard" && (next.flags.dashboardAlert ?? 0) >= 1) {
+    next = {
+      ...next,
+      flags: { ...next.flags, dashboardAlert: 0 },
+    };
+  }
   setSnapshot({
     state: {
       ...next,
@@ -288,6 +341,23 @@ export function openComputerApp(app: ComputerAppId) {
       },
     },
     computerApp: app,
+  });
+  autoSave(snapshot.state);
+}
+
+/** Open an app without spending time (notification “Voir”). */
+export function focusComputerApp(app: ComputerAppId) {
+  setSnapshot({
+    activeAction: {
+      id: "act-computer",
+      type: "ACCESS_COMPUTER",
+      titre: "Accès Ordinateur",
+      icone: "Monitor",
+      description: "",
+      timeCostMinutes: 0,
+    },
+    computerApp: app,
+    playTab: "workspace",
   });
 }
 
@@ -448,9 +518,14 @@ export function useGameStore() {
     startCompetenceTraining,
     applyCompetenceTraining,
     clearTrainingPrompt,
+    dismissEventNotification,
+    clearUrgentBanner,
+    closeDayEndAndAdvance,
+    runEventCheck,
     markIntroSeen,
     setActiveAction,
     openComputerApp,
+    focusComputerApp,
     closeComputerApp,
     setPlayTab,
     setSelectedDecisionId,

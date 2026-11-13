@@ -10,21 +10,22 @@ import { useAdminStore } from "@/lib/adminStore";
 
 export default function AdminCompetenceDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { coeurs, scenarios } = useAdminStore();
+  const { scenarios, getScenarioCoeur } = useAdminStore();
   const def = getCompetenceDef(id);
 
   const usages = useMemo(() => {
-    const list = Object.values(coeurs).map((c) => ({
-      scenario: {
-        id: c.scenario.id,
-        titre:
-          scenarios.find((s) => s.id === c.scenario.id)?.titre ??
-          c.scenario.titre,
-      },
-      decisions: c.decisions,
-    }));
+    const list = scenarios.map((s) => {
+      const c = getScenarioCoeur(s.id);
+      return {
+        scenario: {
+          id: s.id,
+          titre: s.titre || c.scenario.titre,
+        },
+        decisions: c.decisions,
+      };
+    });
     return usagesOfCompetence(id, list);
-  }, [coeurs, scenarios, id]);
+  }, [scenarios, getScenarioCoeur, id]);
 
   if (!def) {
     return (

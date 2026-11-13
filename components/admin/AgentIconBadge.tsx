@@ -8,8 +8,10 @@ import {
   Factory,
   Gamepad2,
   GraduationCap,
+  Hand,
   Link2,
   MessageCircle,
+  Network,
   Shield,
   Target,
   Zap,
@@ -29,6 +31,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   database: Database,
   "book-open": BookOpen,
   "gamepad-2": Gamepad2,
+  network: Network,
+  hand: Hand,
 };
 
 /** Class strings must live here so Tailwind content scan keeps them. */
@@ -46,6 +50,14 @@ const THEME_CLASSES = {
     icon: "text-black",
   },
   erp: {
+    box: "border-2 border-black bg-white",
+    icon: "text-black",
+  },
+  orchestra: {
+    box: "bg-violet-600",
+    icon: "text-white",
+  },
+  ergonomie: {
     box: "border-2 border-black bg-white",
     icon: "text-black",
   },

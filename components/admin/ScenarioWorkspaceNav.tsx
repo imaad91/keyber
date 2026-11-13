@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { slug: "logique", label: "Logique", hint: "Yeux — lecture seule" },
+  { slug: "logique", label: "Workflow", hint: "Yeux — lecture seule" },
   { slug: "coeur", label: "Cœur", hint: "Essence verrouillée + Agents" },
   { slug: "", label: "Fiche", hint: "Voie d'édition autorisée" },
 ] as const;

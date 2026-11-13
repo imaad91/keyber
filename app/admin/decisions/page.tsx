@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 export default function DecisionsRedirect() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/admin/logique");
+    router.replace("/admin/workflow/scenarios");
   }, [router]);
-  return <p className="text-sm text-slate-500">Redirection vers Logique…</p>;
+  return (
+    <p className="text-sm text-slate-500">Redirection vers Workflow…</p>
+  );
 }

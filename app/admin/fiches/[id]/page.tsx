@@ -286,10 +286,10 @@ export default function AdminFicheDetailPage() {
         {fiche.coeurGenere && fiche.scenarioId ? (
           <>
             <Link
-              href={`/admin/logique/${fiche.scenarioId}`}
+              href={`/admin/workflow/scenarios/${fiche.scenarioId}`}
               className="inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
             >
-              Voir dans Logique
+              Voir dans Workflow
             </Link>
             <Link
               href={`/admin/coeur/langage/${fiche.scenarioId}`}

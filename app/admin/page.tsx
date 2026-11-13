@@ -41,10 +41,10 @@ export default function AdminDashboardPage() {
           hint="Porte d'entrée du réel"
         />
         <DashLink
-          href="/admin/logique"
+          href="/admin/workflow/scenarios"
           icon={Network}
-          title="Logique"
-          hint="Liste → schéma BPMN"
+          title="Workflow"
+          hint="Scénarios BPMN + Architecture"
         />
         <DashLink
           href="/admin/coeur/langage"

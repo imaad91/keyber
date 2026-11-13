@@ -5,8 +5,11 @@ import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { trainingForCompetence } from "@/data/trainings";
-import { skills } from "@/lib/mock";
+import {
+  trainingForCompetence,
+  trainingHeadline,
+} from "@/data/trainings";
+import { getCompetenceDef } from "@/lib/competences";
 import { XP_PER_SKILL_LEVEL } from "@/lib/progression";
 import {
   applyCompetenceTraining,
@@ -18,15 +21,17 @@ import { cn } from "@/lib/utils";
 export default function CompetenceTrainingPage() {
   const { skillId } = useParams<{ skillId: string }>();
   const { gameState } = useGameStore();
-  const skill = skills.find((s) => s.id === skillId);
+  const skill = getCompetenceDef(skillId);
   const training = trainingForCompetence(skillId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  const progress = gameState.skillProgress[skillId] ?? {
-    niveau: 1,
-    xp: 0,
-  };
+  const progress =
+    skill?.type === "ciblee"
+      ? gameState.competencesCiblees[skillId]
+      : gameState.competencesGenerales[skillId];
+  const niveau = progress?.niveau ?? 1;
+  const xp = progress?.xp ?? 0;
 
   const decision = training?.decision;
   const selected = useMemo(() => {
@@ -49,6 +54,8 @@ export default function CompetenceTrainingPage() {
     );
   }
 
+  const headline = trainingHeadline(skillId, niveau);
+
   return (
     <div className="min-h-screen atmosphere-play text-foreground">
       <div className="mx-auto max-w-4xl px-6 py-8">
@@ -60,12 +67,16 @@ export default function CompetenceTrainingPage() {
           Compétences
         </Link>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
-          Mode Compétence · {skill.nom}
+          Mode Compétence
         </p>
-        <h1 className="font-display text-3xl font-semibold">{training.titre}</h1>
+        <h1 className="font-display text-2xl font-semibold md:text-3xl">
+          {headline}
+        </h1>
         <p className="mt-1 text-sm text-muted">
-          Niveau {progress.niveau} · {progress.xp}/{XP_PER_SKILL_LEVEL} XP · ~
-          {training.dureeMin} min
+          {skill.descriptionPrecise}
+        </p>
+        <p className="mt-1 text-sm text-muted">
+          {xp}/{XP_PER_SKILL_LEVEL} XP · ~{training.dureeMin} min
         </p>
 
         <section className="mt-8 grid gap-4 lg:grid-cols-[240px_1fr]">
@@ -97,26 +108,6 @@ export default function CompetenceTrainingPage() {
               {selected.label}
             </h2>
             <p className="mt-2 text-sm text-muted">{selected.description}</p>
-            <div className="mt-6 grid gap-2 sm:grid-cols-3">
-              {(selected.impacts ?? []).map((impact) => (
-                <div
-                  key={impact.label}
-                  className={cn(
-                    "rounded-xl border px-3 py-3",
-                    impact.tone === "pos" && "border-ok/40 bg-ok/10",
-                    impact.tone === "neg" && "border-danger/40 bg-danger/10",
-                    impact.tone === "neu" && "border-white/10 bg-panel-2"
-                  )}
-                >
-                  <p className="text-[10px] uppercase tracking-wider text-muted">
-                    {impact.label}
-                  </p>
-                  <p className="mt-1 font-display text-sm font-semibold">
-                    {impact.value}
-                  </p>
-                </div>
-              ))}
-            </div>
 
             <div className="mt-8 flex flex-wrap gap-2">
               {!done ? (
@@ -133,9 +124,19 @@ export default function CompetenceTrainingPage() {
                 </Button>
               ) : (
                 <>
-                  <p className="w-full text-sm text-accent">
-                    {gameState.feedbackFlash}
-                  </p>
+                  <div className="w-full space-y-2 rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+                      Débrief compétences
+                    </p>
+                    {(gameState.lastSkillDebrief.length
+                      ? gameState.lastSkillDebrief
+                      : [gameState.feedbackFlash ?? ""]
+                    ).map((line) => (
+                      <p key={line} className="leading-relaxed text-foreground">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
                   <Button asChild variant="accent">
                     <Link href="/jouer/competence">Retour compétences</Link>
                   </Button>

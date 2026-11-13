@@ -185,6 +185,10 @@ function ReadOnlyDetail({
   }
   if (detail.kind === "choix") {
     const c = detail.choix;
+    const generales =
+      c.competencesImpactees?.filter((i) => i.type === "generale") ?? [];
+    const ciblees =
+      c.competencesImpactees?.filter((i) => i.type === "ciblee") ?? [];
     return (
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase text-slate-400">Action</p>
@@ -192,6 +196,36 @@ function ReadOnlyDetail({
         {c.feedbackTexte ? (
           <p className="text-sm text-slate-600">{c.feedbackTexte}</p>
         ) : null}
+        {(generales.length > 0 || ciblees.length > 0) && (
+          <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs">
+            {generales.length > 0 ? (
+              <div>
+                <p className="font-semibold text-slate-700">Générales</p>
+                <ul className="mt-1 space-y-1 text-slate-600">
+                  {generales.map((i) => (
+                    <li key={`${i.competenceId}-${i.feedback}`}>
+                      <span className="font-medium">{i.competenceId}</span> +
+                      {i.xp} — {i.feedback}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {ciblees.length > 0 ? (
+              <div>
+                <p className="font-semibold text-slate-700">Ciblées</p>
+                <ul className="mt-1 space-y-1 text-slate-600">
+                  {ciblees.map((i) => (
+                    <li key={`${i.competenceId}-${i.feedback}`}>
+                      <span className="font-medium">{i.competenceId}</span> +
+                      {i.xp} — {i.feedback}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        )}
         <ul className="font-mono text-[10px] text-slate-600">
           {c.consequences.map((cons, i) => (
             <li key={i}>{schematicImpact(cons)}</li>
@@ -201,6 +235,9 @@ function ReadOnlyDetail({
     );
   }
   const d = detail.decision;
+  const allImpacts = d.choix.flatMap((c) => c.competencesImpactees ?? []);
+  const generales = allImpacts.filter((i) => i.type === "generale");
+  const ciblees = allImpacts.filter((i) => i.type === "ciblee");
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold uppercase text-slate-400">
@@ -208,6 +245,35 @@ function ReadOnlyDetail({
       </p>
       <h3 className="text-sm font-semibold">{d.titre}</h3>
       <p className="text-sm text-slate-600">{d.dilemme}</p>
+      {(generales.length > 0 || ciblees.length > 0) && (
+        <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs">
+          <p className="font-semibold text-slate-700">Compétences impactées</p>
+          {generales.length > 0 ? (
+            <div>
+              <p className="text-[10px] uppercase text-slate-500">Générales</p>
+              <ul className="mt-1 space-y-1 text-slate-600">
+                {generales.map((i) => (
+                  <li key={`g-${i.competenceId}-${i.feedback.slice(0, 24)}`}>
+                    {i.competenceId} +{i.xp} — {i.feedback}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {ciblees.length > 0 ? (
+            <div>
+              <p className="text-[10px] uppercase text-slate-500">Ciblées</p>
+              <ul className="mt-1 space-y-1 text-slate-600">
+                {ciblees.map((i) => (
+                  <li key={`c-${i.competenceId}-${i.feedback.slice(0, 24)}`}>
+                    {i.competenceId} +{i.xp} — {i.feedback}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

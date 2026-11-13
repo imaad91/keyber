@@ -10,6 +10,11 @@ import {
   SCENARIO_ID,
   SCENARIO_TITLE,
 } from "@/data/scenarioNovacier";
+import {
+  assertPreciseDescription,
+  COMPETENCES_CIBLEES_PROD,
+  isVagueFeedback,
+} from "@/lib/competences";
 import type {
   AdminDecision,
   AdminEvent,
@@ -26,12 +31,31 @@ export type CoeurConsequence = {
   setValeur?: string;
 };
 
+export type CoeurCompetenceImpact = {
+  competenceId: string;
+  type: "generale" | "ciblee";
+  xp: number;
+  feedback: string;
+  indicateurIndex?: number;
+};
+
 export type CoeurChoix = {
   id: string;
   label: string;
   consequences: CoeurConsequence[];
   conditions?: unknown;
   feedbackTexte?: string;
+  competencesImpactees?: CoeurCompetenceImpact[];
+};
+
+export type CoeurCompetenceCiblee = {
+  id: string;
+  type: "ciblee";
+  role: string;
+  nom: string;
+  descriptionPrecise: string;
+  indicateurs: string[];
+  erreursFrequentes: string[];
 };
 
 export type CoeurDecision = {
@@ -80,6 +104,8 @@ export type ScenarioCoeur = {
     entrepriseId: string;
   };
   gameStateInitial: CoeurGameStateInitial;
+  /** Targeted skills for this scenario's role (generals are shared). */
+  competencesCiblees: CoeurCompetenceCiblee[];
   decisions: CoeurDecision[];
   evenements: CoeurEvenement[];
 };
@@ -162,6 +188,15 @@ export function emptyCoeur(scenario: AdminScenario): ScenarioCoeur {
       entrepriseId: scenario.entrepriseId ?? "",
     },
     gameStateInitial: defaultGameStateInitial(),
+    competencesCiblees: COMPETENCES_CIBLEES_PROD.map((c) => ({
+      id: c.id,
+      type: "ciblee" as const,
+      role: c.role,
+      nom: c.nom,
+      descriptionPrecise: c.descriptionPrecise,
+      indicateurs: [...c.indicateurs],
+      erreursFrequentes: [...c.erreursFrequentes],
+    })),
     decisions: [],
     evenements: [],
   };
@@ -175,6 +210,15 @@ export function novacierCoeur(): ScenarioCoeur {
       entrepriseId: ENTREPRISE_ID,
     },
     gameStateInitial: defaultGameStateInitial(),
+    competencesCiblees: COMPETENCES_CIBLEES_PROD.map((c) => ({
+      id: c.id,
+      type: "ciblee" as const,
+      role: c.role,
+      nom: c.nom,
+      descriptionPrecise: c.descriptionPrecise,
+      indicateurs: [...c.indicateurs],
+      erreursFrequentes: [...c.erreursFrequentes],
+    })),
     decisions: novacierDecisions.map((d) => ({
       id: d.id,
       jour: d.jour,
@@ -187,6 +231,15 @@ export function novacierCoeur(): ScenarioCoeur {
         label: c.label,
         feedbackTexte: c.feedbackTexte,
         conditions: c.requis ?? c.conditions,
+        competencesImpactees: c.competencesImpactees?.map((i) => ({
+          competenceId: i.competenceId,
+          type: i.type,
+          xp: i.xp,
+          feedback: i.feedback,
+          ...(typeof i.indicateurIndex === "number"
+            ? { indicateurIndex: i.indicateurIndex }
+            : {}),
+        })),
         consequences: c.consequences.map((x) => ({
           cible: x.cible,
           valeur: x.valeur,
@@ -548,6 +601,72 @@ export function validateCoeurObject(
     });
   }
 
+  if (root.competencesCiblees !== undefined) {
+    if (!Array.isArray(root.competencesCiblees)) {
+      errors.push(
+        err(
+          lineOf(text, '"competencesCiblees"'),
+          "competencesCiblees doit être un tableau"
+        )
+      );
+    } else {
+      (root.competencesCiblees as unknown[]).forEach((raw, i) => {
+        if (!raw || typeof raw !== "object") {
+          errors.push(err(1, `competencesCiblees[${i}] doit être un objet`));
+          return;
+        }
+        const c = raw as Record<string, unknown>;
+        const descErr = assertPreciseDescription(
+          typeof c.descriptionPrecise === "string"
+            ? c.descriptionPrecise
+            : undefined
+        );
+        if (descErr) {
+          errors.push(
+            err(
+              lineOf(text, '"competencesCiblees"'),
+              `competencesCiblees[${i}] — ${descErr}`
+            )
+          );
+        }
+        if (!isString(c.id) || !isString(c.nom) || !isString(c.role)) {
+          errors.push(
+            err(
+              lineOf(text, '"competencesCiblees"'),
+              `competencesCiblees[${i}] : id, nom et role obligatoires`
+            )
+          );
+        }
+      });
+    }
+  }
+
+  // Precise feedback on choice skill impacts
+  if (Array.isArray(root.decisions)) {
+    (root.decisions as unknown[]).forEach((dec, di) => {
+      if (!dec || typeof dec !== "object") return;
+      const d = dec as Record<string, unknown>;
+      if (!Array.isArray(d.choix)) return;
+      (d.choix as unknown[]).forEach((ch, ci) => {
+        if (!ch || typeof ch !== "object") return;
+        const choice = ch as Record<string, unknown>;
+        if (!Array.isArray(choice.competencesImpactees)) return;
+        (choice.competencesImpactees as unknown[]).forEach((imp, ii) => {
+          if (!imp || typeof imp !== "object") return;
+          const impact = imp as Record<string, unknown>;
+          if (!isString(impact.feedback) || isVagueFeedback(impact.feedback)) {
+            errors.push(
+              err(
+                lineOf(text, '"competencesImpactees"'),
+                `decisions[${di}].choix[${ci}].competencesImpactees[${ii}] : feedback précis obligatoire (pas « Bien joué »)`
+              )
+            );
+          }
+        });
+      });
+    });
+  }
+
   if (!Array.isArray(root.evenements)) {
     errors.push(
       err(
@@ -585,7 +704,19 @@ export function validateCoeurObject(
 
   if (errors.length) return { ok: false, errors };
 
-  return { ok: true, coeur: parsed as ScenarioCoeur };
+  const coeur = parsed as ScenarioCoeur;
+  if (!Array.isArray(coeur.competencesCiblees)) {
+    coeur.competencesCiblees = COMPETENCES_CIBLEES_PROD.map((c) => ({
+      id: c.id,
+      type: "ciblee" as const,
+      role: c.role,
+      nom: c.nom,
+      descriptionPrecise: c.descriptionPrecise,
+      indicateurs: [...c.indicateurs],
+      erreursFrequentes: [...c.erreursFrequentes],
+    }));
+  }
+  return { ok: true, coeur };
 }
 
 /** Build CŒUR from legacy admin slices (migration / fallback). */
@@ -609,6 +740,15 @@ export function buildCoeurFromAdminState(
     return {
       scenario: { id: scenarioId, titre: "Inconnu", entrepriseId: "" },
       gameStateInitial: defaultGameStateInitial(),
+      competencesCiblees: COMPETENCES_CIBLEES_PROD.map((c) => ({
+        id: c.id,
+        type: "ciblee" as const,
+        role: c.role,
+        nom: c.nom,
+        descriptionPrecise: c.descriptionPrecise,
+        indicateurs: [...c.indicateurs],
+        erreursFrequentes: [...c.erreursFrequentes],
+      })),
       decisions: [],
       evenements: [],
     };
@@ -641,6 +781,15 @@ export function buildCoeurFromAdminState(
       entrepriseId: scenario.entrepriseId ?? "",
     },
     gameStateInitial: defaultGameStateInitial(),
+    competencesCiblees: COMPETENCES_CIBLEES_PROD.map((c) => ({
+      id: c.id,
+      type: "ciblee" as const,
+      role: c.role,
+      nom: c.nom,
+      descriptionPrecise: c.descriptionPrecise,
+      indicateurs: [...c.indicateurs],
+      erreursFrequentes: [...c.erreursFrequentes],
+    })),
     decisions,
     evenements,
   };

@@ -191,6 +191,9 @@ function seedDecisions(): AdminDecision[] {
         ...(x.mode ? { mode: x.mode } : {}),
         ...(typeof x.setValeur === "string" ? { setValeur: x.setValeur } : {}),
       })),
+      ...(c.competencesImpactees?.length
+        ? { competencesImpactees: c.competencesImpactees.map((i) => ({ ...i })) }
+        : {}),
     })),
     order: idx + 1,
   }));

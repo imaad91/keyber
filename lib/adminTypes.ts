@@ -59,10 +59,24 @@ export type AdminConsequence = {
   setValeur?: string;
 };
 
+/** Competence impact mirrored from Cœur / scenario seed (for rebuild safety). */
+export type AdminCompetenceImpact = {
+  competenceId: string;
+  type: "generale" | "ciblee";
+  xp: number;
+  feedback?: string;
+  indicateurIndex?: number;
+  indicateurTeste?: string;
+  feedbackSiReussi?: string;
+  feedbackSiEchoue?: string;
+};
+
 export type AdminChoice = {
   id: string;
   texte: string;
   consequences: AdminConsequence[];
+  /** Kept so rebuildCoeurFromSlices does not strip Cœur competence links. */
+  competencesImpactees?: AdminCompetenceImpact[];
 };
 
 export type AdminDecision = {

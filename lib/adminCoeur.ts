@@ -825,6 +825,74 @@ export function buildCoeurFromAdminState(
   };
 }
 
+/**
+ * Backfill competencesImpactees stripped by older rebuilds / localStorage.
+ * Safe: only fills empty arrays from the Novacier seed file when ids match.
+ */
+export function repairMissingCompetenceImpacts(
+  coeur: ScenarioCoeur
+): ScenarioCoeur {
+  if (coeur.scenario.id !== SCENARIO_ID) return coeur;
+  let changed = false;
+  const decisions = coeur.decisions.map((d) => {
+    const fromFile = novacierDecisions.find((x) => x.id === d.id);
+    if (!fromFile) return d;
+    const choix = d.choix.map((c, i) => {
+      if (c.competencesImpactees && c.competencesImpactees.length > 0) {
+        return c;
+      }
+      const base =
+        fromFile.choix.find((b) => b.id === c.id) ?? fromFile.choix[i];
+      if (!base?.competencesImpactees?.length) return c;
+      changed = true;
+      return {
+        ...c,
+        competencesImpactees: base.competencesImpactees.map((imp) =>
+          mapImpactToCoeur(imp)
+        ),
+      };
+    });
+    return choix === d.choix ? d : { ...d, choix };
+  });
+  return changed ? { ...coeur, decisions } : coeur;
+}
+
+function mapImpactToCoeur(
+  raw: {
+    competenceId: string;
+    type?: "generale" | "ciblee";
+    xp: number;
+    feedback?: string;
+    indicateurIndex?: number;
+    indicateurTeste?: string;
+    feedbackSiReussi?: string;
+    feedbackSiEchoue?: string;
+  }
+): CoeurCompetenceImpact {
+  const n = normalizeLockedImpact({
+    competenceId: raw.competenceId,
+    type: raw.type ?? "generale",
+    xp: raw.xp,
+    feedback: raw.feedback,
+    indicateurIndex: raw.indicateurIndex,
+    indicateurTeste: raw.indicateurTeste,
+    feedbackSiReussi: raw.feedbackSiReussi,
+    feedbackSiEchoue: raw.feedbackSiEchoue,
+  });
+  return {
+    competenceId: n.competenceId,
+    type: n.type,
+    xp: n.xp,
+    feedback: n.feedback || n.feedbackSiReussi || "",
+    ...(typeof n.indicateurIndex === "number"
+      ? { indicateurIndex: n.indicateurIndex }
+      : {}),
+    ...(n.indicateurTeste ? { indicateurTeste: n.indicateurTeste } : {}),
+    ...(n.feedbackSiReussi ? { feedbackSiReussi: n.feedbackSiReussi } : {}),
+    ...(n.feedbackSiEchoue ? { feedbackSiEchoue: n.feedbackSiEchoue } : {}),
+  };
+}
+
 function adminDecisionToCoeur(d: AdminDecision): CoeurDecision {
   const fromFile = novacierDecisions.find((x) => x.id === d.id);
   return {
@@ -836,11 +904,16 @@ function adminDecisionToCoeur(d: AdminDecision): CoeurDecision {
     xpGagne: fromFile?.xpGagne ?? 0,
     choix: d.choix.map((c, i) => {
       const base = fromFile?.choix.find((b) => b.id === c.id) ?? fromFile?.choix[i];
+      const rawImpacts =
+        c.competencesImpactees?.length
+          ? c.competencesImpactees
+          : base?.competencesImpactees;
       return {
         id: c.id,
         label: c.texte,
         feedbackTexte: base?.feedbackTexte,
         conditions: base?.requis ?? base?.conditions,
+        competencesImpactees: rawImpacts?.map((imp) => mapImpactToCoeur(imp)),
         consequences: c.consequences.map((cons) => ({
           cible: cons.metric,
           valeur: cons.delta,
@@ -876,6 +949,13 @@ export function coeurToAdminSlices(coeur: ScenarioCoeur): {
         ...(cons.mode ? { mode: cons.mode } : {}),
         ...(cons.setValeur ? { setValeur: cons.setValeur } : {}),
       })),
+      ...(c.competencesImpactees?.length
+        ? {
+            competencesImpactees: c.competencesImpactees.map((imp) =>
+              mapImpactToCoeur(imp)
+            ),
+          }
+        : {}),
     })),
   }));
 

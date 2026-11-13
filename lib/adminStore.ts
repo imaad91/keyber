@@ -10,6 +10,7 @@ import {
   buildCoeurFromAdminState,
   coeurToAdminSlices,
   emptyCoeur,
+  repairMissingCompetenceImpacts,
   type ScenarioCoeur,
 } from "./adminCoeur";
 import {
@@ -97,10 +98,14 @@ function loadState(): AdminState {
     if (!raw) return createAdminSeed();
     const parsed = JSON.parse(raw) as Partial<AdminState>;
     const seed = createAdminSeed();
-    const coeurs = migrateCoeurs(parsed, seed);
-    for (const [id, c] of Object.entries(seed.coeurs)) {
-      if (!coeurs[id]) coeurs[id] = c;
-    }
+  const coeurs = migrateCoeurs(parsed, seed);
+  for (const [id, c] of Object.entries(seed.coeurs)) {
+    if (!coeurs[id]) coeurs[id] = c;
+  }
+  // Restore competence impacts stripped by older rebuilds / stale LS
+  for (const id of Object.keys(coeurs)) {
+    coeurs[id] = repairMissingCompetenceImpacts(coeurs[id]!);
+  }
     const coeurMeta = { ...seed.coeurMeta, ...(parsed.coeurMeta ?? {}) };
     for (const id of Object.keys(coeurs)) {
       if (!coeurMeta[id]) {
@@ -142,7 +147,30 @@ function loadState(): AdminState {
       })(),
       entreprises: parsed.entreprises ?? seed.entreprises,
       personnages: parsed.personnages ?? seed.personnages,
-      decisions: parsed.decisions ?? seed.decisions,
+      decisions: (() => {
+        const loaded = parsed.decisions ?? seed.decisions;
+        // Mirror competence impacts onto admin decision slices (rebuild-safe)
+        return loaded.map((d) => {
+          const coeur = coeurs[d.scenarioId];
+          const cd = coeur?.decisions.find((x) => x.id === d.id);
+          if (!cd) return d;
+          return {
+            ...d,
+            choix: d.choix.map((c, i) => {
+              if (c.competencesImpactees?.length) return c;
+              const cc =
+                cd.choix.find((x) => x.id === c.id) ?? cd.choix[i];
+              if (!cc?.competencesImpactees?.length) return c;
+              return {
+                ...c,
+                competencesImpactees: cc.competencesImpactees.map((imp) => ({
+                  ...imp,
+                })),
+              };
+            }),
+          };
+        });
+      })(),
       events: parsed.events ?? seed.events,
       fiches: (() => {
         const loaded = (parsed.fiches?.length ? parsed.fiches : seed.fiches).map(

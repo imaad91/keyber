@@ -16,6 +16,8 @@ export type ArchBlockId =
   | "competences"
   | "coeur"
   | "agents"
+  | "agent_orchestra"
+  | "agent_ergonomie"
   | "moteur"
   | "gamestate"
   | "temps"
@@ -94,6 +96,20 @@ const CORE_BLOCKS: ArchBlock[] = [
     role: "Testent et proposent des corrections",
     files: ["lib/agents.ts", "app/admin/coeur/agents"],
     links: ["testent → Cœur"],
+  },
+  {
+    id: "agent_orchestra",
+    label: "Agent Orchestra",
+    role: "Vérifie l'architecture et la cohérence globale",
+    files: ["lib/agents.ts", "lib/agentAppAudits.ts", "app/admin/coeur/agents"],
+    links: ["vérifie → Architecture globale"],
+  },
+  {
+    id: "agent_ergonomie",
+    label: "Agent Ergonomie",
+    role: "Vérifie l'ergonomie UI joueur et admin",
+    files: ["lib/agents.ts", "lib/agentAppAudits.ts", "app/admin/coeur/agents"],
+    links: ["vérifie → UI Joueur et UI Admin"],
   },
   {
     id: "moteur",
@@ -176,6 +192,20 @@ const CORE_LINKS: ArchLink[] = [
     kind: "dashed",
   },
   {
+    id: "l-orchestra-arch",
+    from: "agent_orchestra",
+    to: "coeur",
+    label: "Orchestra → vérifie → Architecture globale",
+    kind: "dashed",
+  },
+  {
+    id: "l-ergonomie-ui",
+    from: "agent_ergonomie",
+    to: "ordinateur",
+    label: "Ergonomie → vérifie → UI Joueur et UI Admin",
+    kind: "dashed",
+  },
+  {
     id: "l-coeur-workflow",
     from: "coeur",
     to: "scenarios",
@@ -229,8 +259,14 @@ const CORE_LINKS: ArchLink[] = [
 export function buildArchitectureModel(state: AdminState): ArchitectureModel {
   const agents = state.agents ?? [];
   const agentNames = agents.map((a) => a.nom).join(", ") || "—";
+  const hasOrchestra = agents.some((a) => a.id === "agent-orchestra");
+  const hasErgonomie = agents.some((a) => a.id === "agent-ergonomie");
 
-  const blocks = CORE_BLOCKS.map((b) => {
+  const blocks = CORE_BLOCKS.filter((b) => {
+    if (b.id === "agent_orchestra") return hasOrchestra;
+    if (b.id === "agent_ergonomie") return hasErgonomie;
+    return true;
+  }).map((b) => {
     if (b.id === "agents") {
       return {
         ...b,
@@ -239,6 +275,20 @@ export function buildArchitectureModel(state: AdminState): ArchitectureModel {
           ...b.links,
           ...agents.map((a) => `${a.nom} (${a.role})`),
         ],
+      };
+    }
+    if (b.id === "agent_orchestra") {
+      const a = agents.find((x) => x.id === "agent-orchestra");
+      return {
+        ...b,
+        meta: a ? `${a.niveauExigence} · ${a.actif ? "actif" : "inactif"}` : undefined,
+      };
+    }
+    if (b.id === "agent_ergonomie") {
+      const a = agents.find((x) => x.id === "agent-ergonomie");
+      return {
+        ...b,
+        meta: a ? `${a.niveauExigence} · ${a.actif ? "actif" : "inactif"}` : undefined,
       };
     }
     if (b.id === "competences") {
@@ -270,10 +320,15 @@ export function buildArchitectureModel(state: AdminState): ArchitectureModel {
   });
 
   const journal = buildArchitectureJournal(state, agents);
+  const links = CORE_LINKS.filter((l) => {
+    if (l.id === "l-orchestra-arch") return hasOrchestra;
+    if (l.id === "l-ergonomie-ui") return hasErgonomie;
+    return true;
+  });
 
   return {
     blocks,
-    links: CORE_LINKS,
+    links,
     journal,
     generatedAt: new Date().toISOString(),
   };
@@ -303,6 +358,22 @@ function buildArchitectureJournal(
     modification: "Verrous IA compétences (id + indicateur + feedbacks)",
     origine: "Compétences",
   });
+  if (agents.some((a) => a.id === "agent-orchestra")) {
+    entries.push({
+      id: "arch-agent-orchestra",
+      at: "2026-11-13T21:30:00.000Z",
+      modification: "Ajout de l'Agent Orchestra (audit architecture)",
+      origine: "Agents",
+    });
+  }
+  if (agents.some((a) => a.id === "agent-ergonomie")) {
+    entries.push({
+      id: "arch-agent-ergonomie",
+      at: "2026-11-13T21:31:00.000Z",
+      modification: "Ajout de l'Agent Ergonomie (audit UX)",
+      origine: "Agents",
+    });
+  }
 
   for (const a of agents) {
     entries.push({

@@ -6,6 +6,7 @@ import {
   type AgentProfile,
   type AgentRunReport,
 } from "./agents";
+import { runErgonomieAudit, runOrchestraAudit } from "./agentAppAudits";
 import {
   buildCoeurFromAdminState,
   coeurToAdminSlices,
@@ -207,9 +208,26 @@ function loadState(): AdminState {
       })(),
       coeurs,
       coeurMeta,
-      agents: parsed.agents?.length
-        ? parsed.agents.map((a) => normalizeAgent(a))
-        : seed.agents,
+      agents: (() => {
+        const loaded = parsed.agents?.length
+          ? parsed.agents.map((a) => normalizeAgent(a))
+          : [];
+        const byId = new Map(loaded.map((a) => [a.id, a]));
+        // Inject newly seeded agents (Orchestra, Ergonomie…) without touching existing ones
+        for (const demo of seed.agents) {
+          if (!byId.has(demo.id)) byId.set(demo.id, demo);
+        }
+        const order = seed.agents.map((a) => a.id);
+        const ordered: typeof seed.agents = [];
+        for (const id of order) {
+          const a = byId.get(id);
+          if (a) ordered.push(a);
+        }
+        byId.forEach((a, id) => {
+          if (!order.includes(id)) ordered.push(a);
+        });
+        return ordered.length ? ordered : seed.agents;
+      })(),
       agentReports: parsed.agentReports ?? [],
       consultants: parsed.consultants ?? [],
       glossaire: mergeGlossaire(parsed.glossaire, seed.glossaire),
@@ -1168,6 +1186,12 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
     onlyId ? a.id === onlyId && a.actif : a.actif
   );
   const reports: AgentRunReport[] = agents.map((a) => {
+    if (a.id === "agent-orchestra") {
+      return runOrchestraAudit(state, coeur);
+    }
+    if (a.id === "agent-ergonomie") {
+      return runErgonomieAudit(state);
+    }
     const issues = [];
     if (a.id === "agent-metier" || a.role.toLowerCase().includes("métier")) {
       const d1 = coeur.decisions.find((d) => d.jour === 1);

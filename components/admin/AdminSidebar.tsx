@@ -56,6 +56,11 @@ const NAV: NavItem[] = [
         href: "/admin/workflow/architecture",
         label: "Architecture de l'application",
       },
+      { href: "/admin/workflow/glossaire", label: "Glossaire" },
+      {
+        href: "/admin/workflow/journal-decisions",
+        label: "Journal des décisions",
+      },
     ],
   },
   {

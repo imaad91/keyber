@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   BookOpen,
@@ -59,6 +60,8 @@ export default function WorkflowArchitecturePage() {
         agents: state.agents,
         agentReports: state.agentReports,
         consultants: state.consultants,
+        glossaire: state.glossaire,
+        journalDecisions: state.journalDecisions,
         toast: null,
       }),
     [state]
@@ -198,6 +201,14 @@ export default function WorkflowArchitecturePage() {
                 </li>
               ))}
             </ul>
+            <p className="mt-4">
+              <Link
+                href="/admin/workflow/journal-decisions"
+                className="text-sm font-semibold text-slate-800 underline underline-offset-2 hover:text-slate-950"
+              >
+                Voir le Journal des décisions
+              </Link>
+            </p>
           </section>
         </div>
 

@@ -114,9 +114,9 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
     role: "Apprentissage",
     competences: ["compétences", "feedback", "progression", "débrief"],
     mission:
-      "S'assurer que chaque décision enseigne quelque chose (data, leadership, éthique, négociation) et que le feedback renforce l'apprentissage.",
+      "S'assurer que chaque décision enseigne quelque chose et que le feedback renforce l'apprentissage. Pour chaque décision, vérifie que le dilemme parle bien de l'indicateur testé. Exemple : si la décision dit tester « Calcule correctement le besoin net », le dilemme doit parler de besoin net, de stock, d'en-cours. Si le dilemme ne parle pas de l'indicateur, signale « Incohérence : décision ne teste pas l'indicateur annoncé » et bloque la validation.",
     sortieAttendue:
-      "Rapport pédagogique : compétences couvertes / manquantes, qualité des feedbackTexte, propositions de renforcement XP ou de dilemmes.",
+      "Rapport pédagogique : compétences couvertes / manquantes, cohérence dilemme↔indicateur, qualité des feedbacks précis, propositions de renforcement.",
     niveauExigence: "normal",
     actif: true,
     icone: "graduation-cap",
@@ -125,11 +125,11 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
     id: "agent-coherence-erp",
     nom: "Cohérence ERP",
     role: "Mapping / typage / traduction ERP",
-    competences: ["cibles", "typage", "visibilité", "ERP", "stock", "production"],
+    competences: ["cibles", "typage", "visibilité", "ERP", "stock", "production", "compétences"],
     mission:
-      "Contrôler que chaque cible de conséquence existe dans le GameState, que les modes set/add sont cohérents, et que la traduction vers ERP / stock / production est correcte.",
+      "Contrôler que chaque cible de conséquence existe dans le GameState, que les modes set/add sont cohérents, et que la traduction vers ERP / stock / production est correcte. Vérifie que chaque competenceId dans le Cœur existe dans le module Compétences, que chaque indicateurTeste existe dans la liste des indicateurs de cette compétence, et que chaque feedback est précis et lié à l'indicateur. Si un competenceId est inconnu, ou un indicateur est inconnu, ou un feedback est vague, signale « Utilisation imprécise » et bloque la validation.",
     sortieAttendue:
-      "Rapport cohérence : cibles invalides, types faux, mapping ERP manquant, correctifs proposés au format CŒUR.",
+      "Rapport cohérence : cibles invalides, competenceId / indicateur / feedback imprécis, mapping ERP manquant, correctifs au format CŒUR.",
     niveauExigence: "strict",
     actif: true,
     icone: "link",
@@ -151,8 +151,9 @@ export function normalizeAgent(a: Partial<AgentProfile> & { id: string }): Agent
     nom: a.nom ?? seed?.nom ?? "Agent",
     role: a.role ?? seed?.role ?? "",
     competences: a.competences ?? seed?.competences ?? [],
-    mission: a.mission ?? seed?.mission ?? "",
-    sortieAttendue: a.sortieAttendue ?? seed?.sortieAttendue ?? "",
+    // Prefer seed mission for built-in agents so competence locks stay current
+    mission: seed?.mission ?? a.mission ?? "",
+    sortieAttendue: seed?.sortieAttendue ?? a.sortieAttendue ?? "",
     niveauExigence: a.niveauExigence ?? seed?.niveauExigence ?? "normal",
     actif: a.actif ?? true,
     icone: a.icone ?? seed?.icone ?? "target",

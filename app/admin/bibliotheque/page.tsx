@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, UserCheck, Users } from "lucide-react";
+import { Building2, Target, UserCheck, Users } from "lucide-react";
 import { PageHeader } from "@/components/admin/AdminPrimitives";
 
 const ITEMS = [
@@ -18,6 +18,12 @@ const ITEMS = [
     icon: Users,
   },
   {
+    href: "/admin/competences",
+    label: "Compétences",
+    hint: "Catalogue verrouillé — générales & ciblées, traçabilité",
+    icon: Target,
+  },
+  {
     href: "/admin/consultants",
     label: "Consultants",
     hint: "Soumissions et validation",
@@ -32,7 +38,7 @@ export default function BibliothequePage() {
         title="Bibliothèque"
         subtitle="Ressources partagées — une liste, un clic, une page."
       />
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {ITEMS.map((item) => {
           const Icon = item.icon;
           return (

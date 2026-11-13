@@ -166,6 +166,19 @@ export type TrainingPrompt = {
   raison: string;
 };
 
+export type EventNotificationState = {
+  id: string;
+  titre: string;
+  type: string;
+  at: string;
+};
+
+export type UrgentBannerState = {
+  eventId: string;
+  message: string;
+  deadlineHeure: string;
+};
+
 export type TrainingCompletion = {
   competenceId: string;
   decisionId: string;
@@ -247,6 +260,9 @@ export type GameState = {
     trainingsCompleted: TrainingCompletion[];
     histoiresCompleted: HistoireCompletion[];
     trainingPrompt: TrainingPrompt | null;
+    eventNotifications: EventNotificationState[];
+    urgentBanner: UrgentBannerState | null;
+    showDayEnd: boolean;
   };
 };
 

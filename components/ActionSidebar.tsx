@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { exampleActions } from "@/lib/mock";
-import { formatGameClock, remainingDayMinutes } from "@/lib/engine";
+import { formatRemainingLabel } from "@/lib/evenements";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type { Action } from "@/lib/types";
@@ -29,10 +29,12 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 export function ActionSidebar() {
-  const { activeAction, setActiveAction, gameState, rawState } = useGameStore();
-  const clock = formatGameClock(gameState.minutesSinceStart);
-  const left = remainingDayMinutes(rawState);
+  const { activeAction, setActiveAction, gameState } = useGameStore();
   const chapter = gameState.chapters.find((c) => c.id === gameState.chapterId);
+  const clockLabel =
+    gameState.day >= 1
+      ? `Jour ${gameState.day} - ${gameState.heureActuelle} - Il te reste ${formatRemainingLabel(gameState.tempsRestantMinutes)}`
+      : gameState.heureActuelle;
 
   return (
     <aside className="flex h-full w-[232px] shrink-0 flex-col border-r border-white/10 bg-panel">
@@ -46,11 +48,8 @@ export function ActionSidebar() {
         <p className="mt-1 text-[10px] uppercase tracking-wider text-muted">
           {chapter ? `Ch.${chapter.numero} · ${chapter.titre}` : "Novacier"}
         </p>
-        <p className="mt-2 font-display text-2xl font-semibold tabular-nums text-foreground">
-          {clock}
-        </p>
-        <p className="text-[11px] text-muted">
-          Jour {gameState.day} · {left} min restantes
+        <p className="mt-2 font-display text-sm font-semibold leading-snug tabular-nums text-foreground">
+          {clockLabel}
         </p>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
           <div

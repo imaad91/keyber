@@ -25,6 +25,7 @@ import {
   toModeJeu,
 } from "./gameState";
 import { RELATION_ALIASES } from "./gameState";
+import { applyMissedDecision, checkEvenements } from "./evenements";
 import { addSkillXp, skillLabel } from "./progression";
 
 const XP_PER_LEVEL = 500;
@@ -42,22 +43,35 @@ export function canSpendTime(state: GameState, minutes: number): boolean {
 }
 
 export function advanceTime(state: GameState, minutes: number): GameState {
+  const prevMin = state.meta.minutesSinceStart;
   const nextMin = Math.min(
     state.meta.dayLengthMinutes,
-    state.meta.minutesSinceStart + minutes
+    prevMin + minutes
   );
-  const next: GameState = {
+  let next: GameState = {
     ...state,
     meta: { ...state.meta, minutesSinceStart: nextMin },
-    world: {
-      ...state.world,
-      feedbackFlash:
-        nextMin >= state.meta.dayLengthMinutes
-          ? "Fin de journée — plus de temps disponible."
-          : state.world.feedbackFlash,
-    },
   };
-  return syncMetaClock(next);
+  next = syncMetaClock(next);
+  next = checkEvenements(next);
+
+  if (
+    nextMin >= next.meta.dayLengthMinutes &&
+    prevMin < next.meta.dayLengthMinutes &&
+    next.meta.jourActuel >= 1
+  ) {
+    next = applyMissedDecision(next);
+    next = {
+      ...next,
+      world: {
+        ...next.world,
+        showDayEnd: true,
+        feedbackFlash: "Fin de journée — 18:00.",
+      },
+    };
+  }
+
+  return next;
 }
 
 function conditionPasses(
@@ -469,6 +483,7 @@ export function applyDecision(
     world: {
       ...next.world,
       dayDecisionId: choixId,
+      urgentBanner: null,
       feedbackFlash: choix.feedbackTexte,
       journal,
       badges: next.world.badges.map((b) =>

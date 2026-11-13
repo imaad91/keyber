@@ -89,6 +89,7 @@ export function ComputerDesktop() {
   const clock = formatGameClock(gameState.minutesSinceStart);
   const unreadMail = gameState.emails.filter((e) => !e.read).length;
   const alertChat = gameState.messages.filter((m) => m.alert).length;
+  const dashboardAlert = gameState.dashboardAlert;
 
   return (
     <section className="computer-shell view-enter flex h-full min-h-[520px] flex-col overflow-hidden rounded-xl border border-slate-300 bg-slate-200 shadow-soft">
@@ -132,12 +133,10 @@ export function ComputerDesktop() {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
               {APPS.map((app) => {
                 const Icon = app.icon;
-                const badge =
-                  app.id === "mail"
-                    ? unreadMail
-                    : app.id === "chat"
-                      ? alertChat
-                      : 0;
+                const mailBadge = app.id === "mail" ? unreadMail : 0;
+                const chatBadge = app.id === "chat" ? alertChat : 0;
+                const dashBadge =
+                  app.id === "dashboard" && dashboardAlert ? 1 : 0;
                 return (
                   <button
                     key={app.id}
@@ -154,9 +153,19 @@ export function ComputerDesktop() {
                       >
                         <Icon className="h-6 w-6" />
                       </span>
-                      {badge > 0 ? (
+                      {mailBadge > 0 ? (
                         <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                          {badge}
+                          {mailBadge}
+                        </span>
+                      ) : null}
+                      {chatBadge > 0 ? (
+                        <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                          {chatBadge}
+                        </span>
+                      ) : null}
+                      {dashBadge > 0 ? (
+                        <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
+                          !
                         </span>
                       ) : null}
                     </span>

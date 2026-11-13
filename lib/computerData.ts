@@ -448,7 +448,7 @@ export const browserCorpus: BrowserResult[] = [
 
 export const COMPUTER_APP_TIME: Record<string, number> = {
   erp: 15,
-  mail: 10,
+  mail: 5,
   dashboard: 10,
   documents: 8,
   chat: 5,

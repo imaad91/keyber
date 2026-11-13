@@ -8,6 +8,7 @@ import type {
 } from "./types";
 import type { GameState } from "./gameState";
 import { syncMetaClock } from "./gameState";
+import { checkEvenements } from "./evenements";
 import {
   createNovacierInitialState,
   novacierDecisions,
@@ -217,7 +218,7 @@ export const exampleActions: Action[] = [
     titre: "Accès Ordinateur",
     icone: "Monitor",
     description: "ERP, mails, chat…",
-    timeCostMinutes: 5,
+    timeCostMinutes: 0,
   },
   {
     id: "act-interview",
@@ -225,7 +226,7 @@ export const exampleActions: Action[] = [
     titre: "Interview",
     icone: "MessagesSquare",
     description: "Marie, Karim, Laurent…",
-    timeCostMinutes: 20,
+    timeCostMinutes: 30,
   },
   {
     id: "act-decide",
@@ -233,7 +234,7 @@ export const exampleActions: Action[] = [
     titre: "Décider",
     icone: "Scale",
     description: "Décision du jour",
-    timeCostMinutes: 0,
+    timeCostMinutes: 30,
   },
   {
     id: "act-atelier",
@@ -450,6 +451,9 @@ export function createInitialGameState(): GameState {
       trainingsCompleted: base.world.trainingsCompleted ?? [],
       histoiresCompleted: base.world.histoiresCompleted ?? [],
       trainingPrompt: null,
+      eventNotifications: base.world.eventNotifications ?? [],
+      urgentBanner: base.world.urgentBanner ?? null,
+      showDayEnd: false,
       chapters: scenarioChapters.map((c) => ({ ...c })),
       unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
     },
@@ -461,12 +465,12 @@ export function createScenarioDayState(
   from: GameState,
   day: number
 ): GameState {
-  return syncMetaClock({
+  const base = syncMetaClock({
     ...from,
     meta: {
       ...from.meta,
       jourActuel: day,
-      minutesSinceStart: day === 3 ? 2 * 60 : 0,
+      minutesSinceStart: 0,
     },
     finance: {
       ...from.finance,
@@ -475,6 +479,8 @@ export function createScenarioDayState(
     world: {
       ...from.world,
       dayDecisionId: null,
+      showDayEnd: false,
+      urgentBanner: null,
       emails: emailsForDay(day),
       messages: messagesForDay(day),
       events: eventsForDay(day),
@@ -491,14 +497,15 @@ export function createScenarioDayState(
               },
             ]
           : from.world.rumors,
-      alarmActive: day === 3,
+      alarmActive: false,
       feedbackFlash: from.world.feedbackFlash,
     },
     flags: {
       ...from.flags,
-      alarmActive: day === 3 ? 1 : from.flags.alarmActive,
+      alarmActive: 0,
     },
   });
+  return checkEvenements(base);
 }
 
 export { ALL_ACTIONS, novacierDecisions };

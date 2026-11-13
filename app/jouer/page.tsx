@@ -7,7 +7,6 @@ import { ArrowLeft, Eraser, Play, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   clearSlot,
-  hydrateFromCloud,
   loadProgressionLocale,
   loadSavesBundle,
 } from "@/lib/saveStore";
@@ -46,7 +45,6 @@ export default function JouerSlotsPage() {
 
   useEffect(() => {
     refresh();
-    void hydrateFromCloud().then(refresh);
   }, []);
 
   function resume(save: Sauvegarde) {

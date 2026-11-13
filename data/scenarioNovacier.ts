@@ -13,7 +13,7 @@ export const SCENARIO_TITLE = "NOVACIER — La Semaine Qui Décide De Tout";
 export const TARGET_PIECES = 500;
 
 export const NOVACIER_RULES: ScenarioRules = {
-  dayLengthMinutes: 8 * 60,
+  dayLengthMinutes: 10 * 60, // 08:00 → 18:00
   machineDownProductionFactor: 0.55,
   bypassProductionFactor: 0.95,
   endingBands: [
@@ -500,6 +500,9 @@ export function createNovacierInitialState(): GameState {
       trainingsCompleted: [],
       histoiresCompleted: [],
       trainingPrompt: null,
+      eventNotifications: [],
+      urgentBanner: null,
+      showDayEnd: false,
     },
   };
 }

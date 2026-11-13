@@ -198,6 +198,10 @@ export type AdminState = {
   /** Last multi-agent run reports (global). */
   agentReports: import("./agents").AgentRunReport[];
   consultants: AdminConsultantSubmission[];
+  /** Workflow > Glossaire (dictionnaire données). */
+  glossaire: import("./adminGlossaire").GlossaireTerme[];
+  /** Workflow > Journal des décisions (mémoire du pourquoi, append-only). */
+  journalDecisions: import("./adminJournalDecisions").JournalDecision[];
   toast: string | null;
 };
 

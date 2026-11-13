@@ -14,6 +14,8 @@ import {
   seedNovacierFiche,
 } from "./adminFiches";
 import { emptyCoeur } from "./adminCoeur";
+import { seedGlossaire } from "./adminGlossaire";
+import { seedJournalDecisions } from "./adminJournalDecisions";
 import type {
   AdminDecision,
   AdminEntreprise,
@@ -334,6 +336,8 @@ export function createAdminSeed(): AdminState {
     agents: cloneDefaultAgents(),
     agentReports: [],
     consultants: [],
+    glossaire: seedGlossaire(),
+    journalDecisions: seedJournalDecisions(),
     toast: null,
   };
 }

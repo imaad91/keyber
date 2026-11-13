@@ -14,6 +14,20 @@ import {
   type ScenarioCoeur,
 } from "./adminCoeur";
 import {
+  emptyGlossaireTerme,
+  isTermUsedInPublishedCoeur,
+  mergeGlossaire,
+  slugifyTerme,
+  type GlossaireTerme,
+} from "./adminGlossaire";
+import {
+  createLockedJournalDecision,
+  JOURNAL_MODULE_HREFS,
+  mergeJournalDecisions,
+  type JournalDecision,
+  type JournalModuleLie,
+} from "./adminJournalDecisions";
+import {
   appendVersion,
   emptyCoeurMeta,
   markHighlightsSeen,
@@ -81,6 +95,11 @@ function migrateCoeurs(
     agents: partial.agents ?? seed.agents,
     agentReports: partial.agentReports ?? [],
     consultants: partial.consultants ?? [],
+    glossaire: mergeGlossaire(partial.glossaire, seed.glossaire),
+    journalDecisions: mergeJournalDecisions(
+      partial.journalDecisions,
+      seed.journalDecisions
+    ),
     toast: null,
   };
   for (const s of scenarios) {
@@ -193,6 +212,11 @@ function loadState(): AdminState {
         : seed.agents,
       agentReports: parsed.agentReports ?? [],
       consultants: parsed.consultants ?? [],
+      glossaire: mergeGlossaire(parsed.glossaire, seed.glossaire),
+      journalDecisions: mergeJournalDecisions(
+        parsed.journalDecisions,
+        seed.journalDecisions
+      ),
       toast: null,
     };
   } catch {
@@ -1340,7 +1364,136 @@ export function useAdminStore() {
     setAgentActive,
     runAgentsOnScenario,
     applyAgentMetierCapteurPatch,
+    updateGlossaireTerme,
+    createGlossaireTerme,
+    deleteGlossaireTerme,
+    addJournalDecision,
   };
+}
+
+/* —— Workflow > Glossaire (human edits only; AI read-only) —— */
+export function updateGlossaireTerme(
+  terme: string,
+  patchData: Partial<
+    Omit<GlossaireTerme, "terme" | "seed">
+  >
+): boolean {
+  ensureHydrated();
+  const idx = state.glossaire.findIndex((t) => t.terme === terme);
+  if (idx < 0) {
+    toast("Terme introuvable dans le Glossaire");
+    return false;
+  }
+  const precise = (patchData.definitionPrecise ?? state.glossaire[idx]!.definitionPrecise).trim();
+  if (!precise || precise.length < 20) {
+    toast("Définition précise obligatoire (1-2 phrases exactes)");
+    return false;
+  }
+  const next = [...state.glossaire];
+  const cur = next[idx]!;
+  next[idx] = {
+    ...cur,
+    ...patchData,
+    terme: cur.terme,
+    seed: cur.seed,
+    definitionPrecise: precise,
+    definitionCourte:
+      (patchData.definitionCourte ?? cur.definitionCourte).trim() || precise,
+    updatedAt: new Date().toISOString(),
+  };
+  patch({ glossaire: next });
+  toast("Terme Glossaire enregistré");
+  return true;
+}
+
+export function createGlossaireTerme(input: {
+  terme: string;
+  nomLisible: string;
+  definitionPrecise: string;
+  definitionCourte?: string;
+  exempleConcret?: string;
+  utilisations?: GlossaireTerme["utilisations"];
+  synonymesInterdits?: string[];
+}): GlossaireTerme | null {
+  ensureHydrated();
+  const id = slugifyTerme(input.terme);
+  if (!id) {
+    toast("Identifiant technique invalide");
+    return null;
+  }
+  if (state.glossaire.some((t) => t.terme === id)) {
+    toast(`Le terme « ${id} » existe déjà`);
+    return null;
+  }
+  if (!input.definitionPrecise.trim() || input.definitionPrecise.trim().length < 20) {
+    toast("Définition précise obligatoire");
+    return null;
+  }
+  const created = emptyGlossaireTerme({
+    terme: id,
+    nomLisible: input.nomLisible.trim() || id,
+    definitionPrecise: input.definitionPrecise.trim(),
+    definitionCourte:
+      input.definitionCourte?.trim() || input.definitionPrecise.trim(),
+    exempleConcret: input.exempleConcret?.trim() || "",
+    utilisations: input.utilisations,
+    synonymesInterdits: input.synonymesInterdits,
+  });
+  patch({ glossaire: [...state.glossaire, created] });
+  toast("Terme ajouté au Glossaire");
+  return created;
+}
+
+export function deleteGlossaireTerme(terme: string): boolean {
+  ensureHydrated();
+  const entry = state.glossaire.find((t) => t.terme === terme);
+  if (!entry) {
+    toast("Terme introuvable");
+    return false;
+  }
+  const publishedTexts: string[] = [];
+  for (const [sid, coeur] of Object.entries(state.coeurs)) {
+    const scn = state.scenarios.find((s) => s.id === sid);
+    const published =
+      scn?.statut === "publie" ||
+      scn?.statutWorkflow === "retenu_publie" ||
+      coeur.scenario.statutWorkflow === "retenu_publie";
+    if (!published) continue;
+    publishedTexts.push(JSON.stringify(coeur));
+  }
+  if (isTermUsedInPublishedCoeur(terme, publishedTexts)) {
+    toast(
+      "Suppression refusée : ce terme est utilisé dans un Cœur publié"
+    );
+    return false;
+  }
+  patch({ glossaire: state.glossaire.filter((t) => t.terme !== terme) });
+  toast("Terme Glossaire supprimé");
+  return true;
+}
+
+/* —— Workflow > Journal des décisions (append-only) —— */
+export function addJournalDecision(input: {
+  titre: string;
+  decision: string;
+  pourquoi: string;
+  consequenceSiChange: string;
+  moduleLie: JournalModuleLie;
+}): JournalDecision | null {
+  ensureHydrated();
+  if (!input.titre.trim() || !input.decision.trim() || !input.pourquoi.trim()) {
+    toast("Titre, Décision et Pourquoi sont obligatoires");
+    return null;
+  }
+  const created = createLockedJournalDecision({
+    ...input,
+    moduleHref: JOURNAL_MODULE_HREFS[input.moduleLie],
+  });
+  patch({
+    journalDecisions: [created, ...state.journalDecisions],
+  });
+  toast("Décision ajoutée au journal (verrouillée)");
+  return created;
 }
 
 export type { AdminConsultantSubmission };

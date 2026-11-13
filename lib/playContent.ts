@@ -73,6 +73,8 @@ function readAdminState(): AdminState | null {
       agents: parsed.agents ?? seed.agents,
       agentReports: parsed.agentReports ?? [],
       consultants: parsed.consultants ?? [],
+      glossaire: parsed.glossaire ?? seed.glossaire,
+      journalDecisions: parsed.journalDecisions ?? seed.journalDecisions,
       toast: null,
     };
   } catch {

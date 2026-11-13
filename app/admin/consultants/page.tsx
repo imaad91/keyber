@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import {
   AdminButton,
   Field,
-  PageHeader,
   StatusBadge,
   inputClass,
 } from "@/components/admin/AdminPrimitives";
@@ -24,10 +24,20 @@ export default function AdminConsultantsPage() {
 
   return (
     <div>
-      <PageHeader
+      <AdminBreadcrumb
+        backHref="/admin"
+        backLabel="← Admin"
+        crumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Bibliothèque", href: "/admin/entreprises" },
+          { label: "Consultants" },
+        ]}
         title="Consultants"
-        subtitle="Validation des scénarios soumis par des consultants (préparation future)."
       />
+      <p className="mb-6 text-sm text-slate-500">
+        Validation des scénarios soumis par des consultants (préparation
+        future).
+      </p>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">

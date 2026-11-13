@@ -73,9 +73,31 @@ const NAV: NavItem[] = [
       { href: "/admin/coeur/rapport", label: "Rapport", icon: ClipboardList },
     ],
   },
-  { href: "/admin/bibliotheque", label: "Bibliothèque", icon: BookOpen },
+  {
+    href: "/admin/bibliotheque",
+    label: "Bibliothèque",
+    icon: BookOpen,
+    children: [
+      { href: "/admin/entreprises", label: "Entreprises" },
+      { href: "/admin/personnages", label: "Personnages" },
+      { href: "/admin/consultants", label: "Consultants" },
+    ],
+  },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
+
+function pathMatches(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
+function itemIsActive(pathname: string, item: NavItem) {
+  if (item.exact) return pathname === item.href;
+  if (pathMatches(pathname, item.href)) return true;
+  // Children may live outside the parent prefix (ex: Bibliothèque → /admin/entreprises)
+  return Boolean(
+    item.children?.some((c) => pathMatches(pathname, c.href))
+  );
+}
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -93,9 +115,7 @@ export function AdminSidebar() {
 
       <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Admin">
         {NAV.map((item) => {
-          const active = item.exact
-            ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(item.href + "/");
+          const active = itemIsActive(pathname, item);
           const Icon = item.icon;
           return (
             <div key={item.href}>
@@ -121,11 +141,9 @@ export function AdminSidebar() {
                             !item.children!.some(
                               (c) =>
                                 c.href !== child.href &&
-                                (pathname === c.href ||
-                                  pathname.startsWith(c.href + "/"))
+                                pathMatches(pathname, c.href)
                             ))
-                        : pathname === child.href ||
-                          pathname.startsWith(child.href + "/");
+                        : pathMatches(pathname, child.href);
                     const ChildIcon = child.icon;
                     return (
                       <Link

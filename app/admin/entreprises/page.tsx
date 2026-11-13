@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import {
-  AdminButton,
-  PageHeader,
-} from "@/components/admin/AdminPrimitives";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { useAdminStore } from "@/lib/adminStore";
 
 export default function AdminEntreprisesPage() {
@@ -15,21 +13,31 @@ export default function AdminEntreprisesPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Entreprises fictives"
-        subtitle="Livre de l'Entreprise : histoire, activité, chiffres, valeurs, glossaire."
-        actions={
-          <AdminButton
-            onClick={() => {
-              const id = createEntreprise();
-              router.push(`/admin/entreprises/${id}`);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Nouvelle Entreprise
-          </AdminButton>
-        }
+      <AdminBreadcrumb
+        backHref="/admin"
+        backLabel="← Admin"
+        crumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Bibliothèque", href: "/admin/entreprises" },
+          { label: "Entreprises" },
+        ]}
+        title="Entreprises"
       />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-slate-500">
+          Livre de l&apos;Entreprise : histoire, activité, chiffres, valeurs,
+          glossaire.
+        </p>
+        <AdminButton
+          onClick={() => {
+            const id = createEntreprise();
+            router.push(`/admin/entreprises/${id}`);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Nouvelle Entreprise
+        </AdminButton>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {entreprises.map((e) => {

@@ -128,7 +128,7 @@ export default function CompetenceTrainingPage() {
                     <p className="text-xs font-semibold uppercase tracking-wider text-accent">
                       Débrief compétences
                     </p>
-                    {(gameState.lastSkillDebrief.length
+                    {((gameState.lastSkillDebrief?.length ?? 0) > 0
                       ? gameState.lastSkillDebrief
                       : [gameState.feedbackFlash ?? ""]
                     ).map((line) => (

@@ -17,6 +17,7 @@ import { checkEvenements } from "./evenements";
 import type { GameState, ModeJeu } from "./gameState";
 import { legacyModeFrom, toModeJeu } from "./gameState";
 import { createInitialGameState } from "./mock";
+import { migrateGameState } from "./migrateGameState";
 import {
   advanceOnboarding,
   advanceScenarioDay,
@@ -55,7 +56,7 @@ type StoreSnapshot = {
 };
 
 let snapshot: StoreSnapshot = {
-  state: createInitialGameState(),
+  state: migrateGameState(createInitialGameState()),
   activeAction: null,
   playTab: "workspace",
   computerApp: null,
@@ -84,7 +85,11 @@ function emit() {
 }
 
 function setSnapshot(partial: Partial<StoreSnapshot>) {
-  snapshot = { ...snapshot, ...partial };
+  const next = { ...snapshot, ...partial };
+  if (partial.state) {
+    next.state = migrateGameState(partial.state);
+  }
+  snapshot = next;
   emit();
 }
 
@@ -214,7 +219,7 @@ export function markIntroSeen() {
 export function loadGameFromSave(state: GameState, slot: SlotNumber) {
   persistActiveSlot(slot);
   setSnapshot({
-    state,
+    state: migrateGameState(state),
     activeSlot: slot,
     activeAction: null,
     playTab: "workspace",

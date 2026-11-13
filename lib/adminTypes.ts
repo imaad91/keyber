@@ -169,6 +169,8 @@ export type AdminState = {
   personnages: AdminPersonnage[];
   decisions: AdminDecision[];
   events: AdminEvent[];
+  /** Rich real-world intake sheets (module Fiches). */
+  fiches: import("./adminFiches").AdminFiche[];
   /** Single source of truth for decisions & events per scenario. */
   coeurs: AdminCoeurMap;
   /** Versions, audit, highlights per scenario. */

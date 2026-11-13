@@ -19,6 +19,11 @@ import {
   type CoeurOrigin,
 } from "./coeurHistory";
 import {
+  emptyFiche,
+  ficheFillPercent,
+  type AdminFiche,
+} from "./adminFiches";
+import {
   createAdminSeed,
   emptyDecision,
   emptyEntreprise,
@@ -53,6 +58,7 @@ function migrateCoeurs(
     personnages: partial.personnages ?? seed.personnages,
     decisions: partial.decisions ?? seed.decisions,
     events: partial.events ?? seed.events,
+    fiches: partial.fiches ?? seed.fiches,
     coeurs: base,
     coeurMeta: partial.coeurMeta ?? seed.coeurMeta,
     agents: partial.agents ?? seed.agents,
@@ -98,6 +104,7 @@ function loadState(): AdminState {
       personnages: parsed.personnages ?? seed.personnages,
       decisions: parsed.decisions ?? seed.decisions,
       events: parsed.events ?? seed.events,
+      fiches: parsed.fiches?.length ? parsed.fiches : seed.fiches,
       coeurs,
       coeurMeta,
       agents: parsed.agents?.length
@@ -299,6 +306,109 @@ export function markCoeurHighlightsSeen(scenarioId: string) {
     },
   });
   toast("Highlights marqués comme vus");
+}
+
+/* —— Fiches (rich intake) —— */
+export function createFiche(scenarioId?: string) {
+  ensureHydrated();
+  const scn =
+    state.scenarios.find((s) => s.id === scenarioId) ?? state.scenarios[0];
+  const ent = state.entreprises.find((e) => e.id === scn?.entrepriseId);
+  const fiche = emptyFiche(scn?.id ?? "");
+  fiche.titre = scn ? `Fiche ${scn.titre.split("—")[0]?.trim() || scn.titre}` : "Nouvelle fiche";
+  fiche.entrepriseNom = ent?.nom ?? "";
+  fiche.role = scn?.competence || "Responsable de Production";
+  patch({ fiches: [...state.fiches, fiche] });
+  toast("Fiche créée");
+  return fiche.id;
+}
+
+export function updateFiche(id: string, data: Partial<AdminFiche>) {
+  ensureHydrated();
+  patch({
+    fiches: state.fiches.map((f) =>
+      f.id === id
+        ? {
+            ...f,
+            ...data,
+            sections: data.sections
+              ? { ...f.sections, ...data.sections }
+              : f.sections,
+            updatedAt: new Date().toISOString(),
+          }
+        : f
+    ),
+  });
+  toast("Fiche enregistrée");
+}
+
+/**
+ * Draft Cœur from Fiche content — visible in Logique & Langage Cœur.
+ * Full generation logic comes later; for now stamps a draft event + commits.
+ */
+export function generateCoeurFromFiche(ficheId: string): boolean {
+  ensureHydrated();
+  const fiche = state.fiches.find((f) => f.id === ficheId);
+  if (!fiche?.scenarioId) {
+    toast("Liez d'abord la Fiche à un scénario");
+    return false;
+  }
+  const pct = ficheFillPercent(fiche);
+  let coeur = getScenarioCoeur(fiche.scenarioId);
+  const draftId = `adm-ev-fiche-${fiche.id}`;
+  const draftTexte = [
+    `Brouillon généré depuis « ${fiche.titre} » (${pct}%).`,
+    fiche.sections.contexteEntreprise.slice(0, 280),
+    fiche.sections.personnagesRiches.slice(0, 200),
+    fiche.sections.decisionsRiches.slice(0, 200),
+    fiche.sections.donneesReelles.slice(0, 200),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const others = coeur.evenements.filter((e) => e.id !== draftId);
+  coeur = {
+    ...coeur,
+    scenario: {
+      ...coeur.scenario,
+      titre: coeur.scenario.titre || fiche.titre,
+      entrepriseId:
+        coeur.scenario.entrepriseId ||
+        state.scenarios.find((s) => s.id === fiche.scenarioId)?.entrepriseId ||
+        "",
+    },
+    evenements: [
+      {
+        id: draftId,
+        jour: 1,
+        heure: "08:00",
+        type: "Autre",
+        titre: `Brouillon Fiche — ${fiche.titre}`,
+        texte: draftTexte || "Fiche encore vide — à enrichir.",
+      },
+      ...others,
+    ],
+  };
+
+  const ok = applyCoeurFromFiche(
+    coeur,
+    `Cœur brouillon généré depuis la Fiche « ${fiche.titre} »`
+  );
+  if (ok) {
+    patch({
+      fiches: state.fiches.map((f) =>
+        f.id === ficheId
+          ? { ...f, coeurGenere: true, updatedAt: new Date().toISOString() }
+          : f
+      ),
+    });
+  }
+  return ok;
+}
+
+export function ficheForScenario(scenarioId: string): AdminFiche | undefined {
+  ensureHydrated();
+  return state.fiches.find((f) => f.scenarioId === scenarioId);
 }
 
 /* —— Scenarios —— */
@@ -757,6 +867,10 @@ export function useAdminStore() {
     archiveScenario,
     publishScenario,
     reorderScenarios,
+    createFiche,
+    updateFiche,
+    generateCoeurFromFiche,
+    ficheForScenario,
     createEntreprise,
     updateEntreprise,
     createPersonnage,

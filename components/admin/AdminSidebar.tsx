@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   BookOpen,
   ClipboardList,
+  FileText,
   LayoutDashboard,
   Network,
   Play,
@@ -26,6 +27,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/scenarios", label: "Scénarios", icon: ScrollText },
+  { href: "/admin/fiches", label: "Fiches", icon: FileText },
   { href: "/admin/logique", label: "Logique", icon: Network },
   {
     href: "/admin/coeur",

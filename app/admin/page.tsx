@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Network, ScrollText, Shield, Bot } from "lucide-react";
+import { FileText, Network, ScrollText, Shield, Bot } from "lucide-react";
 import {
   PageHeader,
   StatCard,
@@ -9,7 +9,8 @@ import {
 import { useAdminStore } from "@/lib/adminStore";
 
 export default function AdminDashboardPage() {
-  const { scenarios, agents, entreprises, personnages } = useAdminStore();
+  const { scenarios, agents, entreprises, personnages, fiches } =
+    useAdminStore();
 
   return (
     <div>
@@ -18,19 +19,26 @@ export default function AdminDashboardPage() {
         subtitle="Liste → clic → page plein écran. Jamais de double panneau."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Scénarios" value={scenarios.length} />
+        <StatCard label="Fiches" value={fiches.length} />
         <StatCard label="Agents" value={agents.length} />
         <StatCard label="Entreprises" value={entreprises.length} />
         <StatCard label="Personnages" value={personnages.length} />
       </div>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <DashLink
           href="/admin/scenarios"
           icon={ScrollText}
           title="Scénarios"
-          hint="Liste des fiches"
+          hint="Liste des scénarios"
+        />
+        <DashLink
+          href="/admin/fiches"
+          icon={FileText}
+          title="Fiches"
+          hint="Porte d'entrée du réel"
         />
         <DashLink
           href="/admin/logique"

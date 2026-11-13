@@ -8,6 +8,7 @@ import {
   SCENARIO_TITLE,
   scenarioPersonnages,
 } from "./scenario";
+import { seedNovacierFiche } from "./adminFiches";
 import type {
   AdminDecision,
   AdminEntreprise,
@@ -213,6 +214,7 @@ export function createAdminSeed(): AdminState {
     personnages: seedPersonnages(),
     decisions: seedDecisions(),
     events: seedEvents(),
+    fiches: [seedNovacierFiche()],
     coeurs: { [SCENARIO_ID]: coeur },
     coeurMeta: { [SCENARIO_ID]: meta },
     agents: cloneDefaultAgents(),

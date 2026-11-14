@@ -69,7 +69,7 @@ export function DebriefView() {
           <Stat label="Éthique" value={`${gameState.ethique}`} />
           <Stat
             label="Confiance client"
-            value={`${gameState.confianceAutoVolt}`}
+            value={`${gameState.confianceClient}`}
           />
           <Stat
             label="Trésorerie"

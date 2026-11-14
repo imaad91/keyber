@@ -16,18 +16,16 @@ import {
   emptyGeneralesProgress,
 } from "./competences";
 import { getContexteActif, getScenarioActif } from "@/data/registry";
-import { novacierDecisions } from "@/data/scenarioNovacier";
 import {
   emailsForDay,
   eventsForDay,
-  livreNovacier as livreFromScenario,
+  getChaptersActifs,
+  getLivreActif,
+  getMachinesActives,
+  getObjectivesActifs,
+  getPersonnagesActifs,
+  getRumorActif,
   messagesForDay,
-  scenarioChapters,
-  scenarioMachines,
-  scenarioObjectives,
-  scenarioPersonnages,
-  scenarioRumor,
-  SCENARIO_TITLE,
 } from "./scenario";
 
 /** Prefer getContexteActif().nom — Company label from active contexte. */
@@ -35,12 +33,14 @@ export function getCompanyName(): string {
   return getContexteActif().nom;
 }
 export const COMPANY_NAME = "Entreprise";
-export const SCENARIO_NAME = SCENARIO_TITLE;
-export const livreNovacier = livreFromScenario;
-export const examplePersonnages = scenarioPersonnages;
-export const exampleMachines = scenarioMachines;
-export const exampleObjectives = scenarioObjectives;
-export const exampleChapters = scenarioChapters;
+export const SCENARIO_NAME = "Scénario actif";
+export {
+  getLivreActif as getLivre,
+  getPersonnagesActifs as getExamplePersonnages,
+  getMachinesActives as getExampleMachines,
+  getObjectivesActifs as getExampleObjectives,
+  getChaptersActifs as getExampleChapters,
+};
 export const exampleNewMachine = {
   id: "m5",
   nom: "Ligne Flex 5",
@@ -262,7 +262,9 @@ export const onboardingStepsMeta = [
   },
 ];
 
-export const exampleDecisions = novacierDecisions;
+export function getExampleDecisions() {
+  return getScenarioActif().decisions;
+}
 
 export const exampleBadges: Badge[] = [
   {
@@ -312,7 +314,7 @@ export const exampleBadges: Badge[] = [
 export const exampleEmails = emailsForDay(1);
 export const exampleMessages = messagesForDay(1);
 export const exampleEvents = eventsForDay(1);
-export const exampleRumors = [scenarioRumor];
+export const exampleRumors = [getRumorActif()];
 
 export const erpStock = [
   { id: "ST-01", article: "Acier 2mm", qty: 850, seuil: 200, statut: "OK" },
@@ -435,12 +437,12 @@ export function createInitialGameState(): GameState {
     flags: { ...base.flags, tauxPanne: 5 },
     world: {
       ...base.world,
-      machines: scenarioMachines.map((m) => ({ ...m })),
-      objectives: scenarioObjectives.map((o) => ({ ...o })),
+      machines: getMachinesActives().map((m) => ({ ...m })),
+      objectives: getObjectivesActifs().map((o) => ({ ...o })),
       events: eventsForDay(1),
       emails: emailsForDay(1),
       messages: messagesForDay(1),
-      rumors: [{ ...scenarioRumor }],
+      rumors: [{ ...getRumorActif() }],
       badges: exampleBadges.map((b) => ({ ...b })),
       skillProgress,
       trainingsCompleted: base.world.trainingsCompleted ?? [],
@@ -450,7 +452,7 @@ export function createInitialGameState(): GameState {
       eventNotifications: base.world.eventNotifications ?? [],
       urgentBanner: base.world.urgentBanner ?? null,
       showDayEnd: false,
-      chapters: scenarioChapters.map((c) => ({ ...c })),
+      chapters: getChaptersActifs().map((c) => ({ ...c })),
       unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
     },
   });
@@ -484,7 +486,7 @@ export function createScenarioDayState(
         day >= 2
           ? [
               {
-                ...scenarioRumor,
+                ...getRumorActif(),
                 verified: from.world.unlockedInfos.includes("RUMEUR_CONFIRMED")
                   ? true
                   : from.world.unlockedInfos.includes("RUMEUR_PARTIELLE")
@@ -504,10 +506,10 @@ export function createScenarioDayState(
   return checkEvenements(base);
 }
 
-export { ALL_ACTIONS, novacierDecisions };
-/** @deprecated use novacierDecisions — kept for any leftover imports */
-export const dayDecisions = Object.fromEntries(
-  novacierDecisions.map((d) => [d.jour, d.choix])
-);
+export { ALL_ACTIONS };
+export function getDayDecisions() {
+  return Object.fromEntries(
+    getScenarioActif().decisions.map((d) => [d.jour, d.choix])
+  );
+}
 export const initialGameState = createInitialGameState();
-export { dayTitles } from "@/data/scenarioNovacier";

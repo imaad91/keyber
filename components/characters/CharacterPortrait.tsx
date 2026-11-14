@@ -119,13 +119,13 @@ function PortraitSvg({
         <circle cx="160" cy="36" r="42" fill={mintWash} opacity="0.28" />
       ) : null}
       {id === "pers-marie" ? (
-        <Marie expression={expression} />
+        <SlotAtelier expression={expression} />
       ) : id === "pers-karim" ? (
-        <Karim expression={expression} />
+        <SlotMaintenance expression={expression} />
       ) : id === "pers-laurent" ? (
-        <Laurent expression={expression} />
+        <SlotDirection expression={expression} />
       ) : (
-        <Henri expression={expression} />
+        <SlotMentor expression={expression} />
       )}
     </svg>
   );
@@ -228,7 +228,7 @@ function Mouth({
   );
 }
 
-function Marie({ expression }: { expression: CharacterExpression }) {
+function SlotAtelier({ expression }: { expression: CharacterExpression }) {
   const meta = CHARACTER_META["pers-marie"];
   const skin = CHARACTER_PALETTE.skinLight;
   return (
@@ -290,7 +290,7 @@ function Marie({ expression }: { expression: CharacterExpression }) {
   );
 }
 
-function Karim({ expression }: { expression: CharacterExpression }) {
+function SlotMaintenance({ expression }: { expression: CharacterExpression }) {
   const meta = CHARACTER_META["pers-karim"];
   const skin = CHARACTER_PALETTE.skinMid;
   return (
@@ -330,7 +330,7 @@ function Karim({ expression }: { expression: CharacterExpression }) {
   );
 }
 
-function Laurent({ expression }: { expression: CharacterExpression }) {
+function SlotDirection({ expression }: { expression: CharacterExpression }) {
   const meta = CHARACTER_META["pers-laurent"];
   const skin = CHARACTER_PALETTE.skinLight;
   return (
@@ -375,7 +375,7 @@ function Laurent({ expression }: { expression: CharacterExpression }) {
   );
 }
 
-function Henri({ expression }: { expression: CharacterExpression }) {
+function SlotMentor({ expression }: { expression: CharacterExpression }) {
   const meta = CHARACTER_META["pers-henri"];
   const skin = CHARACTER_PALETTE.skinLight;
   const smileExpr: CharacterExpression =

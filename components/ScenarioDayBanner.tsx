@@ -31,7 +31,7 @@ export function ScenarioDayBanner() {
           <p className="mt-1 text-sm text-muted">
             Objectif semaine : {gameState.piecesQualiteSemaine}/{target}{" "}
             pièces qualité · Éthique {gameState.ethique} · Client{" "}
-            {gameState.confianceAutoVolt}
+            {gameState.confianceClient}
           </p>
           {!gameState.sensorInstalled && gameState.day === 1 ? (
             <p className="mt-1 text-xs text-accent-warm">{fogHint}</p>

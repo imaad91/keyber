@@ -32,7 +32,7 @@ export type GameView = {
   stockKg: number;
   rebutRate: number;
   ethique: number;
-  confianceAutoVolt: number;
+  confianceClient: number;
   piecesQualiteSemaine: number;
   piecesBrutesSemaine: number;
   dailyProductionBase: number;
@@ -144,7 +144,7 @@ export function toGameView(state: GameState): GameView {
     stockKg: state.finance?.stockKg ?? 0,
     rebutRate: state.finance?.tauxRebut ?? 0,
     ethique: state.humain?.ethique ?? 0,
-    confianceAutoVolt: state.humain?.confianceClient ?? 0,
+    confianceClient: state.humain?.confianceClient ?? 0,
     piecesQualiteSemaine: state.finance?.qualite ?? 0,
     piecesBrutesSemaine: state.finance?.piecesBrutesSemaine ?? 0,
     dailyProductionBase: state.flags?.dailyProductionBase ?? 60,

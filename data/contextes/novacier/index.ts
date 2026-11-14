@@ -1,6 +1,17 @@
 import type { Decision } from "@/lib/decisions";
 import type { Evenement } from "@/lib/evenements";
 import type { GameState } from "@/lib/gameState";
+import type {
+  Chapitre,
+  ChatMessage,
+  CompanyEvent,
+  Email,
+  LivreEntreprise,
+  Machine,
+  Objective,
+  Personnage,
+  Rumor,
+} from "@/lib/types";
 import {
   createNovacierInitialState,
   dayTitles,
@@ -14,6 +25,17 @@ import { novacierEvenements } from "./evenements";
 import { novacierRuntimeCopy } from "./runtimeCopy";
 import type { ContexteComputerData } from "@/lib/computerTypes";
 import type { ContexteRuntimeCopy } from "./runtimeCopy";
+import {
+  emailsForDay as novacierEmailsForDay,
+  eventsForDay as novacierEventsForDay,
+  livreNovacier,
+  messagesForDay as novacierMessagesForDay,
+  scenarioChapters,
+  scenarioMachines,
+  scenarioObjectives,
+  scenarioPersonnages,
+  scenarioRumor,
+} from "./scenarioContent";
 
 export type ContexteScenario = {
   id: string;
@@ -31,6 +53,15 @@ export type ContexteModule = {
   computer: ContexteComputerData;
   runtime: ContexteRuntimeCopy;
   evenements: Evenement[];
+  livre: LivreEntreprise;
+  personnages: Personnage[];
+  machines: Machine[];
+  chapters: Chapitre[];
+  objectives: Objective[];
+  rumor: Rumor;
+  emailsForDay: (day: number) => Email[];
+  messagesForDay: (day: number) => ChatMessage[];
+  eventsForDay: (day: number) => CompanyEvent[];
   scenarios: Record<string, ContexteScenario>;
   defaultScenarioId: string;
 };
@@ -51,6 +82,25 @@ export const contexteNovacier: ContexteModule = {
   computer: novacierComputer,
   runtime: novacierRuntimeCopy,
   evenements: novacierEvenements,
+  livre: livreNovacier,
+  personnages: scenarioPersonnages,
+  machines: scenarioMachines,
+  chapters: scenarioChapters,
+  objectives: scenarioObjectives,
+  rumor: scenarioRumor,
+  emailsForDay: novacierEmailsForDay,
+  messagesForDay: novacierMessagesForDay,
+  eventsForDay: novacierEventsForDay,
   scenarios: { [SCENARIO_ID]: semaine },
   defaultScenarioId: SCENARIO_ID,
 };
+
+/** Re-export for Admin seed only — not for OS gameplay. */
+export {
+  livreNovacier,
+  scenarioPersonnages,
+  scenarioMachines,
+  scenarioChapters,
+  scenarioObjectives,
+  scenarioRumor,
+} from "./scenarioContent";

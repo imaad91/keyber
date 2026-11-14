@@ -208,7 +208,7 @@ function applyConsequence(state: GameState, c: Consequence): GameState {
       const short = Object.entries(RELATION_ALIASES).find(([k]) => k === id)?.[1];
       if (alias && alias !== id) next = setPath(next, `relations.${alias}`, value);
       if (short && short !== id) next = setPath(next, `relations.${short}`, value);
-      // also set marie if pers-marie
+      // also set aliased relation keys (e.g. marie → pers-marie)
       for (const [shortName, longName] of Object.entries(RELATION_ALIASES)) {
         if (longName === id && shortName !== id) {
           next = setPath(next, `relations.${shortName}`, value);

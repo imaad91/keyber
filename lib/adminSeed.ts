@@ -4,10 +4,9 @@ import { novacierCoeur } from "./adminCoeur";
 import { appendVersion, emptyCoeurMeta } from "./coeurHistory";
 import {
   livreNovacier,
-  SCENARIO_ID,
-  SCENARIO_TITLE,
   scenarioPersonnages,
-} from "./scenario";
+} from "@/data/contextes/novacier/scenarioContent";
+import { SCENARIO_ID, SCENARIO_TITLE } from "@/data/scenarioNovacier";
 import {
   seedAtelierNordFiche,
   seedNouveauProjetFiche,

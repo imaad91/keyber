@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { getChatContacts } from "@/lib/computerData";
-import { examplePersonnages } from "@/lib/mock";
+import { getPersonnagesActifs } from "@/lib/scenario";
 import { useGameStore } from "@/lib/store";
 import type { DialogueChoice } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,7 @@ export function ComputerChat() {
 
   const threads = getChatContacts();
   const thread = threads.find((t) => t.id === threadId) ?? threads[0]!;
-  const personnage = examplePersonnages.find((p) => p.id === threadId);
+  const personnage = getPersonnagesActifs().find((p) => p.id === threadId);
 
   const feed = useMemo(() => {
     const first = thread.name.split(" ")[0] ?? "";

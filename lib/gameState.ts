@@ -235,7 +235,7 @@ export type GameState = {
   meta: GameMeta;
   finance: GameFinance;
   humain: GameHumain;
-  /** confiance keyed by personnage id (marie, karim, … or pers-marie) */
+  /** confiance keyed by personnage visual slot id (pers-marie, …) */
   relations: Record<string, number>;
   progression: GameProgression;
   visibilite: Record<string, VisibilityTier>;

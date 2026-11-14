@@ -78,10 +78,13 @@ export type AtelierChantier = {
   id: string;
   /** Nom du contexte à créer (ex. AgriBio). */
   nom: string;
+  /** Rempli à l'Étape 1 (création secteur). */
   secteurId: string;
+  /** Contexte brouillon / publié lié (créé à l'Étape 1). */
+  contexteId: string;
   createdAt: string;
   updatedAt: string;
-  /** true une fois publié dans l'Atelier (publication réelle plus tard). */
+  /** true une fois publié dans l'Atelier. */
   publie: boolean;
   etapes: ChantierEtapeState[];
 };
@@ -133,6 +136,7 @@ function normalizeChantier(
     id: c.id,
     nom: c.nom ?? "",
     secteurId: c.secteurId ?? "",
+    contexteId: c.contexteId ?? "",
     createdAt: c.createdAt ?? now(),
     updatedAt: c.updatedAt ?? now(),
     publie: Boolean(c.publie),
@@ -227,18 +231,15 @@ export function useAtelierChantierStore() {
     getChantier(id: string) {
       return state.chantiers.find((c) => c.id === id);
     },
-    createChantier(input: {
-      nom: string;
-      secteurId: string;
-    }): AtelierChantier | { error: string } {
+    createChantier(input: { nom: string }): AtelierChantier | { error: string } {
       ensure();
       const nom = input.nom.trim();
       if (!nom) return { error: "Nom du contexte à créer obligatoire" };
-      if (!input.secteurId) return { error: "Secteur obligatoire" };
       const c: AtelierChantier = {
         id: uid("chantier"),
         nom,
-        secteurId: input.secteurId,
+        secteurId: "",
+        contexteId: "",
         createdAt: now(),
         updatedAt: now(),
         publie: false,
@@ -250,6 +251,40 @@ export function useAtelierChantierStore() {
         toast: "Chantier créé",
       });
       return c;
+    },
+    updateChantierLinks(
+      id: string,
+      patch: { secteurId?: string; contexteId?: string; nom?: string }
+    ): { error?: string } {
+      ensure();
+      if (!state.chantiers.some((c) => c.id === id)) {
+        return { error: "Chantier introuvable" };
+      }
+      persist({
+        ...state,
+        chantiers: state.chantiers.map((ch) =>
+          ch.id !== id
+            ? ch
+            : {
+                ...ch,
+                secteurId:
+                  patch.secteurId !== undefined
+                    ? patch.secteurId
+                    : ch.secteurId,
+                contexteId:
+                  patch.contexteId !== undefined
+                    ? patch.contexteId
+                    : ch.contexteId,
+                nom: patch.nom !== undefined ? patch.nom.trim() || ch.nom : ch.nom,
+                updatedAt: now(),
+              }
+        ),
+        toast: null,
+      });
+      return {};
+    },
+    findChantierByContexteId(contexteId: string) {
+      return state.chantiers.find((c) => c.contexteId === contexteId);
     },
     deleteChantier(id: string): { error?: string } {
       ensure();
@@ -321,8 +356,22 @@ export function useAtelierChantierStore() {
       });
       return {};
     },
-    /** Placeholder — publication réelle plus tard. */
-    attemptPublish(id: string): { error?: string; message?: string } {
+    setChantierPublie(id: string, publie: boolean): { error?: string } {
+      ensure();
+      if (!state.chantiers.some((c) => c.id === id)) {
+        return { error: "Chantier introuvable" };
+      }
+      persist({
+        ...state,
+        chantiers: state.chantiers.map((ch) =>
+          ch.id === id ? { ...ch, publie, updatedAt: now() } : ch
+        ),
+        toast: publie ? "Chantier publié" : "Chantier rouvert en modification",
+      });
+      return {};
+    },
+    /** Marque le chantier prêt ; la publication contexte se fait côté UI via atelierStore. */
+    attemptPublish(id: string): { error?: string; ok?: boolean } {
       ensure();
       const c = state.chantiers.find((x) => x.id === id);
       if (!c) return { error: "Chantier introuvable" };
@@ -331,7 +380,10 @@ export function useAtelierChantierStore() {
           error: "Les 6 étapes doivent être validées avant de publier",
         };
       }
-      return { message: "Publication à implémenter plus tard" };
+      if (!c.contexteId) {
+        return { error: "Étape 1 incomplète : aucun contexte lié" };
+      }
+      return { ok: true };
     },
     clearToast() {
       ensure();

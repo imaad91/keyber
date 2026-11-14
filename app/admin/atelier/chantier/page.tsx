@@ -9,7 +9,6 @@ import {
   AdminButton,
   Field,
   inputClass,
-  selectClass,
 } from "@/components/admin/AdminPrimitives";
 import {
   countEtapesValidees,
@@ -22,23 +21,21 @@ export default function AtelierChantierListPage() {
   const router = useRouter();
   const { chantiers, createChantier, deleteChantier, toast, clearToast } =
     useAtelierChantierStore();
-  const { secteurs, getSecteur } = useAtelierStore();
+  const { getSecteur } = useAtelierStore();
 
   const [showCreate, setShowCreate] = useState(false);
   const [nom, setNom] = useState("");
-  const [secteurId, setSecteurId] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   function submit() {
     setError(null);
-    const res = createChantier({ nom, secteurId });
+    const res = createChantier({ nom });
     if ("error" in res) {
       setError(res.error);
       return;
     }
     setShowCreate(false);
     setNom("");
-    setSecteurId("");
     router.push(`/admin/atelier/chantier/${res.id}`);
   }
 
@@ -57,14 +54,14 @@ export default function AtelierChantierListPage() {
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-sm text-slate-600">
-          Un chantier = la création d&apos;un nouveau contexte d&apos;entreprise,
-          en 6 étapes. Aucun contenu métier inventé ici — vous saisissez tout.
+          Un chantier = la création d&apos;un nouveau contexte d&apos;entreprise
+          (secteur, contexte, rôles…), en 6 étapes. La création se fait ici —
+          l&apos;Atelier n&apos;affiche que le résultat publié.
         </p>
         <AdminButton
           onClick={() => {
             setError(null);
             setNom("");
-            setSecteurId(secteurs[0]?.id ?? "");
             setShowCreate(true);
           }}
         >
@@ -99,7 +96,7 @@ export default function AtelierChantierListPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-900">{c.nom}</p>
                   <p className="mt-1 text-xs text-slate-500">
-                    Secteur : {secteur?.nom ?? "—"}
+                    Secteur : {secteur?.nom ?? "À créer à l'Étape 1"}
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
                     Créé {relativeTimeFr(c.createdAt)}
@@ -162,25 +159,9 @@ export default function AtelierChantierListPage() {
                   placeholder="Ex. AgriBio"
                 />
               </Field>
-              <Field label="Secteur *">
-                <select
-                  className={selectClass}
-                  value={secteurId}
-                  onChange={(e) => setSecteurId(e.target.value)}
-                >
-                  <option value="">Choisir un secteur…</option>
-                  {secteurs.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nom}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              {secteurs.length === 0 ? (
-                <p className="text-sm text-amber-700">
-                  Créez d&apos;abord un secteur dans Atelier → Contextes.
-                </p>
-              ) : null}
+              <p className="text-xs text-slate-500">
+                Le secteur et la fiche se créent à l&apos;Étape 1 du chantier.
+              </p>
               {error ? (
                 <p className="text-sm text-rose-600">{error}</p>
               ) : null}
@@ -193,11 +174,7 @@ export default function AtelierChantierListPage() {
               >
                 Annuler
               </AdminButton>
-              <AdminButton
-                type="button"
-                onClick={submit}
-                disabled={secteurs.length === 0}
-              >
+              <AdminButton type="button" onClick={submit}>
                 Créer
               </AdminButton>
             </div>

@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Copy } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
+import { ChantierEtape1Form } from "@/components/admin/atelier/ChantierEtape1Form";
+import { ChantierEtape2Roles } from "@/components/admin/atelier/ChantierEtape2Roles";
 import {
   buildPromptCorrection,
   CHANTIER_ETAPE_STATUT_LABELS,
@@ -32,10 +34,11 @@ export default function AtelierChantierDetailPage() {
     getChantier,
     setEtapeStatut,
     attemptPublish,
+    setChantierPublie,
     toast,
     clearToast,
   } = useAtelierChantierStore();
-  const { getSecteur } = useAtelierStore();
+  const { getSecteur, setContextePublie } = useAtelierStore();
   const chantier = getChantier(id);
 
   const [blockPanel, setBlockPanel] = useState<null | 1 | 2 | 3 | 4 | 5 | 6>(
@@ -126,8 +129,23 @@ export default function AtelierChantierDetailPage() {
             setPublishMsg(null);
             setActionError(null);
             const res = attemptPublish(id);
-            if (res.error) setActionError(res.error);
-            else if (res.message) setPublishMsg(res.message);
+            if (res.error) {
+              setActionError(res.error);
+              return;
+            }
+            if (!chantier.contexteId) {
+              setActionError("Étape 1 incomplète : aucun contexte lié");
+              return;
+            }
+            const pub = setContextePublie(chantier.contexteId, true);
+            if (pub.error) {
+              setActionError(pub.error);
+              return;
+            }
+            setChantierPublie(id, true);
+            setPublishMsg(
+              "Contexte publié dans Atelier → Contextes. Vous pouvez le consulter en lecture seule."
+            );
           }}
         >
           Publier dans l&apos;Atelier
@@ -242,6 +260,19 @@ export default function AtelierChantierDetailPage() {
                   </AdminButton>
                 ) : null}
               </div>
+
+              {def.numero === 1 ? (
+                <ChantierEtape1Form
+                  chantierId={id}
+                  readOnly={chantier.publie || lockedNext}
+                />
+              ) : null}
+              {def.numero === 2 ? (
+                <ChantierEtape2Roles
+                  chantierId={id}
+                  readOnly={chantier.publie || lockedNext}
+                />
+              ) : null}
             </li>
           );
         })}

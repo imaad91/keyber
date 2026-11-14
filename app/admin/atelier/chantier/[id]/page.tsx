@@ -286,6 +286,19 @@ export default function AtelierChantierDetailPage() {
                   </Link>
                 </div>
               ) : null}
+              {def.numero === 4 ? (
+                <div className="mt-4">
+                  <Link href={`/admin/atelier/chantier/${id}/etape-4`}>
+                    <AdminButton
+                      variant="secondary"
+                      type="button"
+                      disabled={lockedNext}
+                    >
+                      Ouvrir l&apos;Étape 4 — Scénarios Mode Compétence
+                    </AdminButton>
+                  </Link>
+                </div>
+              ) : null}
             </li>
           );
         })}

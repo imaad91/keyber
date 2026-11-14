@@ -132,10 +132,46 @@ export type ChantierCompetence = {
   updatedAt: string;
 };
 
+/** Choix d'une décision Mode Compétence (Étape 4) — pas de rôle. */
+export type ChantierDecisionChoix = {
+  id: string;
+  texte: string;
+  /** true = bonne réponse */
+  correct: boolean;
+  feedback: string;
+};
+
+export type ChantierDecisionModeCompetence = {
+  id: string;
+  texte: string;
+  choix: ChantierDecisionChoix[];
+  /** false si l'utilisateur signale que la décision ne travaille pas la compétence */
+  lieeACompetence: boolean;
+};
+
+/**
+ * Scénario Mode Compétence (Étape 4) — entraînement intensif.
+ * JAMAIS de rôle : une seule compétence précise.
+ */
+export type ChantierScenarioModeCompetence = {
+  id: string;
+  chantierId: string;
+  titre: string;
+  /** Exactement 1 compétence (Étape 3). */
+  competenceId: string;
+  description: string;
+  /** Ordre linéaire : Décision 1 → 2 → 3 → Fin */
+  decisions: ChantierDecisionModeCompetence[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 type ChantierState = {
   chantiers: AtelierChantier[];
   /** Compétences + cours créés dans les chantiers (Étape 3). */
   competences: ChantierCompetence[];
+  /** Scénarios Mode Compétence (Étape 4) — brouillon chantier. */
+  scenariosModeCompetence: ChantierScenarioModeCompetence[];
   /** Catégories créées par l'utilisateur (en plus des défauts). */
   categoriesCustom: string[];
   toast: string | null;
@@ -154,7 +190,56 @@ function emptyEtapes(): ChantierEtapeState[] {
 }
 
 function emptyState(): ChantierState {
-  return { chantiers: [], competences: [], categoriesCustom: [], toast: null };
+  return {
+    chantiers: [],
+    competences: [],
+    scenariosModeCompetence: [],
+    categoriesCustom: [],
+    toast: null,
+  };
+}
+
+function normalizeDecisionChoix(
+  c: Partial<ChantierDecisionChoix> & { id: string }
+): ChantierDecisionChoix {
+  return {
+    id: c.id,
+    texte: c.texte ?? "",
+    correct: Boolean(c.correct),
+    feedback: c.feedback ?? "",
+  };
+}
+
+function normalizeDecision(
+  d: Partial<ChantierDecisionModeCompetence> & { id: string }
+): ChantierDecisionModeCompetence {
+  return {
+    id: d.id,
+    texte: d.texte ?? "",
+    choix: Array.isArray(d.choix)
+      ? d.choix.map((x) => normalizeDecisionChoix(x as ChantierDecisionChoix))
+      : [],
+    lieeACompetence: d.lieeACompetence !== false,
+  };
+}
+
+function normalizeScenarioModeCompetence(
+  s: Partial<ChantierScenarioModeCompetence> & { id: string }
+): ChantierScenarioModeCompetence {
+  return {
+    id: s.id,
+    chantierId: s.chantierId ?? "",
+    titre: s.titre ?? "",
+    competenceId: s.competenceId ?? "",
+    description: s.description ?? "",
+    decisions: Array.isArray(s.decisions)
+      ? s.decisions.map((d) =>
+          normalizeDecision(d as ChantierDecisionModeCompetence)
+        )
+      : [],
+    createdAt: s.createdAt ?? now(),
+    updatedAt: s.updatedAt ?? now(),
+  };
 }
 
 function normalizeCours(c: Partial<ChantierCours> & { id: string }): ChantierCours {
@@ -209,7 +294,20 @@ function load(): ChantierState {
           (x): x is string => typeof x === "string" && x.trim().length > 0
         )
       : [];
-    return { chantiers, competences, categoriesCustom, toast: null };
+    const scenariosModeCompetence = Array.isArray(
+      parsed.scenariosModeCompetence
+    )
+      ? parsed.scenariosModeCompetence.map((x) =>
+          normalizeScenarioModeCompetence(x as ChantierScenarioModeCompetence)
+        )
+      : [];
+    return {
+      chantiers,
+      competences,
+      scenariosModeCompetence,
+      categoriesCustom,
+      toast: null,
+    };
   } catch {
     return emptyState();
   }
@@ -744,6 +842,120 @@ export function useAtelierChantierStore() {
               }
         ),
         toast: "Cours supprimé",
+      });
+      return {};
+    },
+    scenariosModeCompetenceForChantier(chantierId: string) {
+      return state.scenariosModeCompetence.filter(
+        (s) => s.chantierId === chantierId
+      );
+    },
+    getScenarioModeCompetence(id: string) {
+      return state.scenariosModeCompetence.find((s) => s.id === id);
+    },
+    createScenarioModeCompetence(input: {
+      chantierId: string;
+      titre: string;
+      competenceId: string;
+      description?: string;
+    }): ChantierScenarioModeCompetence | { error: string } {
+      ensure();
+      if (!state.chantiers.some((c) => c.id === input.chantierId)) {
+        return { error: "Chantier introuvable" };
+      }
+      const titre = input.titre.trim();
+      if (!titre) return { error: "Titre obligatoire" };
+      if (!input.competenceId) {
+        return { error: "Compétence à travailler obligatoire" };
+      }
+      const comp = state.competences.find(
+        (c) =>
+          c.id === input.competenceId && c.chantierId === input.chantierId
+      );
+      if (!comp) {
+        return {
+          error: "Compétence introuvable — créez-la d'abord à l'Étape 3",
+        };
+      }
+      const s: ChantierScenarioModeCompetence = {
+        id: uid("scmc"),
+        chantierId: input.chantierId,
+        titre,
+        competenceId: input.competenceId,
+        description: (input.description ?? "").trim(),
+        decisions: [],
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      persist({
+        ...state,
+        scenariosModeCompetence: [s, ...state.scenariosModeCompetence],
+        toast: "Scénario Mode Compétence créé",
+      });
+      return s;
+    },
+    updateScenarioModeCompetence(
+      id: string,
+      patch: Partial<
+        Pick<
+          ChantierScenarioModeCompetence,
+          "titre" | "competenceId" | "description" | "decisions"
+        >
+      >
+    ): { error?: string } {
+      ensure();
+      const prev = state.scenariosModeCompetence.find((s) => s.id === id);
+      if (!prev) return { error: "Scénario introuvable" };
+      if (patch.titre !== undefined && !patch.titre.trim()) {
+        return { error: "Titre obligatoire" };
+      }
+      let competenceId = prev.competenceId;
+      if (patch.competenceId !== undefined) {
+        if (!patch.competenceId) {
+          return { error: "Compétence à travailler obligatoire" };
+        }
+        const comp = state.competences.find(
+          (c) =>
+            c.id === patch.competenceId && c.chantierId === prev.chantierId
+        );
+        if (!comp) {
+          return { error: "Compétence introuvable dans ce chantier" };
+        }
+        competenceId = patch.competenceId;
+      }
+      persist({
+        ...state,
+        scenariosModeCompetence: state.scenariosModeCompetence.map((s) =>
+          s.id !== id
+            ? s
+            : {
+                ...s,
+                titre:
+                  patch.titre !== undefined ? patch.titre.trim() : s.titre,
+                competenceId,
+                description:
+                  patch.description !== undefined
+                    ? patch.description.trim()
+                    : s.description,
+                decisions: patch.decisions ?? s.decisions,
+                updatedAt: now(),
+              }
+        ),
+        toast: null,
+      });
+      return {};
+    },
+    deleteScenarioModeCompetence(id: string): { error?: string } {
+      ensure();
+      if (!state.scenariosModeCompetence.some((s) => s.id === id)) {
+        return { error: "Scénario introuvable" };
+      }
+      persist({
+        ...state,
+        scenariosModeCompetence: state.scenariosModeCompetence.filter(
+          (s) => s.id !== id
+        ),
+        toast: "Scénario supprimé",
       });
       return {};
     },

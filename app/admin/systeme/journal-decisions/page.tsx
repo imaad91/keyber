@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { SystemeSubNav } from "@/components/admin/SystemeSubNav";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { type JournalModuleLie } from "@/lib/adminJournalDecisions";
 import { useAdminStore } from "@/lib/adminStore";
@@ -64,6 +65,7 @@ export default function WorkflowJournalDecisionsListPage() {
         ]}
         title="Système — Journal des décisions"
       />
+      <SystemeSubNav />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-sm text-slate-600">

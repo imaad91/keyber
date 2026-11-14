@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { SystemeSubNav } from "@/components/admin/SystemeSubNav";
 
 const OS = [
   "Moteur (applyDecision)",
@@ -37,6 +38,7 @@ export default function SystemeArchitecturePage() {
         ]}
         title="Système — Architecture"
       />
+      <SystemeSubNav />
 
       <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
         🔒 Lecture seule — KEYBER = OS · Novacier = module exemple installé

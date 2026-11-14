@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { SystemeSubNav } from "@/components/admin/SystemeSubNav";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { relativeTimeFr } from "@/lib/coeurHistory";
 import { useAdminStore } from "@/lib/adminStore";
@@ -27,6 +28,7 @@ export default function SystemeGlossaireListPage() {
         ]}
         title="Système — Glossaire"
       />
+      <SystemeSubNav />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-sm text-slate-600">
           Dictionnaire KEYBER. L&apos;IA lit seulement. Humain peut éditer un

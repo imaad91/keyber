@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { SystemeSubNav } from "@/components/admin/SystemeSubNav";
 import { useAdminStore } from "@/lib/adminStore";
 
 export default function SystemeCoeurListPage() {
@@ -19,6 +20,7 @@ export default function SystemeCoeurListPage() {
         ]}
         title="Système — Cœur"
       />
+      <SystemeSubNav />
       <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
         🔒 Lecture seule — pas de modification, copier / coller / exporter.
         Source de vérité du module actif.

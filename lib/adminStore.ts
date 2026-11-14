@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import {
   normalizeAgent,
+  resolveAgentId,
   type AgentProfile,
   type AgentRunReport,
 } from "./agents";
@@ -216,12 +217,14 @@ function loadState(): AdminState {
       coeurMeta,
       agents: (() => {
         const loaded = parsed.agents?.length
-          ? parsed.agents.map((a) => normalizeAgent(a))
+          ? parsed.agents.map((a) =>
+              normalizeAgent({ ...a, id: resolveAgentId(a.id) })
+            )
           : [];
         const byId = new Map(loaded.map((a) => [a.id, a]));
-        // Inject newly seeded agents (Orchestra, Ergonomie…) without touching existing ones
+        // Prefer seed profiles for the 7 contrôle agents (MILO…CLEO)
         for (const demo of seed.agents) {
-          if (!byId.has(demo.id)) byId.set(demo.id, demo);
+          byId.set(demo.id, normalizeAgent({ ...byId.get(demo.id), ...demo }));
         }
         const order = seed.agents.map((a) => a.id);
         const ordered: typeof seed.agents = [];
@@ -1147,6 +1150,7 @@ export function duplicateAgent(id: string) {
     ...src,
     id: `agent-${Date.now().toString(36)}`,
     nom: `${src.nom} (copie)`,
+    nom_affiche: `${src.nom_affiche} (copie)`,
     competences: [...src.competences],
     icone: src.icone ?? "target",
   };
@@ -1160,9 +1164,14 @@ export function createAgent() {
   const a: AgentProfile = {
     id: `agent-${Date.now().toString(36)}`,
     nom: "Nouvel agent",
+    nom_affiche: "Nouvel agent",
     role: "À définir",
+    presentation: "",
     competences: [],
     mission: "",
+    objectifs: "",
+    commentJeTravaille: "",
+    ceQueJeNeFaisJamais: "",
     sortieAttendue: "",
     niveauExigence: "normal",
     actif: true,
@@ -1184,7 +1193,7 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
   let agents = state.agents.filter((a) =>
     onlyId ? a.id === onlyId && a.actif : a.actif
   );
-  // Nettoyage d'abord : il dit par où commencer
+  // CLEO (nettoyage) d'abord : il dit par où commencer
   if (!onlyId) {
     agents = [...agents].sort((a, b) => {
       if (a.id === "nettoyage") return -1;
@@ -1193,17 +1202,18 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
     });
   }
   const reports: AgentRunReport[] = agents.map((a) => {
-    if (a.id === "nettoyage") {
+    const aid = resolveAgentId(a.id);
+    if (aid === "nettoyage") {
       return runNettoyageAudit();
     }
-    if (a.id === "agent-orchestra") {
+    if (aid === "orchestra") {
       return runOrchestraAudit(state, coeur);
     }
-    if (a.id === "agent-ergonomie") {
+    if (aid === "ergonomie") {
       return runErgonomieAudit(state);
     }
     const issues = [];
-    if (a.id === "agent-metier" || a.role.toLowerCase().includes("métier")) {
+    if (aid === "expert_metier" || a.nom_affiche === "ATLAS") {
       const atelier = getAtelierSnapshotForAgents();
       for (const comp of atelier.competences) {
         if (comp.type !== "technique") continue;
@@ -1242,7 +1252,7 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
         });
       }
     }
-    if (a.id === "agent-coherence-erp") {
+    if (aid === "coherence_erp") {
       for (const d of coeur.decisions) {
         for (const c of d.choix) {
           for (const cons of c.consequences) {
@@ -1272,7 +1282,7 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
         }
       }
     }
-    if (a.id === "agent-testeur") {
+    if (aid === "testeur_joueur") {
       issues.push({
         priorite: "basse" as const,
         titre: "Branche « Rien » peu enseignante",
@@ -1281,7 +1291,7 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
         nodeId: "d1-rien",
       });
     }
-    if (a.id === "agent-pedagogue") {
+    if (aid === "pedagogue") {
       let incoherent = 0;
       for (const d of coeur.decisions) {
         for (const c of d.choix) {
@@ -1318,7 +1328,7 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
       0
     );
     return {
-      agentId: a.id,
+      agentId: aid,
       score: Math.max(0, 100 - penalty),
       issues,
       ranAt: new Date().toISOString(),

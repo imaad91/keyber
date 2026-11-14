@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AgentIconBadge } from "@/components/admin/AgentIconBadge";
 import {
-  AdminButton,
   Field,
   PageHeader,
   selectClass,
@@ -13,13 +12,7 @@ import { useAdminStore } from "@/lib/adminStore";
 import { SCENARIO_ID } from "@/data/scenarioNovacier";
 
 export default function CoeurRapportPage() {
-  const {
-    agents,
-    scenarios,
-    agentReports,
-    runAgentsOnScenario,
-    applyAgentMetierCapteurPatch,
-  } = useAdminStore();
+  const { agents, scenarios, agentReports } = useAdminStore();
 
   const defaultScenarioId =
     scenarios.find((s) => s.id === SCENARIO_ID)?.id ?? scenarios[0]?.id ?? "";
@@ -31,11 +24,6 @@ export default function CoeurRapportPage() {
       setScenarioId(defaultScenarioId);
     }
   }, [scenarioId, defaultScenarioId]);
-
-  const activeAgents = useMemo(
-    () => agents.filter((a) => a.actif),
-    [agents]
-  );
 
   const visibleReports = useMemo(() => {
     if (filterAgentId === "all") return agentReports;
@@ -99,56 +87,22 @@ export default function CoeurRapportPage() {
           </select>
         </Field>
         <div className="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-1">
-          <AdminButton
-            onClick={() => scenarioId && runAgentsOnScenario(scenarioId)}
-            disabled={!scenarioId || activeAgents.length === 0}
+          <a
+            href="/admin/controle/prompt"
+            className="inline-flex items-center rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
           >
-            Lancer tous les agents
-          </AdminButton>
-          <AdminButton
-            variant="secondary"
-            onClick={() =>
-              scenarioId && applyAgentMetierCapteurPatch(scenarioId)
-            }
-            disabled={!scenarioId}
-          >
-            Démo patch Expert Métier
-          </AdminButton>
+            Prompt Audit →
+          </a>
         </div>
       </div>
 
-      <section className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">
-          Lancer un agent seul
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {agents.map((a) => (
-            <div
-              key={a.id}
-              className={`flex items-center gap-3 rounded-xl border bg-white p-3 shadow-sm ${
-                a.actif ? "border-slate-200" : "border-slate-100 opacity-55"
-              }`}
-            >
-              <AgentIconBadge agent={a} size="md" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-slate-900">
-                  {a.nom}
-                </p>
-                <p className="truncate text-[11px] text-slate-500">{a.role}</p>
-              </div>
-              <AdminButton
-                variant="secondary"
-                className="shrink-0 text-xs"
-                disabled={!a.actif || !scenarioId}
-                onClick={() =>
-                  scenarioId && runAgentsOnScenario(scenarioId, a.id)
-                }
-              >
-                Lancer
-              </AdminButton>
-            </div>
-          ))}
-        </div>
+      <section className="mb-8 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        Plus de bouton Lancer. Copie le Prompt Audit dans Cursor, puis stocke
+        chaque rapport dans{" "}
+        <a href="/admin/controle/rapports" className="font-semibold underline">
+          Contrôle → Rapports
+        </a>
+        .
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4">

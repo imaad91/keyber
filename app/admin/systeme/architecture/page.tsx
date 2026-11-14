@@ -13,7 +13,7 @@ const OS = [
   "Profil",
   "Temps & Évènements",
   "Sauvegarde locale",
-  "Agent Nettoyage → identifie → Choses à nettoyer dans l'OS",
+  "CLEO (Nettoyage) → identifie → Choses à nettoyer dans l'OS",
 ];
 
 const MODULE = [
@@ -84,16 +84,16 @@ export default function SystemeArchitecturePage() {
       </div>
 
       <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-sm text-orange-950 shadow-sm">
-        <p className="font-semibold">Agent Nettoyage</p>
+        <p className="font-semibold">CLEO — Agent Nettoyage</p>
         <p className="mt-2">
-          Nettoyage → identifie → Choses à nettoyer dans l&apos;OS. Propose un
-          plan priorisé (Critique / Majeure / Mineure). Ne supprime jamais tout
-          seul. Voir{" "}
+          CLEO → identifie → Choses à nettoyer dans l&apos;OS. Propose un plan
+          priorisé (Critique / Majeure / Mineure). Ne supprime jamais tout seul.
+          Voir{" "}
           <Link
             href="/admin/controle/agents/nettoyage"
             className="font-semibold underline"
           >
-            Contrôle → Nettoyage
+            Contrôle → CLEO
           </Link>
           .
         </p>

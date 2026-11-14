@@ -45,7 +45,11 @@ const NAV: NavItem[] = [
     href: "/admin/controle",
     label: "Contrôle",
     icon: Bot,
-    children: [{ href: "/admin/controle/agents", label: "Agents" }],
+    children: [
+      { href: "/admin/controle/agents", label: "Agents" },
+      { href: "/admin/controle/prompt", label: "Prompt" },
+      { href: "/admin/controle/rapports", label: "Rapports" },
+    ],
   },
   {
     href: "/admin/equipe",

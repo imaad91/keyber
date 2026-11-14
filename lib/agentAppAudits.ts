@@ -162,7 +162,7 @@ export function runOrchestraAudit(
   }
 
   return {
-    agentId: "agent-orchestra",
+    agentId: "orchestra",
     score: scoreFromIssues(issues),
     issues,
     ranAt: new Date().toISOString(),
@@ -245,7 +245,7 @@ export function runErgonomieAudit(state: AdminState): AgentRunReport {
   }
 
   return {
-    agentId: "agent-ergonomie",
+    agentId: "ergonomie",
     score: scoreFromIssues(issues),
     issues,
     ranAt: new Date().toISOString(),

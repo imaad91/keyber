@@ -228,7 +228,7 @@ export function runNettoyageAudit(): AgentRunReport {
   });
 
   return {
-    agentId: "nettoyage",
+    agentId: "nettoyage", // CLEO
     score,
     issues,
     ranAt: new Date().toISOString(),

@@ -29,7 +29,7 @@ function formatDateFr(iso: string): string {
 export default function BookDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { getEntry, familyHistory, setStatus } = useBookStore();
+  const { getEntry, familyHistory, setStatus, deleteEntry } = useBookStore();
   const { returnFromBookToCreation } = useAtelierCreationStore();
   const entry = getEntry(id);
 
@@ -46,6 +46,8 @@ export default function BookDetailPage() {
 
   const history = familyHistory(entry.familyId);
   const filled = fieldsPreviewEntries(entry.fields).filter((e) => e.filled);
+  const playHref =
+    entry.mode === "competence" ? "/jouer/competence" : "/jouer/histoire";
 
   return (
     <div>
@@ -65,11 +67,20 @@ export default function BookDetailPage() {
       />
 
       <p className="mb-4 text-sm text-slate-600">
-        Lecture seule — récapitulatif de la version validée. Pour modifier :
-        retournez en Création (nouvelle version).
+        Lecture seule —{" "}
+        {entry.mode === "competence"
+          ? "Scénario (Mode Compétence)"
+          : "Histoire (Mode Histoire)"}
+        . Pour modifier : Retourner en Création (nouvelle version).
       </p>
 
       <div className="mb-4 flex flex-wrap gap-2">
+        <ModeBadge mode={entry.mode} />
+        <Link href={playHref}>
+          <AdminButton variant="secondary" type="button">
+            {entry.status === "live" ? "Jouer" : "Tester"}
+          </AdminButton>
+        </Link>
         {entry.status === "en_test" ? (
           <AdminButton
             type="button"
@@ -89,7 +100,7 @@ export default function BookDetailPage() {
               if (res.error) window.alert(res.error);
             }}
           >
-            Retirer du Live
+            Retourner en En cours de test
           </AdminButton>
         )}
         <AdminButton
@@ -106,12 +117,48 @@ export default function BookDetailPage() {
         >
           Retourner en Création
         </AdminButton>
+        {entry.status === "en_test" ? (
+          <AdminButton
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              if (!window.confirm(`Supprimer « ${bookVersionLabel(entry)} » ?`))
+                return;
+              const res = deleteEntry(entry.id);
+              if (res.error) window.alert(res.error);
+              else router.push("/admin/book/en-cours-de-test");
+            }}
+          >
+            Supprimer
+          </AdminButton>
+        ) : null}
       </div>
 
       <div className="mb-6 space-y-2 rounded-2xl border border-slate-200 bg-white p-5 text-sm shadow-sm">
+        {entry.mode === "competence" ? (
+          <p>
+            <span className="font-medium text-slate-500">
+              Compétence travaillée :
+            </span>{" "}
+            {entry.competenceName || entry.competenceNames[0] || "—"}
+          </p>
+        ) : (
+          <>
+            <p>
+              <span className="font-medium text-slate-500">Rôle joué :</span>{" "}
+              {entry.roleName || entry.roleNames[0] || "—"}
+            </p>
+            <p>
+              <span className="font-medium text-slate-500">Secteur :</span>{" "}
+              {entry.secteur || "—"}
+            </p>
+          </>
+        )}
         <p>
-          <span className="font-medium text-slate-500">Secteur :</span>{" "}
-          {entry.secteur || "—"}
+          <span className="font-medium text-slate-500">
+            Entreprise / Contexte :
+          </span>{" "}
+          {entry.entrepriseNom || "—"}
         </p>
         <p>
           <span className="font-medium text-slate-500">Version :</span> V
@@ -128,34 +175,10 @@ export default function BookDetailPage() {
             ? " · visible joueurs"
             : " · Admin uniquement"}
         </p>
-        <p>
-          <span className="font-medium text-slate-500">Rôles :</span>{" "}
-          {entry.roleNames.length ? entry.roleNames.join(", ") : "—"}
-        </p>
-        <p>
-          <span className="font-medium text-slate-500">Compétences :</span>{" "}
-          {entry.competenceNames.length
-            ? entry.competenceNames.join(", ")
-            : "—"}
-        </p>
-        <div>
-          <p className="font-medium text-slate-500">Scénarios :</p>
-          {entry.scenarios.length === 0 ? (
-            <p className="mt-1">—</p>
-          ) : (
-            <ul className="mt-1 space-y-1">
-              {entry.scenarios.map((s) => (
-                <li key={s.id} className="flex items-center gap-2">
-                  {s.nom} <ModeBadge mode={s.mode} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
         <div>
           <p className="font-medium text-slate-500">Historique :</p>
           <p className="mt-1">
-            {history.map((h) => `V${h.version}`).join(", ")}
+            {history.map((h) => `V${h.version}`).join(", ") || `V${entry.version}`}
           </p>
         </div>
       </div>

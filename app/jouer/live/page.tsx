@@ -9,9 +9,10 @@ import {
   type BookEntry,
 } from "@/lib/bookStore";
 import { ModeBadge } from "@/components/admin/BookEntryCard";
+import { cn } from "@/lib/utils";
 
 /**
- * Catalogue joueur des créations Book en Live uniquement.
+ * Catalogue joueur Book Live — Scénarios et Histoires séparés.
  * Les entrées « En cours de test » n'apparaissent jamais ici.
  */
 export default function JouerLiveBookPage() {
@@ -20,6 +21,9 @@ export default function JouerLiveBookPage() {
   useEffect(() => {
     setEntries(listLiveBookEntriesForPlayers());
   }, []);
+
+  const scenarios = entries.filter((e) => e.mode === "competence");
+  const histoires = entries.filter((e) => e.mode === "histoire");
 
   return (
     <div className="min-h-screen atmosphere-play text-foreground">
@@ -38,55 +42,95 @@ export default function JouerLiveBookPage() {
           Créations disponibles
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Uniquement les versions passées en Live par l&apos;Admin. Mode
-          Compétence ou Mode Histoire selon chaque scénario.
+          Uniquement les versions Live. Scénarios (Compétence) et Histoires
+          restent séparés.
         </p>
 
-        {entries.length === 0 ? (
-          <p className="mt-8 rounded-xl border border-dashed border-border px-4 py-8 text-sm text-muted">
-            Aucune création Live pour l&apos;instant.
+        <section className="mt-8">
+          <h2 className="font-display text-xl font-semibold text-sky-700">
+            Scénarios — Entraînement Compétence
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Entraînement intensif sur une compétence précise.
           </p>
-        ) : (
-          <div className="mt-8 space-y-4">
-            {entries.map((e) => (
-              <div
-                key={e.id}
-                className="rounded-2xl border border-border bg-card/40 p-5"
-              >
-                <p className="font-semibold">{bookVersionLabel(e)}</p>
-                <p className="mt-1 text-sm text-muted">
-                  Secteur : {e.secteur || "—"}
-                </p>
-                {e.scenarios.length === 0 ? (
-                  <p className="mt-3 text-sm text-muted">Aucun scénario publié.</p>
-                ) : (
-                  <ul className="mt-3 space-y-2">
-                    {e.scenarios.map((s) => (
-                      <li
-                        key={s.id}
-                        className="flex flex-wrap items-center justify-between gap-2 text-sm"
-                      >
-                        <span className="flex items-center gap-2">
-                          {s.nom} <ModeBadge mode={s.mode} />
-                        </span>
-                        <Link
-                          href={
-                            s.mode === "competence"
-                              ? "/jouer/competence"
-                              : "/jouer/histoire"
-                          }
-                          className="text-accent underline"
-                        >
-                          Jouer
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+          {scenarios.length === 0 ? (
+            <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted">
+              Aucun scénario Live.
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {scenarios.map((e) => (
+                <div
+                  key={e.id}
+                  className={cn(
+                    "rounded-2xl border border-sky-500/30 bg-card/40 p-5"
+                  )}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold">{bookVersionLabel(e)}</p>
+                    <ModeBadge mode="competence" />
+                  </div>
+                  <p className="mt-2 text-sm text-muted">
+                    Compétence :{" "}
+                    {e.competenceName || e.competenceNames[0] || "—"}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    Entreprise : {e.entrepriseNom || "—"}
+                  </p>
+                  <Link
+                    href="/jouer/competence"
+                    className="mt-3 inline-block text-accent underline"
+                  >
+                    Jouer
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-10">
+          <h2 className="font-display text-xl font-semibold text-violet-700">
+            Histoires — Mode Histoire
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Mise en pratique. Rôle → Secteur → Entreprise → Histoire libre.
+          </p>
+          {histoires.length === 0 ? (
+            <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted">
+              Aucune histoire Live.
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {histoires.map((e) => (
+                <div
+                  key={e.id}
+                  className="rounded-2xl border border-violet-500/30 bg-card/40 p-5"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold">{bookVersionLabel(e)}</p>
+                    <ModeBadge mode="histoire" />
+                  </div>
+                  <p className="mt-2 text-sm text-muted">
+                    Rôle : {e.roleName || e.roleNames[0] || "—"}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    Secteur : {e.secteur || "—"}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    Entreprise : {e.entrepriseNom || "—"}
+                  </p>
+                  <Link
+                    href="/jouer/histoire"
+                    className="mt-3 inline-block text-accent underline"
+                  >
+                    Jouer
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

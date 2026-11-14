@@ -436,7 +436,7 @@ export function useAtelierCreationStore() {
      */
     validateAndSendToBook(
       id: string
-    ): { entry: BookEntry } | { error: string } {
+    ): { entries: BookEntry[] } | { error: string } {
       ensure();
       const c = state.creations.find((x) => x.id === id);
       if (!c) return { error: "Création introuvable" };
@@ -462,9 +462,9 @@ export function useAtelierCreationStore() {
       }));
 
       const published = book.publishFromCreation({
-        familyId: next.familyId,
+        creationFamilyId: next.familyId,
         version: next.version,
-        nom: next.nom,
+        entrepriseNom: next.nom,
         secteur: next.secteur,
         roleNames: next.roleNames,
         competenceNames: next.competenceNames,
@@ -478,7 +478,7 @@ export function useAtelierCreationStore() {
         {
           ...next,
           dansBook: true,
-          bookEntryId: published.id,
+          bookEntryId: published.entries[0]?.id ?? null,
         },
         "prototype_book"
       );
@@ -488,11 +488,11 @@ export function useAtelierCreationStore() {
         creations: state.creations.map((x) => (x.id === id ? next : x)),
         toast: `${creationVersionLabel(next)} envoyé dans le Book (En cours de test)`,
       });
-      return { entry: published };
+      return { entries: published.entries };
     },
     /**
-     * Depuis le Book : crée une nouvelle version dans Création (Vn+1).
-     * Ne modifie pas l'entrée Book source.
+     * Depuis le Book : crée une nouvelle version dans Création (Vn+1)
+     * pour CE scénario / CETTE histoire, sans effacer V1.
      */
     returnFromBookToCreation(
       entry: BookEntry
@@ -500,16 +500,23 @@ export function useAtelierCreationStore() {
       ensure();
       const nextVersion = book.nextVersionNumber(entry.familyId);
       const at = now();
+      const scenarioId = entry.sourceScenarioId || uid("scen");
       const draft: AtelierCreation = {
         id: uid("crea"),
-        familyId: entry.familyId,
+        familyId: entry.creationFamilyId || entry.familyId,
         version: nextVersion,
-        nom: entry.nom,
+        nom: entry.entrepriseNom || entry.nom,
         secteur: entry.secteur,
         fields: { ...emptyContexteFields(), ...entry.fields },
         roleNames: [...entry.roleNames],
         competenceNames: [...entry.competenceNames],
-        scenarios: entry.scenarios.map((s) => ({ ...s, id: uid("scen") })),
+        scenarios: [
+          {
+            id: scenarioId,
+            nom: entry.nom,
+            mode: entry.mode,
+          },
+        ],
         dansBook: false,
         bookEntryId: null,
         timeline: [

@@ -2,17 +2,36 @@
 
 import { useRouter } from "next/navigation";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
-import { BookEntryCard } from "@/components/admin/BookEntryCard";
+import {
+  BookEntryCard,
+  BookSection,
+} from "@/components/admin/BookEntryCard";
 import { BookTabs } from "@/components/admin/BookTabs";
 import { useAtelierCreationStore } from "@/lib/atelierCreationStore";
 import { useBookStore } from "@/lib/bookStore";
 
 export default function BookLivePage() {
   const router = useRouter();
-  const { entriesByStatus, familyHistory, setStatus, toast, clearToast } =
-    useBookStore();
+  const {
+    entriesByStatusAndMode,
+    familyHistory,
+    setStatus,
+    toast,
+    clearToast,
+  } = useBookStore();
   const { returnFromBookToCreation } = useAtelierCreationStore();
-  const entries = entriesByStatus("live");
+
+  const scenarios = entriesByStatusAndMode("live", "competence");
+  const histoires = entriesByStatusAndMode("live", "histoire");
+
+  function goRetourCreation(entry: (typeof scenarios)[number]) {
+    const res = returnFromBookToCreation(entry);
+    if ("error" in res) {
+      window.alert(res.error);
+      return;
+    }
+    router.push(`/admin/atelier/creation/${res.id}`);
+  }
 
   return (
     <div>
@@ -29,10 +48,9 @@ export default function BookLivePage() {
 
       <BookTabs />
 
-      <p className="mb-4 max-w-2xl text-sm text-slate-600">
-        Créations testées et disponibles pour les joueurs (Mode Compétence ou
-        Mode Histoire). Lecture seule ici — pour modifier : « Retourner en
-        Création » (nouvelle version).
+      <p className="mb-6 max-w-2xl text-sm text-slate-600">
+        Disponible pour les joueurs. Scénarios et Histoires restent séparés.
+        Lecture seule ici — pour modifier : Retourner en Création (V2).
       </p>
 
       {toast ? (
@@ -44,34 +62,49 @@ export default function BookLivePage() {
         </p>
       ) : null}
 
-      {entries.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-sm text-slate-500">
-          Aucune création Live. Depuis « En cours de test », cliquez sur «
-          Passer en Live ».
-        </p>
-      ) : (
-        <div className="space-y-4">
-          {entries.map((entry) => (
-            <BookEntryCard
-              key={entry.id}
-              entry={entry}
-              history={familyHistory(entry.familyId)}
-              onRetirerDuLive={() => {
-                const res = setStatus(entry.id, "en_test");
-                if (res.error) window.alert(res.error);
-              }}
-              onRetournerEnCreation={() => {
-                const res = returnFromBookToCreation(entry);
-                if ("error" in res) {
-                  window.alert(res.error);
-                  return;
-                }
-                router.push(`/admin/atelier/creation/${res.id}`);
-              }}
-            />
-          ))}
-        </div>
-      )}
+      <BookSection
+        title="Scénarios — Entraînement Compétence"
+        subtitle="Entraînement intensif sur une compétence précise."
+        accent="sky"
+        isEmpty={scenarios.length === 0}
+        emptyLabel="Aucun scénario Live."
+      >
+        {scenarios.map((entry) => (
+          <BookEntryCard
+            key={entry.id}
+            entry={entry}
+            history={familyHistory(entry.familyId)}
+            variant="live"
+            onRetournerEnTest={() => {
+              const res = setStatus(entry.id, "en_test");
+              if (res.error) window.alert(res.error);
+            }}
+            onRetournerEnCreation={() => goRetourCreation(entry)}
+          />
+        ))}
+      </BookSection>
+
+      <BookSection
+        title="Histoires — Mode Histoire"
+        subtitle="Mise en pratique. Rôle → Secteur → Entreprise → Histoire libre."
+        accent="violet"
+        isEmpty={histoires.length === 0}
+        emptyLabel="Aucune histoire Live."
+      >
+        {histoires.map((entry) => (
+          <BookEntryCard
+            key={entry.id}
+            entry={entry}
+            history={familyHistory(entry.familyId)}
+            variant="live"
+            onRetournerEnTest={() => {
+              const res = setStatus(entry.id, "en_test");
+              if (res.error) window.alert(res.error);
+            }}
+            onRetournerEnCreation={() => goRetourCreation(entry)}
+          />
+        ))}
+      </BookSection>
     </div>
   );
 }

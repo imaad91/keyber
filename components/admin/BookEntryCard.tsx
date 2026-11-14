@@ -1,13 +1,14 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 import {
   bookStatusLabel,
   bookVersionLabel,
   isPlayerVisible,
   type BookEntry,
 } from "@/lib/bookStore";
-import { ATELIER_SCENARIO_MODE_LABELS } from "@/lib/atelierScenarioMode";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { cn } from "@/lib/utils";
 
@@ -41,33 +42,79 @@ export function ModeBadge({ mode }: { mode: "competence" | "histoire" }) {
 export function BookEntryCard({
   entry,
   history,
+  variant,
   onPasserEnLive,
-  onRetirerDuLive,
+  onRetournerEnTest,
   onRetournerEnCreation,
+  onSupprimer,
 }: {
   entry: BookEntry;
   history: BookEntry[];
+  variant: "en_test" | "live";
   onPasserEnLive?: () => void;
-  onRetirerDuLive?: () => void;
+  onRetournerEnTest?: () => void;
   onRetournerEnCreation: () => void;
+  onSupprimer?: () => void;
 }) {
+  const playHref =
+    entry.mode === "competence" ? "/jouer/competence" : "/jouer/histoire";
+  const isCompetence = entry.mode === "competence";
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div
+      className={cn(
+        "rounded-2xl border bg-white p-5 shadow-sm",
+        isCompetence ? "border-sky-200" : "border-violet-200"
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-slate-900">
-            {bookVersionLabel(entry)}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-semibold text-slate-900">
+              {bookVersionLabel(entry)}
+            </p>
+            <ModeBadge mode={entry.mode} />
+          </div>
+
+          {isCompetence ? (
+            <>
+              <p className="mt-2 text-sm text-slate-600">
+                <span className="font-medium text-slate-500">
+                  Compétence travaillée :
+                </span>{" "}
+                {entry.competenceName ||
+                  entry.competenceNames[0] ||
+                  "—"}
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                <span className="font-medium text-slate-500">
+                  Entreprise / Contexte :
+                </span>{" "}
+                {entry.entrepriseNom || "—"}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-slate-600">
+                <span className="font-medium text-slate-500">Rôle joué :</span>{" "}
+                {entry.roleName || entry.roleNames[0] || "—"}
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                <span className="font-medium text-slate-500">Secteur :</span>{" "}
+                {entry.secteur || "—"}
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                <span className="font-medium text-slate-500">
+                  Entreprise / Contexte :
+                </span>{" "}
+                {entry.entrepriseNom || "—"}
+              </p>
+            </>
+          )}
+
           <p className="mt-1 text-sm text-slate-600">
-            <span className="font-medium text-slate-500">Secteur :</span>{" "}
-            {entry.secteur || "—"}
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            <span className="font-medium text-slate-500">
-              Date de validation :
-            </span>{" "}
-            {formatDateFr(entry.validatedAt)}
-            <span className="ml-1 text-xs text-slate-400">(Europe/Paris)</span>
+            <span className="font-medium text-slate-500">Version :</span> V
+            {entry.version}
           </p>
           <p className="mt-1 text-sm text-slate-600">
             <span className="font-medium text-slate-500">Statut :</span>{" "}
@@ -78,78 +125,74 @@ export function BookEntryCard({
               </span>
             ) : (
               <span className="ml-2 text-xs text-amber-700">
-                · Admin uniquement (invisible joueurs)
+                · Admin uniquement
               </span>
             )}
           </p>
+          <p className="mt-1 text-xs text-slate-400">
+            Validé {formatDateFr(entry.validatedAt)} (Europe/Paris)
+          </p>
         </div>
+
         <div className="flex flex-wrap gap-2">
           <Link href={`/admin/book/${entry.id}`}>
             <AdminButton variant="secondary" type="button">
               Voir
             </AdminButton>
           </Link>
-          {entry.status === "en_test" && onPasserEnLive ? (
-            <AdminButton type="button" onClick={onPasserEnLive}>
-              Passer en Live
-            </AdminButton>
-          ) : null}
-          {entry.status === "live" && onRetirerDuLive ? (
-            <AdminButton
-              type="button"
-              variant="secondary"
-              onClick={onRetirerDuLive}
-            >
-              Retirer du Live
-            </AdminButton>
-          ) : null}
-          <AdminButton
-            type="button"
-            variant="ghost"
-            onClick={onRetournerEnCreation}
-          >
-            Retourner en Création
-          </AdminButton>
-        </div>
-      </div>
 
-      <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-2">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            Rôles sélectionnés
-          </p>
-          <p className="mt-1 text-slate-800">
-            {entry.roleNames.length ? entry.roleNames.join(", ") : "—"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            Compétences sélectionnées
-          </p>
-          <p className="mt-1 text-slate-800">
-            {entry.competenceNames.length
-              ? entry.competenceNames.join(", ")
-              : "—"}
-          </p>
-        </div>
-        <div className="sm:col-span-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-            Scénarios validés
-          </p>
-          {entry.scenarios.length === 0 ? (
-            <p className="mt-1 text-slate-500">—</p>
+          {variant === "en_test" ? (
+            <>
+              <Link href={playHref}>
+                <AdminButton variant="secondary" type="button">
+                  Tester
+                </AdminButton>
+              </Link>
+              {onPasserEnLive ? (
+                <AdminButton type="button" onClick={onPasserEnLive}>
+                  Passer en Live
+                </AdminButton>
+              ) : null}
+              <AdminButton
+                type="button"
+                variant="ghost"
+                onClick={onRetournerEnCreation}
+              >
+                Retourner en Création
+              </AdminButton>
+              {onSupprimer ? (
+                <AdminButton
+                  type="button"
+                  variant="ghost"
+                  onClick={onSupprimer}
+                >
+                  <Trash2 className="h-4 w-4 text-rose-600" />
+                  Supprimer
+                </AdminButton>
+              ) : null}
+            </>
           ) : (
-            <ul className="mt-1 space-y-1">
-              {entry.scenarios.map((s) => (
-                <li key={s.id} className="flex flex-wrap items-center gap-2">
-                  <span className="text-slate-800">{s.nom}</span>
-                  <ModeBadge mode={s.mode} />
-                  <span className="text-xs text-slate-400">
-                    {ATELIER_SCENARIO_MODE_LABELS[s.mode]}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <Link href={playHref}>
+                <AdminButton type="button">Jouer</AdminButton>
+              </Link>
+              {onRetournerEnTest ? (
+                <AdminButton
+                  type="button"
+                  variant="secondary"
+                  onClick={onRetournerEnTest}
+                >
+                  Retourner en En cours de test
+                </AdminButton>
+              ) : null}
+              <AdminButton
+                type="button"
+                variant="ghost"
+                onClick={onRetournerEnCreation}
+              >
+                Retourner en Création
+              </AdminButton>
+            </>
           )}
         </div>
       </div>
@@ -186,5 +229,58 @@ export function BookEntryCard({
         </p>
       )}
     </div>
+  );
+}
+
+export function BookSection({
+  title,
+  subtitle,
+  accent,
+  children,
+  emptyLabel,
+  isEmpty,
+}: {
+  title: string;
+  subtitle: string;
+  accent: "sky" | "violet";
+  children: ReactNode;
+  emptyLabel: string;
+  isEmpty: boolean;
+}) {
+  return (
+    <section
+      className={cn(
+        "mb-10 rounded-2xl border-2 p-5 sm:p-6",
+        accent === "sky"
+          ? "border-sky-200 bg-sky-50/50"
+          : "border-violet-200 bg-violet-50/50"
+      )}
+    >
+      <h2
+        className={cn(
+          "text-base font-semibold",
+          accent === "sky" ? "text-sky-950" : "text-violet-950"
+        )}
+      >
+        {title}
+      </h2>
+      <p
+        className={cn(
+          "mt-1 text-sm leading-relaxed",
+          accent === "sky" ? "text-sky-900/80" : "text-violet-900/80"
+        )}
+      >
+        {subtitle}
+      </p>
+      <div className="mt-4 space-y-3">
+        {isEmpty ? (
+          <p className="rounded-xl border border-dashed border-slate-200 bg-white/80 px-4 py-6 text-sm text-slate-500">
+            {emptyLabel}
+          </p>
+        ) : (
+          children
+        )}
+      </div>
+    </section>
   );
 }

@@ -101,7 +101,7 @@ export function seedJournalDecisions(): JournalDecision[] {
       consequenceSiChange:
         "Des fiches courtes produisent des Cœurs génériques et des décisions peu crédibles.",
       moduleLie: "Fiches",
-      moduleHref: "/admin/atelier/contextes",
+      moduleHref: "/admin/atelier/creation",
       locked: true,
       seed: true,
     },
@@ -153,9 +153,9 @@ export function createLockedJournalDecision(input: {
 
 export const JOURNAL_MODULE_HREFS: Record<JournalModuleLie, string> = {
   Cœur: "/admin/systeme/coeur",
-  Workflow: "/admin/atelier/scenarios",
+  Workflow: "/admin/atelier/workflow",
   Compétences: "/admin/atelier/competences",
-  Fiches: "/admin/atelier/contextes",
+  Fiches: "/admin/atelier/creation",
   Agents: "/admin/controle/agents",
   Architecture: "/admin/systeme/architecture",
   Glossaire: "/admin/systeme/glossaire",

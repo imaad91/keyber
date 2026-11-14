@@ -38,6 +38,8 @@ Sous-onglets Atelier (ordre fixe) :
 **Book** = espace Studio séparé (même niveau que Atelier / Keyber OS / Contrôle / Équipe), hors Atelier.
 Génération des scénarios : bouton « Générer des scénarios » dans le Book (pas dans Création).
 Chaque carte scénario/histoire a 3 vues (Texte · Graphique · Code / fichier de paramétrage) et un versionning V1, V2… (Live = une version précise).
+Jouer une carte Book : `/jouer/book/[id]` — bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
+Démo optionnelle « Lumière & Co » : seed Studio localStorage uniquement (ne touche pas Novacier en dur). Fichiers sous `data/scenarios/lumiere-co/`.
 
 **Keyber OS** (ex-Système) = documentation lecture seule du moteur générique.
 Sous-onglets (ordre fixe) : Vue Globale · ERP · Moteur de Scénarios · Moteur de Décisions & Branches · Moteur d'Événements · Progression, Scores & Niveaux · Interface Joueur · Données & Sauvegarde.

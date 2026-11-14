@@ -56,8 +56,7 @@ export function BookEntryCard({
   onRetournerEnCreation: () => void;
   onSupprimer?: () => void;
 }) {
-  const playHref =
-    entry.mode === "competence" ? "/jouer/competence" : "/jouer/histoire";
+  const playHref = `/jouer/book/${entry.id}`;
   const isCompetence = entry.mode === "competence";
 
   return (
@@ -74,6 +73,15 @@ export function BookEntryCard({
               {bookVersionLabel(entry)}
             </p>
             <ModeBadge mode={entry.mode} />
+            {entry.status === "live" ? (
+              <span className="inline-flex rounded-md bg-emerald-600 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white">
+                LIVE
+              </span>
+            ) : (
+              <span className="inline-flex rounded-md bg-amber-500 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-amber-950">
+                MODE TEST
+              </span>
+            )}
           </div>
 
           {isCompetence ? (

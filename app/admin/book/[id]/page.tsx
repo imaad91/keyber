@@ -83,8 +83,7 @@ export default function BookDetailPage() {
     );
   }
 
-  const playHref =
-    entry.mode === "competence" ? "/jouer/competence" : "/jouer/histoire";
+  const playHref = `/jouer/book/${entry.id}`;
 
   function parseGraph(): BookGraphView | null {
     try {

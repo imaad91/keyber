@@ -78,7 +78,7 @@ export default function JouerLiveBookPage() {
                     Entreprise : {e.entrepriseNom || "—"}
                   </p>
                   <Link
-                    href="/jouer/competence"
+                    href={`/jouer/book/${e.id}`}
                     className="mt-3 inline-block text-accent underline"
                   >
                     Jouer
@@ -121,7 +121,7 @@ export default function JouerLiveBookPage() {
                     Entreprise : {e.entrepriseNom || "—"}
                   </p>
                   <Link
-                    href="/jouer/histoire"
+                    href={`/jouer/book/${e.id}`}
                     className="mt-3 inline-block text-accent underline"
                   >
                     Jouer

@@ -1,0 +1,70 @@
+{
+  "Nom": "Entraînement — Planification MRP",
+  "Version": 1,
+  "Type": "Scénario",
+  "Mode": "Compétence",
+  "Rôle": "",
+  "Compétence": "Planification MRP",
+  "Secteur": "E-commerce / Éclairage",
+  "Entreprise": "Lumière & Co",
+  "Contexte": {
+    "Nom de l'entreprise": "Lumière & Co",
+    "Secteur d'activité": "E-commerce / Éclairage",
+    "Nombre d'employés": "6"
+  },
+  "Événements entreprise": [
+    {
+      "nom": "Colis perdu par le transporteur",
+      "type": "Logistique",
+      "description": "Un colis client disparaît chez le transporteur après enlèvement. Le client relance le SAV."
+    },
+    {
+      "nom": "Fournisseur en retard",
+      "type": "Fournisseur",
+      "description": "MingLight annonce +12 jours sur le container Halo. Stock bas déjà."
+    },
+    {
+      "nom": "Pic de commandes à Noël",
+      "type": "Client",
+      "description": "Volume x3 sur 10 jours. Packing saturé, délais J+2 menacés."
+    },
+    {
+      "nom": "Lampe cassée dans l'entrepôt",
+      "type": "Technique",
+      "description": "Chute d'un carton Halo depuis le rack haut : 18 unités cassées + zone bloquée."
+    }
+  ],
+  "Rôles sélectionnés": [
+    "Logisticien"
+  ],
+  "Compétences sélectionnées": [
+    {
+      "nom": "Planification MRP",
+      "cours": [
+        "Intro MRP"
+      ]
+    }
+  ],
+  "Décisions": [
+    {
+      "id": "d1",
+      "titre": "Réappro Halo",
+      "options": [
+        "Commander MingLight maintenant",
+        "Partager MingLight + VietGlow",
+        "Couper la promo Halo"
+      ]
+    }
+  ],
+  "Fins": [
+    {
+      "id": "fin-ok",
+      "label": "Stock tenu jusqu'à Noël"
+    },
+    {
+      "id": "fin-rupture",
+      "label": "Rupture Halo en pic"
+    }
+  ],
+  "fichier": "lumiere-co_planification-mrp-competence_v1.json"
+}

@@ -50,11 +50,16 @@ export default function BookEnCoursDeTestPage() {
         title="Book — En cours de test"
       />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap gap-2">
         <Link href="/admin/book/generer">
           <AdminButton type="button">
             <Sparkles className="h-4 w-4" />
             Générer des scénarios
+          </AdminButton>
+        </Link>
+        <Link href="/admin/book/demo-lumiere">
+          <AdminButton type="button" variant="secondary">
+            Démo Lumière & Co
           </AdminButton>
         </Link>
       </div>

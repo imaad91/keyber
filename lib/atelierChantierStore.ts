@@ -89,8 +89,55 @@ export type AtelierChantier = {
   etapes: ChantierEtapeState[];
 };
 
+/** Catégories proposées — l'utilisateur peut en créer d'autres. */
+export const CHANTIER_CATEGORIES_DEFAUT = [
+  "Production",
+  "Logistique",
+  "Qualité",
+  "Management",
+] as const;
+
+export type ChantierCompetenceType = "transverse" | "ciblee";
+
+export const CHANTIER_COMPETENCE_TYPE_LABELS: Record<
+  ChantierCompetenceType,
+  string
+> = {
+  transverse: "Transverse",
+  ciblee: "Ciblée",
+};
+
+/** Cours lié à une compétence de chantier (Étape 3) — pas publié dans Atelier. */
+export type ChantierCours = {
+  id: string;
+  titre: string;
+  contenu: string;
+  formule: string;
+  exempleChiffre: string;
+  erreursFrequentes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** Compétence de chantier (Étape 3) — brouillon, hors Atelier > Compétences. */
+export type ChantierCompetence = {
+  id: string;
+  chantierId: string;
+  nom: string;
+  categorie: string;
+  description: string;
+  type: ChantierCompetenceType;
+  cours: ChantierCours[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 type ChantierState = {
   chantiers: AtelierChantier[];
+  /** Compétences + cours créés dans les chantiers (Étape 3). */
+  competences: ChantierCompetence[];
+  /** Catégories créées par l'utilisateur (en plus des défauts). */
+  categoriesCustom: string[];
   toast: string | null;
 };
 
@@ -107,7 +154,40 @@ function emptyEtapes(): ChantierEtapeState[] {
 }
 
 function emptyState(): ChantierState {
-  return { chantiers: [], toast: null };
+  return { chantiers: [], competences: [], categoriesCustom: [], toast: null };
+}
+
+function normalizeCours(c: Partial<ChantierCours> & { id: string }): ChantierCours {
+  return {
+    id: c.id,
+    titre: c.titre ?? "",
+    contenu: c.contenu ?? "",
+    formule: c.formule ?? "",
+    exempleChiffre: c.exempleChiffre ?? "",
+    erreursFrequentes: c.erreursFrequentes ?? "",
+    createdAt: c.createdAt ?? now(),
+    updatedAt: c.updatedAt ?? now(),
+  };
+}
+
+function normalizeCompetence(
+  c: Partial<ChantierCompetence> & { id: string }
+): ChantierCompetence {
+  const type: ChantierCompetenceType =
+    c.type === "transverse" || c.type === "ciblee" ? c.type : "ciblee";
+  return {
+    id: c.id,
+    chantierId: c.chantierId ?? "",
+    nom: c.nom ?? "",
+    categorie: c.categorie ?? "",
+    description: c.description ?? "",
+    type,
+    cours: Array.isArray(c.cours)
+      ? c.cours.map((x) => normalizeCours(x as ChantierCours))
+      : [],
+    createdAt: c.createdAt ?? now(),
+    updatedAt: c.updatedAt ?? now(),
+  };
 }
 
 function load(): ChantierState {
@@ -119,7 +199,17 @@ function load(): ChantierState {
     const chantiers = Array.isArray(parsed.chantiers)
       ? parsed.chantiers.map(normalizeChantier)
       : [];
-    return { chantiers, toast: null };
+    const competences = Array.isArray(parsed.competences)
+      ? parsed.competences.map((x) =>
+          normalizeCompetence(x as ChantierCompetence)
+        )
+      : [];
+    const categoriesCustom = Array.isArray(parsed.categoriesCustom)
+      ? parsed.categoriesCustom.filter(
+          (x): x is string => typeof x === "string" && x.trim().length > 0
+        )
+      : [];
+    return { chantiers, competences, categoriesCustom, toast: null };
   } catch {
     return emptyState();
   }
@@ -384,6 +474,278 @@ export function useAtelierChantierStore() {
         return { error: "Étape 1 incomplète : aucun contexte lié" };
       }
       return { ok: true };
+    },
+    competencesForChantier(chantierId: string) {
+      return state.competences.filter((c) => c.chantierId === chantierId);
+    },
+    listCategories(): string[] {
+      const fromComps = state.competences.map((c) => c.categorie.trim());
+      const all = [
+        ...CHANTIER_CATEGORIES_DEFAUT,
+        ...state.categoriesCustom,
+        ...fromComps,
+      ];
+      return Array.from(
+        new Set(all.filter((x) => x.length > 0))
+      ).sort((a, b) => a.localeCompare(b, "fr"));
+    },
+    addCategorieCustom(nom: string): { error?: string } {
+      ensure();
+      const n = nom.trim();
+      if (!n) return { error: "Nom de catégorie obligatoire" };
+      if (
+        CHANTIER_CATEGORIES_DEFAUT.some(
+          (d) => d.toLowerCase() === n.toLowerCase()
+        ) ||
+        state.categoriesCustom.some((d) => d.toLowerCase() === n.toLowerCase())
+      ) {
+        return {};
+      }
+      persist({
+        ...state,
+        categoriesCustom: [...state.categoriesCustom, n],
+        toast: null,
+      });
+      return {};
+    },
+    createCompetence(input: {
+      chantierId: string;
+      nom: string;
+      categorie: string;
+      description?: string;
+      type: ChantierCompetenceType;
+    }): ChantierCompetence | { error: string } {
+      ensure();
+      if (!state.chantiers.some((c) => c.id === input.chantierId)) {
+        return { error: "Chantier introuvable" };
+      }
+      const nom = input.nom.trim();
+      if (!nom) return { error: "Nom de la compétence obligatoire" };
+      const categorie = input.categorie.trim();
+      if (!categorie) return { error: "Catégorie obligatoire" };
+      if (input.type !== "transverse" && input.type !== "ciblee") {
+        return { error: "Type obligatoire (Transverse ou Ciblée)" };
+      }
+      const comp: ChantierCompetence = {
+        id: uid("chcomp"),
+        chantierId: input.chantierId,
+        nom,
+        categorie,
+        description: (input.description ?? "").trim(),
+        type: input.type,
+        cours: [],
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      let categoriesCustom = state.categoriesCustom;
+      const isDefault = CHANTIER_CATEGORIES_DEFAUT.some(
+        (d) => d.toLowerCase() === categorie.toLowerCase()
+      );
+      const alreadyCustom = categoriesCustom.some(
+        (d) => d.toLowerCase() === categorie.toLowerCase()
+      );
+      if (!isDefault && !alreadyCustom) {
+        categoriesCustom = [...categoriesCustom, categorie];
+      }
+      persist({
+        ...state,
+        competences: [comp, ...state.competences],
+        categoriesCustom,
+        toast: "Compétence ajoutée",
+      });
+      return comp;
+    },
+    updateCompetence(
+      id: string,
+      patch: Partial<
+        Pick<
+          ChantierCompetence,
+          "nom" | "categorie" | "description" | "type"
+        >
+      >
+    ): { error?: string } {
+      ensure();
+      const prev = state.competences.find((c) => c.id === id);
+      if (!prev) return { error: "Compétence introuvable" };
+      if (patch.nom !== undefined && !patch.nom.trim()) {
+        return { error: "Nom de la compétence obligatoire" };
+      }
+      if (patch.categorie !== undefined && !patch.categorie.trim()) {
+        return { error: "Catégorie obligatoire" };
+      }
+      const categorie =
+        patch.categorie !== undefined
+          ? patch.categorie.trim()
+          : prev.categorie;
+      let categoriesCustom = state.categoriesCustom;
+      if (patch.categorie !== undefined) {
+        const isDefault = CHANTIER_CATEGORIES_DEFAUT.some(
+          (d) => d.toLowerCase() === categorie.toLowerCase()
+        );
+        const alreadyCustom = categoriesCustom.some(
+          (d) => d.toLowerCase() === categorie.toLowerCase()
+        );
+        if (!isDefault && !alreadyCustom) {
+          categoriesCustom = [...categoriesCustom, categorie];
+        }
+      }
+      persist({
+        ...state,
+        categoriesCustom,
+        competences: state.competences.map((c) =>
+          c.id !== id
+            ? c
+            : {
+                ...c,
+                nom: patch.nom !== undefined ? patch.nom.trim() : c.nom,
+                categorie,
+                description:
+                  patch.description !== undefined
+                    ? patch.description.trim()
+                    : c.description,
+                type: patch.type ?? c.type,
+                updatedAt: now(),
+              }
+        ),
+        toast: "Compétence enregistrée",
+      });
+      return {};
+    },
+    deleteCompetence(id: string): { error?: string } {
+      ensure();
+      if (!state.competences.some((c) => c.id === id)) {
+        return { error: "Compétence introuvable" };
+      }
+      persist({
+        ...state,
+        competences: state.competences.filter((c) => c.id !== id),
+        toast: "Compétence supprimée",
+      });
+      return {};
+    },
+    createCours(
+      competenceId: string,
+      input: {
+        titre: string;
+        contenu?: string;
+        formule?: string;
+        exempleChiffre?: string;
+        erreursFrequentes?: string;
+      }
+    ): ChantierCours | { error: string } {
+      ensure();
+      const comp = state.competences.find((c) => c.id === competenceId);
+      if (!comp) return { error: "Compétence introuvable" };
+      const titre = input.titre.trim();
+      if (!titre) return { error: "Titre du cours obligatoire" };
+      const cours: ChantierCours = {
+        id: uid("chcours"),
+        titre,
+        contenu: (input.contenu ?? "").trim(),
+        formule: (input.formule ?? "").trim(),
+        exempleChiffre: (input.exempleChiffre ?? "").trim(),
+        erreursFrequentes: (input.erreursFrequentes ?? "").trim(),
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      persist({
+        ...state,
+        competences: state.competences.map((c) =>
+          c.id !== competenceId
+            ? c
+            : {
+                ...c,
+                cours: [cours, ...c.cours],
+                updatedAt: now(),
+              }
+        ),
+        toast: "Cours ajouté",
+      });
+      return cours;
+    },
+    updateCours(
+      competenceId: string,
+      coursId: string,
+      patch: Partial<
+        Pick<
+          ChantierCours,
+          | "titre"
+          | "contenu"
+          | "formule"
+          | "exempleChiffre"
+          | "erreursFrequentes"
+        >
+      >
+    ): { error?: string } {
+      ensure();
+      const comp = state.competences.find((c) => c.id === competenceId);
+      if (!comp) return { error: "Compétence introuvable" };
+      if (!comp.cours.some((x) => x.id === coursId)) {
+        return { error: "Cours introuvable" };
+      }
+      if (patch.titre !== undefined && !patch.titre.trim()) {
+        return { error: "Titre du cours obligatoire" };
+      }
+      persist({
+        ...state,
+        competences: state.competences.map((c) =>
+          c.id !== competenceId
+            ? c
+            : {
+                ...c,
+                updatedAt: now(),
+                cours: c.cours.map((x) =>
+                  x.id !== coursId
+                    ? x
+                    : {
+                        ...x,
+                        titre:
+                          patch.titre !== undefined
+                            ? patch.titre.trim()
+                            : x.titre,
+                        contenu:
+                          patch.contenu !== undefined
+                            ? patch.contenu.trim()
+                            : x.contenu,
+                        formule:
+                          patch.formule !== undefined
+                            ? patch.formule.trim()
+                            : x.formule,
+                        exempleChiffre:
+                          patch.exempleChiffre !== undefined
+                            ? patch.exempleChiffre.trim()
+                            : x.exempleChiffre,
+                        erreursFrequentes:
+                          patch.erreursFrequentes !== undefined
+                            ? patch.erreursFrequentes.trim()
+                            : x.erreursFrequentes,
+                        updatedAt: now(),
+                      }
+                ),
+              }
+        ),
+        toast: "Cours enregistré",
+      });
+      return {};
+    },
+    deleteCours(competenceId: string, coursId: string): { error?: string } {
+      ensure();
+      const comp = state.competences.find((c) => c.id === competenceId);
+      if (!comp) return { error: "Compétence introuvable" };
+      persist({
+        ...state,
+        competences: state.competences.map((c) =>
+          c.id !== competenceId
+            ? c
+            : {
+                ...c,
+                cours: c.cours.filter((x) => x.id !== coursId),
+                updatedAt: now(),
+              }
+        ),
+        toast: "Cours supprimé",
+      });
+      return {};
     },
     clearToast() {
       ensure();

@@ -273,6 +273,19 @@ export default function AtelierChantierDetailPage() {
                   readOnly={chantier.publie || lockedNext}
                 />
               ) : null}
+              {def.numero === 3 ? (
+                <div className="mt-4">
+                  <Link href={`/admin/atelier/chantier/${id}/etape-3`}>
+                    <AdminButton
+                      variant="secondary"
+                      type="button"
+                      disabled={lockedNext}
+                    >
+                      Ouvrir l&apos;Étape 3 — Compétences + Cours
+                    </AdminButton>
+                  </Link>
+                </div>
+              ) : null}
             </li>
           );
         })}

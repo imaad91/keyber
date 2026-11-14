@@ -21,11 +21,18 @@ Référence Studio — l’Admin lit et propose ; Cursor construit ; le jeu ne l
 3. Pas de bandeau « Studio » dans Décider / play.
 4. Les agents (Contrôle) relisent et proposent — ils ne patchent pas le Cœur ni le code.
 
-## Atelier — 3 couches (ordre fixe)
+## Atelier — couches + sous-onglets (ordre fixe)
 
+Couches métier :
 1. Contexte d’entreprise  
 2. Compétences (générales vs techniques précises)  
 3. Scénarios (liés à un contexte + compétences de ce contexte)
+
+Sous-onglets Studio Atelier :
+1. Contextes d’entreprise  
+2. Compétences  
+3. Scénarios  
+4. Workflow (BPMN 2.0 généré depuis le scénario — logique métier uniquement, jamais de code / fichiers / Novacier en dur dans l’UI)
 
 ## Agent Nettoyage
 

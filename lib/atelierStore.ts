@@ -53,6 +53,8 @@ export type AtelierScenario = {
   decisions: string;
   reglesFin: string;
   statut: ScenarioStatut;
+  /** Spec BPMN métier optionnelle — sinon générée depuis les champs texte. */
+  workflow?: import("@/lib/atelierWorkflow").AtelierWorkflowSpec;
   createdAt: string;
   updatedAt: string;
 };

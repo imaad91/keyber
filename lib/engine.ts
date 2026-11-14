@@ -1,5 +1,5 @@
 /**
- * Generic decision engine — no scenario names or hardcoded Novacier figures.
+ * Generic decision engine — no scenario / entreprise names.
  * All numbers come from GameState / Decision data.
  */
 
@@ -25,6 +25,7 @@ import {
   toModeJeu,
 } from "./gameState";
 import { RELATION_ALIASES } from "./gameState";
+import { getContexteActif } from "@/data/registry";
 import { applyMissedDecision, checkEvenements } from "./evenements";
 import { applyCompetenceImpacts, skillLabel } from "./progression";
 import { getCompetenceDef } from "./competences";
@@ -376,7 +377,7 @@ export function applyDecision(
     next = applyConsequence(next, cons);
   }
 
-  // Bonus conditions (e.g. Marie trust gates, nego AND clauses)
+  // Bonus conditions (e.g. relation trust gates, nego AND clauses)
   if (choix.conditions) {
     for (const cond of choix.conditions) {
       if (fullConditionPasses(next, cond) && cond.alorsEffetSupplementaire) {
@@ -426,7 +427,9 @@ export function applyDecision(
     "histoire";
   const modeLabel =
     mode === "histoire"
-      ? `Novacier Jour ${Math.max(1, next.meta.jourActuel)}`
+      ? getContexteActif().runtime.metaJourLabel(
+          Math.max(1, next.meta.jourActuel)
+        )
       : decision.competenceId
         ? skillLabel(decision.competenceId)
         : "Entraînement";

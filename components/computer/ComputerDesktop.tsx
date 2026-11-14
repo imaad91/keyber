@@ -10,7 +10,8 @@ import {
   MessageCircle,
   X,
 } from "lucide-react";
-import { DAY_LABELS } from "@/lib/computerData";
+import { getContexteActif } from "@/data/registry";
+import { DAY_LABELS, getDesktopCopy } from "@/lib/computerData";
 import { formatGameClock } from "@/lib/engine";
 import { roles } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
@@ -23,57 +24,6 @@ import { ComputerDocs } from "./ComputerDocs";
 import { ComputerErp } from "./ComputerErp";
 import { ComputerMail } from "./ComputerMail";
 
-const APPS: {
-  id: ComputerAppId;
-  titre: string;
-  description: string;
-  icon: typeof Mail;
-  accent: string;
-}[] = [
-  {
-    id: "erp",
-    titre: "ERP Novacier",
-    description: "Stock, commandes, employés, factures, machines",
-    icon: Database,
-    accent: "bg-sky-600",
-  },
-  {
-    id: "mail",
-    titre: "Boîte Mail",
-    description: "Emails de Laurent, clients, fournisseurs",
-    icon: Mail,
-    accent: "bg-rose-600",
-  },
-  {
-    id: "dashboard",
-    titre: "Dashboard",
-    description: "Graphiques, KPIs, pilotage",
-    icon: LayoutDashboard,
-    accent: "bg-emerald-600",
-  },
-  {
-    id: "documents",
-    titre: "Documents",
-    description: "Contrats, procédures, fichiers",
-    icon: FileText,
-    accent: "bg-amber-600",
-  },
-  {
-    id: "chat",
-    titre: "Chat Interne",
-    description: "Marie, Karim, Laurent",
-    icon: MessageCircle,
-    accent: "bg-violet-600",
-  },
-  {
-    id: "browser",
-    titre: "Navigateur",
-    description: "Rechercher infos, concurrents, rumeurs",
-    icon: Globe,
-    accent: "bg-slate-700",
-  },
-];
-
 export function ComputerDesktop() {
   const {
     gameState,
@@ -82,6 +32,58 @@ export function ComputerDesktop() {
     closeComputerApp,
     setActiveAction,
   } = useGameStore();
+
+  const desk = getDesktopCopy();
+  const APPS: {
+    id: ComputerAppId;
+    titre: string;
+    description: string;
+    icon: typeof Mail;
+    accent: string;
+  }[] = [
+    {
+      id: "erp",
+      titre: desk.erpTitle,
+      description: "Stock, commandes, employés, factures, machines",
+      icon: Database,
+      accent: "bg-sky-600",
+    },
+    {
+      id: "mail",
+      titre: "Boîte Mail",
+      description: desk.mailDescription,
+      icon: Mail,
+      accent: "bg-rose-600",
+    },
+    {
+      id: "dashboard",
+      titre: "Dashboard",
+      description: "Graphiques, KPIs, pilotage",
+      icon: LayoutDashboard,
+      accent: "bg-emerald-600",
+    },
+    {
+      id: "documents",
+      titre: "Documents",
+      description: "Contrats, procédures, fichiers",
+      icon: FileText,
+      accent: "bg-amber-600",
+    },
+    {
+      id: "chat",
+      titre: "Chat Interne",
+      description: desk.chatDescription,
+      icon: MessageCircle,
+      accent: "bg-violet-600",
+    },
+    {
+      id: "browser",
+      titre: "Navigateur",
+      description: "Rechercher infos, concurrents, rumeurs",
+      icon: Globe,
+      accent: "bg-slate-700",
+    },
+  ];
 
   const role = roles.find((r) => r.id === gameState.roleId);
   const dayLabel =
@@ -96,8 +98,10 @@ export function ComputerDesktop() {
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 bg-slate-800 px-4 py-2.5 text-white">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">
-            Session — {role?.titre ?? "Responsable de Production"} — Novacier —{" "}
-            {dayLabel} {clock}
+            {getDesktopCopy().sessionLabel
+              .replace("{role}", role?.titre ?? "Responsable de Production")
+              .replace("{entreprise}", getContexteActif().nom)}{" "}
+            — {dayLabel} {clock}
           </p>
           <p className="text-[11px] text-slate-300">
             Ordinateur de production · le temps avance à chaque application
@@ -128,7 +132,7 @@ export function ComputerDesktop() {
             }}
           >
             <p className="mb-5 text-sm font-medium text-white/80">
-              Bureau Novacier — double-cliquez une application
+              {getDesktopCopy().bureauLabel}
             </p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
               {APPS.map((app) => {

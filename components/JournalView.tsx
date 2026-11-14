@@ -4,24 +4,20 @@ import Link from "next/link";
 import { ArrowLeft, BookMarked } from "lucide-react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { Button } from "@/components/ui/button";
+import { getContexteActif } from "@/data/registry";
 import { resolveCharacterId } from "@/lib/characterStyle";
 import { useGameStore } from "@/lib/store";
 
 function portraitForEntry(titre: string, narration: string) {
+  const blob = `${titre} ${narration}`.toLowerCase();
+  const hit = getContexteActif().computer.chatContacts.find((c) => {
+    const first = c.name.split(" ")[0]?.toLowerCase() ?? "";
+    return first && blob.includes(first);
+  });
   return (
     resolveCharacterId(titre) ??
     resolveCharacterId(narration) ??
-    resolveCharacterId(
-      /marie/i.test(narration)
-        ? "Marie"
-        : /karim/i.test(narration)
-          ? "Karim"
-          : /laurent/i.test(narration)
-            ? "Laurent"
-            : /henri/i.test(narration)
-              ? "Henri"
-              : null
-    )
+    (hit ? resolveCharacterId(hit.name) : null)
   );
 }
 
@@ -45,7 +41,7 @@ export function JournalView() {
               Journal de bord
             </p>
             <h1 className="font-display text-3xl font-semibold">
-              Ton histoire chez Novacier
+              {"Ton histoire chez " + getContexteActif().nom}
             </h1>
           </div>
           <Button asChild variant="outline">
@@ -76,7 +72,7 @@ export function JournalView() {
                           {entry.mode === "competence"
                             ? `[Compétence — ${entry.modeLabel ?? "Entraînement"}]`
                             : entry.mode === "histoire" || entry.day > 0
-                              ? `[Histoire — ${entry.modeLabel ?? `Novacier Jour ${entry.day}`}]`
+                              ? `[Histoire — ${entry.modeLabel ?? getContexteActif().runtime.metaJourLabel(entry.day)}]`
                               : `Jour ${entry.day}`}
                         </span>
                         <span>·</span>

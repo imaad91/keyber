@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Globe, Search } from "lucide-react";
-import { browserCorpus } from "@/lib/computerData";
+import { getBrowserCorpus, getDesktopCopy } from "@/lib/computerData";
 import { cn } from "@/lib/utils";
 
 export function ComputerBrowser() {
@@ -12,8 +12,8 @@ export function ComputerBrowser() {
 
   const results = useMemo(() => {
     const q = submitted.trim().toLowerCase();
-    if (!q) return browserCorpus;
-    return browserCorpus.filter(
+    if (!q) return getBrowserCorpus();
+    return getBrowserCorpus().filter(
       (r) =>
         r.title.toLowerCase().includes(q) ||
         r.snippet.toLowerCase().includes(q) ||
@@ -24,7 +24,7 @@ export function ComputerBrowser() {
     );
   }, [submitted]);
 
-  const article = browserCorpus.find((r) => r.id === openId) ?? null;
+  const article = getBrowserCorpus().find((r) => r.id === openId) ?? null;
 
   return (
     <div className="flex h-full min-h-[440px] flex-col bg-white text-slate-900">
@@ -43,7 +43,7 @@ export function ComputerBrowser() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder='Rechercher… ex. "AutoVolt concurrent Pologne" ou "Novacier"'
+              placeholder={getDesktopCopy().browserPlaceholder}
               className="h-10 w-full rounded-full border border-slate-200 bg-white pl-8 pr-4 text-sm outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
@@ -55,7 +55,7 @@ export function ComputerBrowser() {
           </button>
         </form>
         <p className="mt-2 text-[11px] text-slate-500">
-          Suggestions : AutoVolt concurrent Pologne · Novacier · MétalPro
+          {getDesktopCopy().browserSuggestions}
         </p>
       </div>
 

@@ -16,6 +16,7 @@ import {
 import { checkEvenements } from "./evenements";
 import type { GameState, ModeJeu } from "./gameState";
 import { legacyModeFrom, toModeJeu } from "./gameState";
+import { getContexteActif } from "@/data/registry";
 import { createInitialGameState } from "./mock";
 import { migrateGameState } from "./migrateGameState";
 import {
@@ -201,9 +202,8 @@ export function markIntroSeen() {
           {
             id: `j-intro-${Date.now()}`,
             day: 0,
-            titre: "Lundi 8h00 — Arrivée",
-            narration:
-              "Tu franchis la porte de Novacier. Henri te salue. La Semaine Qui Décide De Tout commence.",
+            titre: getContexteActif().runtime.arrivalJournal.titre,
+            narration: getContexteActif().runtime.arrivalJournal.narration,
             xp: 10,
             at: "08:00",
           },
@@ -412,9 +412,8 @@ export function markLivreOpened() {
             {
               id: `j-livre-${Date.now()}`,
               day: Math.max(0, s.meta.jourActuel),
-              titre: "Livre de Novacier",
-              narration:
-                "Tu as ouvert le Livre : 1987, quasi-faillite 2022, AutoVolt 45 % du CA. La mémoire du lieu.",
+              titre: getContexteActif().runtime.livreOpened.titre,
+              narration: getContexteActif().runtime.livreOpened.narration,
               xp: 20,
               at: "—",
             },

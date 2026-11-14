@@ -2,16 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
+import { getChatContacts } from "@/lib/computerData";
 import { examplePersonnages } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
 import type { DialogueChoice } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-const THREADS = [
-  { id: "pers-marie", name: "Marie Dubois", role: "Cheffe d'atelier" },
-  { id: "pers-karim", name: "Karim Benali", role: "Maintenance" },
-  { id: "pers-laurent", name: "Laurent Perrin", role: "Directeur" },
-] as const;
 
 export function ComputerChat() {
   const { gameState, applyDialogueChoice } = useGameStore();
@@ -20,16 +15,14 @@ export function ComputerChat() {
     { id: string; from: "you" | "them"; text: string }[]
   >([]);
 
-  const thread = THREADS.find((t) => t.id === threadId)!;
+  const threads = getChatContacts();
+  const thread = threads.find((t) => t.id === threadId) ?? threads[0]!;
   const personnage = examplePersonnages.find((p) => p.id === threadId);
 
   const feed = useMemo(() => {
-    const fromStore = gameState.messages.filter(
-      (m) =>
-        m.from.includes(thread.name.split(" ")[0]) ||
-        (threadId === "pers-karim" && m.from.includes("Karim")) ||
-        (threadId === "pers-marie" && m.from.includes("Marie")) ||
-        (threadId === "pers-laurent" && m.from.includes("Laurent"))
+    const first = thread.name.split(" ")[0] ?? "";
+    const fromStore = gameState.messages.filter((m) =>
+      m.from.includes(first)
     );
     return fromStore;
   }, [gameState.messages, thread.name, threadId]);
@@ -52,7 +45,7 @@ export function ComputerChat() {
         <p className="px-3 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-400">
           Conversations
         </p>
-        {THREADS.map((t) => {
+        {threads.map((t) => {
           const hasAlert = gameState.messages.some(
             (m) => m.alert && m.from.includes(t.name.split(" ")[0])
           );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { dayTitles } from "@/data/scenarioNovacier";
+import { getScenarioActif } from "@/data/registry";
 import { annotateChoix } from "@/lib/engine";
 import { getPlayDecisionForDay } from "@/lib/playContent";
 import { clearTrainingPrompt, useGameStore } from "@/lib/store";
@@ -19,6 +19,7 @@ export function DecisionCard() {
   } = useGameStore();
 
   const day = Math.min(5, Math.max(1, gameState.day || 1));
+  const dayTitles = getScenarioActif().dayTitles ?? {};
   const decision = getPlayDecisionForDay(day);
   const annotated = decision ? annotateChoix(rawState, decision) : [];
   const unlockedChoix = annotated.filter((a) => a.unlocked).map((a) => a.choix);

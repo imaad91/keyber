@@ -14,6 +14,7 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
+import { getContexteActif } from "@/data/registry";
 import { exampleActions } from "@/lib/mock";
 import { formatRemainingLabel } from "@/lib/evenements";
 import { useGameStore } from "@/lib/store";
@@ -46,7 +47,7 @@ export function ActionSidebar() {
           KEYBER
         </Link>
         <p className="mt-1 text-[10px] uppercase tracking-wider text-muted">
-          {chapter ? `Ch.${chapter.numero} · ${chapter.titre}` : "Novacier"}
+          {chapter ? `Ch.${chapter.numero} · ${chapter.titre}` : getContexteActif().nom}
         </p>
         <p className="mt-2 font-display text-sm font-semibold leading-snug tabular-nums text-foreground">
           {clockLabel}
@@ -159,7 +160,7 @@ function ActionButton({
         </span>
         <span className="mt-0.5 block text-[11px] leading-snug text-muted">
           {locked
-            ? "Verrouillé — suis Henri"
+            ? "Verrouillé — suis le mentor"
             : `${action.description} · ${action.timeCostMinutes} min`}
         </span>
       </span>

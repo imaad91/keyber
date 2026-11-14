@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { getDesktopCopy } from "@/lib/computerData";
 import { dashboardSeries } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
 
@@ -42,7 +43,7 @@ export function ComputerDashboard() {
             ? "Données indisponibles — Visibilité : Aucune. Graphiques masqués jusqu'au capteur."
             : advanced
               ? "Mode avancé — prédictions débloquées."
-              : "Graphiques hebdomadaires Novacier."}
+              : getDesktopCopy().dashboardHint}
         </p>
       </header>
 

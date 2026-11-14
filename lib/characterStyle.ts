@@ -2,7 +2,10 @@
  * KEYBER character visual charter
  * Flat vector — Duolingo / Notion / Pennylane.
  * Use for all current and future cast (commercial, RH, DG…).
+ * Display names come from the active contexte (chatContacts), not hardcoded cast.
  */
+
+import { getContexteActif } from "@/data/registry";
 
 export const CHARACTER_PALETTE = {
   navy: "#0C3B38",
@@ -62,6 +65,7 @@ export const STROKE = {
   color: CHARACTER_PALETTE.ink,
 } as const;
 
+/** Visual slots only — display names come from getCharacterMeta() / contexte. */
 export const CHARACTER_META: Record<
   CharacterVisualId,
   {
@@ -75,40 +79,40 @@ export const CHARACTER_META: Record<
   }
 > = {
   "pers-marie": {
-    displayName: "Marie Dubois",
-    shortName: "Marie",
+    displayName: "Cheffe d'atelier",
+    shortName: "Atelier",
     role: "Cheffe d'Atelier",
     accent: CHARACTER_PALETTE.blue,
     jacketOrTop: CHARACTER_PALETTE.blue,
     hair: "#9CA3AF",
-    notes: "52 · gray ponytail · work jacket · arms crossed · gold earring",
+    notes: "work jacket · arms crossed",
   },
   "pers-karim": {
-    displayName: "Karim Benali",
-    shortName: "Karim",
+    displayName: "Technicien maintenance",
+    shortName: "Maintenance",
     role: "Technicien Maintenance",
     accent: CHARACTER_PALETTE.gray,
     jacketOrTop: "#4B5563",
     hair: "#5C4033",
-    notes: "28 · short brown hair · light beard · dark gray polo",
+    notes: "dark gray polo",
   },
   "pers-laurent": {
-    displayName: "Laurent Perrin",
-    shortName: "Laurent",
+    displayName: "Directeur",
+    shortName: "Direction",
     role: "Directeur",
     accent: CHARACTER_PALETTE.navy,
     jacketOrTop: "#1F2937",
     hair: "#A8A29E",
-    notes: "48 · salt-and-pepper · dark suit · white shirt · demanding",
+    notes: "dark suit · white shirt",
   },
   "pers-henri": {
-    displayName: "Henri Vallon",
-    shortName: "Henri",
+    displayName: "Mentor",
+    shortName: "Mentor",
     role: "Mentor · Ancien Responsable",
     accent: CHARACTER_PALETTE.mint,
     jacketOrTop: "#5B6E6C",
     hair: "#F3F4F6",
-    notes: "60 · white hair · worn work jacket · kind smile · glasses",
+    notes: "worn work jacket · glasses",
   },
 };
 
@@ -132,22 +136,44 @@ export function resolveCharacterId(
 ): CharacterVisualId | null {
   if (!nameOrId) return null;
   const n = nameOrId.toLowerCase();
-  if (n.includes("pers-marie") || n.includes("marie")) return "pers-marie";
-  if (n.includes("pers-karim") || n.includes("karim")) return "pers-karim";
-  if (n.includes("pers-laurent") || n.includes("laurent")) return "pers-laurent";
-  if (
-    n.includes("pers-henri") ||
-    n.includes("henri") ||
-    n.includes("mentor") ||
-    n.includes("ancien")
-  ) {
-    return "pers-henri";
+  if (n.includes("pers-marie")) return "pers-marie";
+  if (n.includes("pers-karim")) return "pers-karim";
+  if (n.includes("pers-laurent")) return "pers-laurent";
+  if (n.includes("pers-henri")) return "pers-henri";
+
+  // Match against active contexte contacts (display names), not hardcoded cast.
+  for (const c of getContexteActif().computer.chatContacts) {
+    const first = c.name.split(" ")[0]?.toLowerCase() ?? "";
+    const id = c.id as CharacterVisualId;
+    if (first && n.includes(first) && id in CHARACTER_META) return id;
+    if (c.role && n.includes(c.role.toLowerCase()) && id in CHARACTER_META) {
+      return id;
+    }
   }
+
+  if (n.includes("mentor") || n.includes("ancien")) return "pers-henri";
+  if (n.includes("maintenance")) return "pers-karim";
+  if (n.includes("directeur") || n.includes("direction")) return "pers-laurent";
+  if (n.includes("atelier") || n.includes("cheffe")) return "pers-marie";
   return null;
 }
 
+export function getCharacterMeta(id: CharacterVisualId) {
+  const base = CHARACTER_META[id];
+  const contact = getContexteActif().computer.chatContacts.find(
+    (c) => c.id === id
+  );
+  if (!contact) return base;
+  return {
+    ...base,
+    displayName: contact.name,
+    shortName: contact.name.split(" ")[0] ?? base.shortName,
+    role: contact.role || base.role,
+  };
+}
+
 export function firstNameFromId(id: CharacterVisualId): string {
-  return CHARACTER_META[id].shortName;
+  return getCharacterMeta(id).shortName;
 }
 
 export const TRUST_CROSSFADE_MS = 400;

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpen, Brain, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getContexteActif } from "@/data/registry";
 import { skills } from "@/lib/mock";
 import { XP_PER_SKILL_LEVEL } from "@/lib/progression";
 import {
@@ -67,9 +68,7 @@ export function HomeProgression() {
   const scenarioLabel =
     resume?.mode === "competence"
       ? "Compétence"
-      : resume?.scenarioId?.includes("novacier")
-        ? "Novacier"
-        : resume?.scenarioId ?? "Partie";
+      : getContexteActif().nom;
 
   return (
     <section className="hero-enter max-w-3xl">

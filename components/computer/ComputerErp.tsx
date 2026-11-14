@@ -8,31 +8,24 @@ import {
   Sparkles,
 } from "lucide-react";
 import {
-  erpClients,
-  erpCommandes,
-  erpEmployes,
-  erpFactures,
-  erpFournisseurs,
-  erpMachines,
-  erpProduction,
-  erpStockRows,
+  getDesktopCopy,
+  getErpClients,
+  getErpCommandes,
+  getErpDashboardCards,
+  getErpEmployes,
+  getErpFactures,
+  getErpFournisseurs,
+  getErpMachines,
+  getErpMaintenance,
+  getErpModuleList,
+  getErpProduction,
+  getErpStockRows,
 } from "@/lib/computerData";
+import type { ErpModuleId } from "@/lib/computerTypes";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-const MODULES = [
-  { id: "dashboard", label: "Tableau de bord ERP" },
-  { id: "stock", label: "Stock" },
-  { id: "commandes", label: "Commandes" },
-  { id: "production", label: "Production" },
-  { id: "employes", label: "Employés" },
-  { id: "factures", label: "Factures" },
-  { id: "machines", label: "Machines" },
-  { id: "clients", label: "Clients" },
-  { id: "fournisseurs", label: "Fournisseurs" },
-] as const;
-
-type ModuleId = (typeof MODULES)[number]["id"];
+type ModuleId = ErpModuleId;
 
 function fogActive(sensorInstalled: boolean, visibilityLevel: number) {
   return !sensorInstalled && visibilityLevel < 2;
@@ -52,6 +45,7 @@ function FogCell({ fog, value }: { fog: boolean; value: string | number }) {
 export function ComputerErp() {
   const { gameState } = useGameStore();
   const fog = fogActive(gameState.sensorInstalled, gameState.visibilityLevel);
+  const modules = getErpModuleList();
   const [module, setModule] = useState<ModuleId>("stock");
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState(0);
@@ -86,7 +80,7 @@ export function ComputerErp() {
           Modules
         </p>
         <nav className="flex flex-col gap-0.5 px-2 pb-3">
-          {MODULES.map((m) => (
+          {modules.map((m) => (
             <button
               key={m.id}
               type="button"
@@ -168,8 +162,7 @@ export function ComputerErp() {
 
         {fog ? (
           <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-900">
-            Données indisponibles — Visibilité : Aucune. Installez le capteur
-            Machine 3 (5 k€) ou interrogez l&apos;atelier.
+            {getDesktopCopy().fogHint}
           </div>
         ) : null}
 
@@ -202,12 +195,7 @@ export function ComputerErp() {
 function ErpDashboard({ fog }: { fog: boolean }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {[
-        { label: "Stock A-42", value: "120 / seuil 200" },
-        { label: "CMD-248 AutoVolt", value: "0 / 500 produites" },
-        { label: "Rebut Machine 3", value: "18 %" },
-        { label: "Trésorerie affichée", value: "Masquée / ???" },
-      ].map((c) => (
+      {getErpDashboardCards().map((c) => (
         <div
           key={c.label}
           className="rounded-lg border border-slate-200 bg-slate-50 p-4"
@@ -245,7 +233,7 @@ function ErpModuleTable({
 
   const table = useMemo(() => {
     if (module === "stock") {
-      let rows = erpStockRows.filter(
+      let rows = getErpStockRows().filter(
         (r) =>
           (filterStatut === "all" || r.statut === filterStatut) &&
           Object.values(r).some((v) => String(v).toLowerCase().includes(q))
@@ -297,7 +285,7 @@ function ErpModuleTable({
       };
     }
     if (module === "commandes") {
-      let rows = erpCommandes.filter(
+      let rows = getErpCommandes().filter(
         (r) =>
           (filterStatut === "all" || r.statut === filterStatut) &&
           Object.values(r).some((v) => String(v).toLowerCase().includes(q))
@@ -331,7 +319,7 @@ function ErpModuleTable({
       };
     }
     if (module === "production") {
-      let rows = erpProduction.filter((r) =>
+      let rows = getErpProduction().filter((r) =>
         Object.values(r).some((v) => String(v).toLowerCase().includes(q))
       );
       rows = [...rows].sort((a, b) =>
@@ -359,7 +347,7 @@ function ErpModuleTable({
       };
     }
     if (module === "employes") {
-      let rows = erpEmployes.filter((r) =>
+      let rows = getErpEmployes().filter((r) =>
         Object.values(r).some((v) => String(v).toLowerCase().includes(q))
       );
       rows = [...rows].sort((a, b) =>
@@ -387,7 +375,7 @@ function ErpModuleTable({
       };
     }
     if (module === "factures") {
-      let rows = erpFactures.filter(
+      let rows = getErpFactures().filter(
         (r) =>
           (filterStatut === "all" || r.statut === filterStatut) &&
           Object.values(r).some((v) => String(v).toLowerCase().includes(q))
@@ -417,7 +405,7 @@ function ErpModuleTable({
       };
     }
     if (module === "machines") {
-      let rows = erpMachines.filter((r) =>
+      let rows = getErpMachines().filter((r) =>
         Object.values(r).some((v) => String(v).toLowerCase().includes(q))
       );
       rows = [...rows].sort((a, b) =>
@@ -445,7 +433,7 @@ function ErpModuleTable({
       };
     }
     if (module === "clients") {
-      let rows = erpClients.filter((r) =>
+      let rows = getErpClients().filter((r) =>
         Object.values(r).some((v) => String(v).toLowerCase().includes(q))
       );
       rows = [...rows].sort((a, b) =>
@@ -468,7 +456,35 @@ function ErpModuleTable({
         ]),
       };
     }
-    let rows = erpFournisseurs.filter((r) =>
+    if (module === "maintenance") {
+      let rows = getErpMaintenance().filter((r) =>
+        Object.values(r).some((v) => String(v).toLowerCase().includes(q))
+      );
+      rows = [...rows].sort((a, b) =>
+        sortAsc
+          ? a.equipement.localeCompare(b.equipement)
+          : b.equipement.localeCompare(a.equipement)
+      );
+      return {
+        headers: [
+          "Équipement",
+          "Type",
+          "Échéance",
+          "Technicien",
+          "Statut",
+          "Priorité",
+        ],
+        rows: rows.map((r) => [
+          r.equipement,
+          r.type,
+          r.echeance,
+          r.technicien,
+          r.statut,
+          r.priorite,
+        ]),
+      };
+    }
+    let rows = getErpFournisseurs().filter((r) =>
       Object.values(r).some((v) => String(v).toLowerCase().includes(q))
     );
     rows = [...rows].sort((a, b) =>
@@ -547,6 +563,7 @@ function shouldFogColumn(module: ModuleId, col: number) {
   if (module === "machines") return col >= 2;
   if (module === "clients") return col >= 1;
   if (module === "fournisseurs") return col >= 2;
+  if (module === "maintenance") return col >= 2;
   return true;
 }
 

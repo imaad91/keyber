@@ -2,7 +2,7 @@
 
 import { Siren } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { dayTitles, TARGET_PIECES } from "@/lib/scenario";
+import { getContexteActif, getScenarioActif } from "@/data/registry";
 import { exampleActions } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
 
@@ -10,7 +10,11 @@ export function ScenarioDayBanner() {
   const { gameState, setActiveAction, advanceDay } = useGameStore();
   if (!gameState.scenarioActive || gameState.day < 1) return null;
 
-  const title = dayTitles[gameState.day] ?? `Jour ${gameState.day}`;
+  const scenario = getScenarioActif();
+  const title =
+    scenario.dayTitles?.[gameState.day] ?? `Jour ${gameState.day}`;
+  const target = scenario.targetPieces ?? 500;
+  const fogHint = getContexteActif().computer.desktop.fogHint;
 
   return (
     <div className="mb-4 rounded-2xl border border-white/10 bg-panel-2 p-4">
@@ -20,19 +24,17 @@ export function ScenarioDayBanner() {
             {title}
             {gameState.alarmActive ? (
               <span className="ml-2 inline-flex items-center gap-1 text-danger">
-                <Siren className="h-3 w-3 machine-fault" /> Alarme Machine 3
+                <Siren className="h-3 w-3 machine-fault" /> Alarme ligne
               </span>
             ) : null}
           </p>
           <p className="mt-1 text-sm text-muted">
-            Objectif semaine : {gameState.piecesQualiteSemaine}/{TARGET_PIECES}{" "}
-            pièces qualité · Éthique {gameState.ethique} · AutoVolt{" "}
+            Objectif semaine : {gameState.piecesQualiteSemaine}/{target}{" "}
+            pièces qualité · Éthique {gameState.ethique} · Client{" "}
             {gameState.confianceAutoVolt}
           </p>
           {!gameState.sensorInstalled && gameState.day === 1 ? (
-            <p className="mt-1 text-xs text-accent-warm">
-              KPIs en ??? — interviewe Karim ou investis dans le capteur (5 k€).
-            </p>
+            <p className="mt-1 text-xs text-accent-warm">{fogHint}</p>
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">

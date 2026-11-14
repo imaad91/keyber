@@ -1,10 +1,12 @@
 /**
- * Time-driven + conditional event engine for Mode Histoire.
+ * Time-driven + conditional event engine (OS — generic).
+ * Event catalogs live in data/contextes/[id]/evenements.ts
  */
 
 import type { Consequence } from "./decisions";
 import type { GameState } from "./gameState";
 import { getPath, setPath, syncMetaClock } from "./gameState";
+import { getContexteActif } from "@/data/registry";
 
 export type EvenementType = "message" | "panne" | "alerte" | "visite";
 
@@ -30,6 +32,8 @@ export type Evenement = {
   deadlineHeure?: string;
   /** Consequences if urgent not handled before deadline */
   consequencesDeadline?: Consequence[];
+  /** Optional mail sender override (otherwise contexte.runtime.eventMailFrom) */
+  mailFrom?: string;
 };
 
 export type EventNotification = {
@@ -76,85 +80,15 @@ function applySimpleConsequence(state: GameState, c: Consequence): GameState {
   return setPath(state, c.cible, curNum + c.valeur);
 }
 
-/** Canonical Novacier event catalog (player runtime). */
-export const NOVACIER_EVENEMENTS: Evenement[] = [
-  {
-    id: "ev-mail-laurent-j2",
-    jour: 2,
-    heure: "10:00",
-    type: "message",
-    titre: "Email de Laurent",
-    texte:
-      "Laurent : AutoVolt insiste pour un point statut aujourd'hui. Réponds avant midi.",
-    consequences: [
-      { cible: "flags.mailLaurentJ2", valeur: 1, mode: "set" },
-    ],
-  },
-  {
-    id: "ev-rumor-j2",
-    jour: 2,
-    heure: "09:00",
-    type: "message",
-    titre: "Rumeur AutoVolt / Pologne",
-    texte: "On parle d'un concurrent polonais contacté par AutoVolt.",
-  },
-  {
-    id: "ev-alerte-stock",
-    jour: 0,
-    type: "alerte",
-    titre: "Alerte stock",
-    texte: "Stock sous le seuil de sécurité (200 kg).",
-    condition: { si: "stock", inferieurA: 200 },
-    consequences: [{ cible: "flags.alerteStock", valeur: 1, mode: "set" }],
-  },
-  {
-    id: "ev-marie-mefiante",
-    jour: 0,
-    type: "visite",
-    titre: "Marie méfiante",
-    texte: "Marie évite ton regard. La confiance est trop basse.",
-    condition: { si: "confiance.marie", inferieurA: 40 },
-  },
-  {
-    id: "ev-panne-m3",
-    jour: 3,
-    heure: "10:00",
-    type: "panne",
-    titre: "Panne Machine 3",
-    texte: "Alarme atelier — tu dois décider avant 16:00.",
-    urgent: true,
-    deadlineHeure: "16:00",
-    consequences: [
-      { cible: "flags.alarmActive", valeur: 1, mode: "set" },
-      { cible: "machine.m3.etat", valeur: 0, setValeur: "PANNE" },
-    ],
-    consequencesDeadline: [
-      { cible: "qualite", valeur: -40 },
-      { cible: "moral", valeur: -10 },
-      { cible: "confianceClient", valeur: -8 },
-    ],
-  },
-  {
-    id: "ev-mail-laurent-j1",
-    jour: 1,
-    heure: "08:15",
-    type: "message",
-    titre: "Email de Laurent",
-    texte: "Où en est le retard ? AutoVolt appelle cet après-midi.",
-  },
-  {
-    id: "ev-defaut-j4",
-    jour: 4,
-    heure: "09:30",
-    type: "alerte",
-    titre: "40 pièces à micro-défaut",
-    texte: "Contrôle qualité : décisions éthiques à venir.",
-  },
-];
+/** Active contexte event catalog — never hardcode an entreprise here. */
+export function evenementsActifs(): Evenement[] {
+  return getContexteActif().evenements;
+}
 
+/** @deprecated Prefer evenementsActifs() */
 export function evenementsForScenario(scenarioId: string): Evenement[] {
   void scenarioId;
-  return NOVACIER_EVENEMENTS;
+  return evenementsActifs();
 }
 
 function injectWorldSideEffects(state: GameState, ev: Evenement): GameState {
@@ -162,6 +96,8 @@ function injectWorldSideEffects(state: GameState, ev: Evenement): GameState {
   if (ev.type === "message") {
     const already = next.world.emails.some((e) => e.id === `mail-${ev.id}`);
     if (!already) {
+      const mailFrom =
+        ev.mailFrom ?? getContexteActif().runtime.eventMailFrom;
       next = {
         ...next,
         world: {
@@ -169,7 +105,7 @@ function injectWorldSideEffects(state: GameState, ev: Evenement): GameState {
           emails: [
             {
               id: `mail-${ev.id}`,
-              from: "Laurent Moreau <laurent@novacier.fr>",
+              from: mailFrom,
               subject: ev.titre,
               preview: ev.texte.slice(0, 80),
               body: ev.texte,
@@ -219,7 +155,7 @@ function injectWorldSideEffects(state: GameState, ev: Evenement): GameState {
  */
 export function checkEvenements(
   state: GameState,
-  catalog: Evenement[] = NOVACIER_EVENEMENTS
+  catalog: Evenement[] = evenementsActifs()
 ): GameState {
   const jour = state.meta.jourActuel;
   const fired = new Set(state.historique.evenementsDeclenches);
@@ -233,6 +169,7 @@ export function checkEvenements(
     at: n.at,
   }));
   let urgentBanner = state.world.urgentBanner ?? null;
+  const jourLabel = getContexteActif().runtime.metaJourLabel;
 
   for (const ev of catalog) {
     if (fired.has(ev.id)) continue;
@@ -273,7 +210,7 @@ export function checkEvenements(
             xp: 0,
             at: next.meta.heureActuelle,
             mode: "histoire",
-            modeLabel: `Novacier Jour ${Math.max(1, jour)}`,
+            modeLabel: jourLabel(Math.max(1, jour)),
           },
           ...next.world.journal,
         ],
@@ -347,6 +284,7 @@ export function applyMissedDecision(state: GameState): GameState {
   let next = state;
   next = applySimpleConsequence(next, { cible: "moral", valeur: -5 });
   next = applySimpleConsequence(next, { cible: "confianceClient", valeur: -5 });
+  const jourLabel = getContexteActif().runtime.metaJourLabel;
   return {
     ...next,
     world: {
@@ -362,7 +300,7 @@ export function applyMissedDecision(state: GameState): GameState {
           xp: 0,
           at: "18:00",
           mode: "histoire",
-          modeLabel: `Novacier Jour ${state.meta.jourActuel}`,
+          modeLabel: jourLabel(state.meta.jourActuel),
         },
         ...next.world.journal,
       ],

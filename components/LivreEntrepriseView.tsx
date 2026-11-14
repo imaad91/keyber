@@ -12,6 +12,7 @@ import {
   Network,
 } from "lucide-react";
 import { Organigramme } from "@/components/Organigramme";
+import { getContexteActif } from "@/data/registry";
 import { livreNovacier } from "@/lib/mock";
 import { markLivreOpened } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,9 @@ type TabId = (typeof TABS)[number]["id"];
 
 export function LivreEntrepriseView() {
   const [tab, setTab] = useState<TabId>("histoire");
-  const livre = livreNovacier;
+  // Contenu narratif encore dans lib/scenario (données Novacier).
+  // Affiche le nom du contexte actif pour rester aligné avec le registry.
+  const livre = { ...livreNovacier, nom: getContexteActif().nom };
 
   useEffect(() => {
     markLivreOpened();

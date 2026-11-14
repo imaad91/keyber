@@ -1,9 +1,9 @@
 /**
- * Play content resolver — static scenario files only.
+ * Play content resolver — active contexte / scénario via registry.
  * Admin Studio must NEVER override player decisions or GameState.
  */
 
-import { decisionForDay } from "@/data/scenarioNovacier";
+import { getScenarioActif } from "@/data/registry";
 import type { Decision } from "@/lib/decisions";
 
 /** Always false — Studio is decoupled from the player. */
@@ -13,10 +13,10 @@ export function adminOverridesActive(): boolean {
 
 /**
  * Decision used by the player Décider screen & engine.
- * Always from static Novacier data — never from Admin localStorage.
+ * From active contexte scenario — never from Admin localStorage.
  */
 export function getPlayDecisionForDay(day: number): Decision | undefined {
-  return decisionForDay(day);
+  return getScenarioActif().decisionForDay(day);
 }
 
 export function getPlayDecisionByChoixId(

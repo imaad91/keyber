@@ -21,9 +21,9 @@ const USAGE_OPTIONS: GlossaireUsage[] = [
 ];
 
 const USAGE_HREF: Partial<Record<GlossaireUsage, string>> = {
-  Décisions: "/admin/atelier/scenarios",
+  Décisions: "/admin/atelier/creation",
   ERP: "/erp",
-  Dialogues: "/admin/atelier/briefs",
+  Dialogues: "/admin/atelier/creation",
   Cœur: "/admin/systeme/coeur",
   Compétences: "/admin/atelier/competences",
   GameState: "/admin/systeme/architecture",

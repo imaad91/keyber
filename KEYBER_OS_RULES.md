@@ -6,7 +6,7 @@ Référence Studio — l’Admin lit et propose ; Cursor construit ; le jeu ne l
 
 - **KEYBER** = système d’exploitation (moteur, GameState, ERP, Ordinateur, Décider, Journal, Profil).
 - **Novacier** = module exemple installé dessus (données scénario uniquement).
-- **Admin Studio** = Atelier / Système / Contrôle / Équipe. Ne joue pas, n’écrit pas dans le GameState.
+- **Admin Studio** = Atelier / Book / Système / Contrôle / Équipe. Ne joue pas, n’écrit pas dans le GameState.
 
 ## Séparation OS / exemple
 
@@ -21,19 +21,20 @@ Référence Studio — l’Admin lit et propose ; Cursor construit ; le jeu ne l
 3. Pas de bandeau « Studio » dans Décider / play.
 4. Les agents (Contrôle) relisent et proposent — ils ne patchent pas le Cœur ni le code.
 
-## Atelier — couches + sous-onglets (ordre fixe)
+## Atelier + Book (Studio)
 
-Couches métier :
-1. Contexte d’entreprise  
-2. Compétences (générales vs techniques précises)  
-3. Scénarios (liés à un contexte + compétences de ce contexte)
+Règle scénario (non négociable) : chaque scénario a **un seul Mode** —
+**Mode Compétence** *ou* **Mode Histoire** (jamais les deux, jamais aucun).
+- Mode Compétence = entraînement intensif, pas de rôle, 1 compétence précise, avec Cours.
+- Mode Histoire = mise en pratique, Rôle → Secteur → Entreprise, événements aléatoires.
 
-Sous-onglets Studio Atelier :
-1. Chantier / Création (pipeline 6 étapes pour créer un contexte — pas de contenu inventé)  
-2. Contextes d’entreprise  
-3. Compétences  
-4. Scénarios  
-5. Workflow (BPMN 2.0 généré depuis le scénario — logique métier uniquement, jamais de code / fichiers / Novacier en dur dans l’UI)
+Sous-onglets Atelier (ordre fixe) :
+1. Création  
+2. Workflow  
+3. Rôles  
+4. Compétences  
+
+**Book** = espace Studio séparé (même niveau que Atelier / Système / Contrôle / Équipe), hors Atelier.
 
 ## Agent Nettoyage
 

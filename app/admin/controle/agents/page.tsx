@@ -8,6 +8,7 @@ import { EXIGENCE_LABELS } from "@/lib/agents";
 import { useAdminStore } from "@/lib/adminStore";
 
 const ALLOWED = [
+  "nettoyage",
   "agent-testeur",
   "agent-metier",
   "agent-pedagogue",
@@ -35,8 +36,8 @@ export default function ControleAgentsPage() {
         title="Contrôle — Agents"
       />
       <p className="mb-4 text-sm text-slate-600">
-        6 agents relisent — ils ne modifient pas le code ni le Cœur. Cursor
-        construit.
+        7 agents relisent — ils ne modifient pas le code ni le Cœur. Nettoyage
+        propose un plan ; Cursor construit.
       </p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((a) => {
@@ -54,7 +55,9 @@ export default function ControleAgentsPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h2 className="font-semibold text-slate-900">{a.nom}</h2>
+                    <h2 className="font-semibold text-slate-900">
+                      {a.id === "nettoyage" ? "Nettoyage" : a.nom}
+                    </h2>
                     <p className="text-sm text-slate-500">{a.role}</p>
                   </div>
                   <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" />

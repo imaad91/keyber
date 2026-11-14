@@ -7,6 +7,7 @@ import {
   type AgentRunReport,
 } from "./agents";
 import { runErgonomieAudit, runOrchestraAudit } from "./agentAppAudits";
+import { runNettoyageAudit } from "./agentNettoyageAudit";
 import {
   getAtelierSnapshotForAgents,
   isTechniqueVague,
@@ -1180,10 +1181,21 @@ export function setAgentActive(id: string, actif: boolean) {
 export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
   ensureHydrated();
   const coeur = getScenarioCoeur(scenarioId);
-  const agents = state.agents.filter((a) =>
+  let agents = state.agents.filter((a) =>
     onlyId ? a.id === onlyId && a.actif : a.actif
   );
+  // Nettoyage d'abord : il dit par où commencer
+  if (!onlyId) {
+    agents = [...agents].sort((a, b) => {
+      if (a.id === "nettoyage") return -1;
+      if (b.id === "nettoyage") return 1;
+      return 0;
+    });
+  }
   const reports: AgentRunReport[] = agents.map((a) => {
+    if (a.id === "nettoyage") {
+      return runNettoyageAudit();
+    }
     if (a.id === "agent-orchestra") {
       return runOrchestraAudit(state, coeur);
     }

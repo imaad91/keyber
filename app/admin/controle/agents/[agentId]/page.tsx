@@ -139,12 +139,24 @@ export default function AgentDetailPage() {
               { label: "Admin", href: "/admin" },
               { label: "Contrôle", href: "/admin/controle/agents" },
               { label: "Agents", href: "/admin/controle/agents" },
-              { label: agent.nom },
+              {
+                label: agent.id === "nettoyage" ? "Nettoyage" : agent.nom,
+              },
             ]}
-            title={`Contrôle — ${agent.nom}`}
+            title={`Contrôle — ${
+              agent.id === "nettoyage" ? "Nettoyage" : agent.nom
+            }`}
           />
         </div>
       </div>
+
+      {agent.id === "nettoyage" ? (
+        <div className="mb-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-950">
+          Propose seulement — ne supprime jamais, ne modifie jamais le Cœur, ne
+          crée pas de 2ᵉ scénario. Donnée d&apos;exemple dans l&apos;OS →
+          « Déplacer vers data/scenarios/novacier/ ». Réf. KEYBER_OS_RULES.md
+        </div>
+      ) : null}
 
       <div className="mb-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950">
         Définition de l&apos;agent uniquement (code source). Pour lancer et

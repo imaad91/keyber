@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
   Briefcase,
+  Brush,
   Database,
   Eye,
   Factory,
@@ -37,6 +38,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   hand: Hand,
   play: Play,
   briefcase: Briefcase,
+  broom: Brush,
 };
 
 /** Class strings must live here so Tailwind content scan keeps them. */
@@ -64,6 +66,10 @@ const THEME_CLASSES = {
   ergonomie: {
     box: "border-2 border-black bg-white",
     icon: "text-black",
+  },
+  nettoyage: {
+    box: "bg-orange-500",
+    icon: "text-white",
   },
   default: {
     box: "bg-slate-900",

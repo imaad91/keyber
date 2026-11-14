@@ -21,7 +21,8 @@ export type AgentIconId =
   | "network"
   | "hand"
   | "play"
-  | "briefcase";
+  | "briefcase"
+  | "broom";
 
 export const AGENT_ICON_OPTIONS: AgentIconId[] = [
   "target",
@@ -39,6 +40,7 @@ export const AGENT_ICON_OPTIONS: AgentIconId[] = [
   "hand",
   "play",
   "briefcase",
+  "broom",
 ];
 
 export type AgentProfile = {
@@ -77,6 +79,7 @@ export type AgentIconThemeKey =
   | "erp"
   | "orchestra"
   | "ergonomie"
+  | "nettoyage"
   | "default";
 
 /** Theme key for known default agents (styles live in AgentIconBadge). */
@@ -107,12 +110,17 @@ export function agentIconThemeKey(
     return "orchestra";
   if (agent.id === "agent-ergonomie" || agent.icone === "hand")
     return "ergonomie";
+  if (agent.id === "nettoyage" || agent.icone === "broom") return "nettoyage";
   return "default";
 }
 
 /** Agents that audit the application (not a single scenario Cœur). */
 export function isAppLevelAgent(agentId: string): boolean {
-  return agentId === "agent-orchestra" || agentId === "agent-ergonomie";
+  return (
+    agentId === "agent-orchestra" ||
+    agentId === "agent-ergonomie" ||
+    agentId === "nettoyage"
+  );
 }
 
 export const DEFAULT_AGENTS: AgentProfile[] = [
@@ -205,6 +213,25 @@ export const DEFAULT_AGENTS: AgentProfile[] = [
     niveauExigence: "strict",
     actif: true,
     icone: "hand",
+  },
+  {
+    id: "nettoyage",
+    nom: "nettoyage",
+    role: "identifier_choses_a_nettoyer_os_keyber",
+    competences: [
+      "audit_os",
+      "detection_donnees_en_dur",
+      "detection_code_mort",
+      "detection_doublons",
+      "priorisation_nettoyage",
+    ],
+    mission:
+      "Identifie tout ce qu'il faut nettoyer dans l'OS Keyber pour que l'OS ne dépende en aucun cas de Novacier ou d'un autre exemple. Analyse tous les fichiers du projet et détecte : 1) Données d'exemple en dur dans l'OS : noms Novacier, AutoVolt, Marie, Karim, Laurent, Henri, 500 pièces, machine 3, mails / persos / décisions d'exemple en dur dans lib/engine.ts, lib/runtime.ts, lib/gameState.ts, lib/playContent.ts, lib/computerData.ts, components/computer/*, components/erp/*, app/(game)/*. 2) Code mort : fonctions jamais appelées, fichiers jamais importés, anciens modules Admin qui ne sont plus dans les 4 espaces Atelier / Système / Contrôle / Équipe, anciens boutons Générer le Cœur, anciens kanbans, anciennes clés localStorage keyber-admin-v1. 3) Doublons : même logique écrite 2 fois, même composant ERP en 2 versions, même définition de compétence en 2 endroits. 4) Mélanges Studio / Jeu : bandeau Studio dans le jeu, lecture du localStorage Admin dans le jeu, formulaires Admin qui écrivent dans le GameState. 5) Fichiers qui mélangent OS et exemple : un fichier qui devrait être générique mais qui contient des données d'exemple. Pour chaque élément à nettoyer, donne : fichier exact, ligne, ce qu'il y a à nettoyer, pourquoi c'est un problème, niveau de priorité (Critique = casse l'OS ou bloque un 2ème scénario, Majeure = rend l'OS sale et confus, Mineure = à nettoyer plus tard), et proposition de nettoyage précise (ex : Déplacer ce bloc vers data/scenarios/novacier/, Supprimer cette fonction, Remplacer par getScenario(id).erp). Ne supprime rien, ne modifie rien. Propose seulement. Sois très détaillé, très critique, sans complaisance.",
+    sortieAttendue:
+      "rapport_nettoyage avec score de propreté OS 0-100, nombre total d'éléments à nettoyer, liste des éléments à nettoyer triée par priorité Critique / Majeure / Mineure, avec pour chacun : fichier, ligne, extrait de code concerné, pourquoi nettoyer, proposition de nettoyage, et plan de nettoyage en 3 étapes : Étape 1 - Critique à nettoyer en premier, Étape 2 - Majeure, Étape 3 - Mineure. Plus une estimation : si je nettoie tout, est-ce que la démo Novacier fonctionne encore ?",
+    niveauExigence: "strict",
+    actif: true,
+    icone: "broom",
   },
 ];
 

@@ -7,12 +7,13 @@ const OS = [
   "Moteur (applyDecision)",
   "GameState",
   "ERP / Ordinateur",
-  "Atelier (Briefs)",
+  "Atelier (Contextes → Compétences → Scénarios)",
   "Décider",
   "Journal de bord",
   "Profil",
   "Temps & Évènements",
   "Sauvegarde locale",
+  "Agent Nettoyage → identifie → Choses à nettoyer dans l'OS",
 ];
 
 const MODULE = [
@@ -82,13 +83,30 @@ export default function SystemeArchitecturePage() {
         </section>
       </div>
 
+      <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-sm text-orange-950 shadow-sm">
+        <p className="font-semibold">Agent Nettoyage</p>
+        <p className="mt-2">
+          Nettoyage → identifie → Choses à nettoyer dans l&apos;OS. Propose un
+          plan priorisé (Critique / Majeure / Mineure). Ne supprime jamais tout
+          seul. Voir{" "}
+          <Link
+            href="/admin/controle/agents/nettoyage"
+            className="font-semibold underline"
+          >
+            Contrôle → Nettoyage
+          </Link>
+          .
+        </p>
+      </div>
+
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700 shadow-sm">
         <p className="font-semibold text-slate-900">Frontière</p>
         <p className="mt-2">
           L&apos;OS fournit le moteur, l&apos;ERP, l&apos;Ordinateur, Décider,
           Journal, Profil. Le module Novacier fournit uniquement les données
           (Cœur, personnages, décisions). L&apos;Admin Studio ne joue pas et
-          n&apos;écrit pas dans le GameState.
+          n&apos;écrit pas dans le GameState. Réf.{" "}
+          <span className="font-mono text-xs">KEYBER_OS_RULES.md</span>.
         </p>
         <p className="mt-4">
           <Link

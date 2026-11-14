@@ -107,16 +107,39 @@ function load(): BookState {
   }
 }
 
-let state: BookState = emptyState();
-let hydrated = false;
-const listeners = new Set<() => void>();
+type BookBag = {
+  state: BookState;
+  hydrated: boolean;
+  listeners: Set<() => void>;
+};
+
+/** Singleton window — évite double instance Next.js (chunks) qui écrase le Live. */
+function bag(): BookBag {
+  if (typeof window === "undefined") {
+    return {
+      state: emptyState(),
+      hydrated: false,
+      listeners: new Set(),
+    };
+  }
+  const w = window as unknown as { __keyberBookStoreV1?: BookBag };
+  if (!w.__keyberBookStoreV1) {
+    w.__keyberBookStoreV1 = {
+      state: emptyState(),
+      hydrated: false,
+      listeners: new Set(),
+    };
+  }
+  return w.__keyberBookStoreV1;
+}
 
 function emit() {
-  listeners.forEach((l) => l());
+  bag().listeners.forEach((l) => l());
 }
 
 function persist(next: BookState) {
-  state = next;
+  const b = bag();
+  b.state = next;
   if (typeof window !== "undefined") {
     const { toast, ...rest } = next;
     void toast;
@@ -126,19 +149,30 @@ function persist(next: BookState) {
 }
 
 function ensure() {
-  if (hydrated || typeof window === "undefined") return;
-  hydrated = true;
-  state = load();
+  if (typeof window === "undefined") return;
+  const b = bag();
+  if (b.hydrated) return;
+  b.hydrated = true;
+  b.state = load();
+}
+
+/** Recharge depuis localStorage avant mutation (source de vérité). */
+function refreshFromStorage() {
+  ensure();
+  const b = bag();
+  const toast = b.state.toast;
+  b.state = { ...load(), toast };
 }
 
 function subscribe(l: () => void) {
-  listeners.add(l);
-  return () => listeners.delete(l);
+  const b = bag();
+  b.listeners.add(l);
+  return () => b.listeners.delete(l);
 }
 
 function getSnapshot() {
   ensure();
-  return state;
+  return bag().state;
 }
 
 function getServerSnapshot() {
@@ -159,9 +193,9 @@ export type PublishToBookInput = {
 
 /** Lecture joueur : uniquement les entrées Live. */
 export function listLiveBookEntriesForPlayers(): BookEntry[] {
-  ensure();
-  return state.entries
-    .filter((e) => e.status === "live")
+  refreshFromStorage();
+  return bag()
+    .state.entries.filter((e) => e.status === "live")
     .slice()
     .sort((a, b) => b.validatedAt.localeCompare(a.validatedAt));
 }
@@ -176,24 +210,24 @@ export function useBookStore() {
   return {
     ...current,
     getEntry(id: string) {
-      return state.entries.find((e) => e.id === id);
+      return bag().state.entries.find((e) => e.id === id);
     },
     entriesByStatus(status: BookStatus) {
-      return state.entries
-        .filter((e) => e.status === status)
+      return bag()
+        .state.entries.filter((e) => e.status === status)
         .slice()
         .sort((a, b) => b.validatedAt.localeCompare(a.validatedAt));
     },
     familyHistory(familyId: string) {
-      return state.entries
-        .filter((e) => e.familyId === familyId)
+      return bag()
+        .state.entries.filter((e) => e.familyId === familyId)
         .slice()
         .sort((a, b) => a.version - b.version);
     },
     nextVersionNumber(familyId: string) {
-      ensure();
-      const versions = state.entries
-        .filter((e) => e.familyId === familyId)
+      refreshFromStorage();
+      const versions = bag()
+        .state.entries.filter((e) => e.familyId === familyId)
         .map((e) => e.version);
       return versions.length ? Math.max(...versions) + 1 : 1;
     },
@@ -202,7 +236,8 @@ export function useBookStore() {
      * Nouvelle entrée toujours en « En cours de test ».
      */
     publishFromCreation(input: PublishToBookInput): BookEntry | { error: string } {
-      ensure();
+      refreshFromStorage();
+      const b = bag();
       const nom = input.nom.trim();
       if (!nom) return { error: "Nom obligatoire" };
       if (!input.familyId) return { error: "Famille de version manquante" };
@@ -210,7 +245,7 @@ export function useBookStore() {
         return { error: "Création source manquante" };
       }
 
-      const duplicate = state.entries.find(
+      const duplicate = b.state.entries.find(
         (e) =>
           e.familyId === input.familyId && e.version === input.version
       );
@@ -239,23 +274,22 @@ export function useBookStore() {
       };
 
       persist({
-        ...state,
-        entries: [entry, ...state.entries],
+        ...b.state,
+        entries: [entry, ...b.state.entries],
         toast: `${bookVersionLabel(entry)} ajouté au Book (En cours de test)`,
       });
       return entry;
     },
     setStatus(id: string, status: BookStatus): { error?: string } {
-      ensure();
-      const entry = state.entries.find((e) => e.id === id);
+      refreshFromStorage();
+      const b = bag();
+      const entry = b.state.entries.find((e) => e.id === id);
       if (!entry) return { error: "Entrée Book introuvable" };
       if (entry.status === status) return {};
       persist({
-        ...state,
-        entries: state.entries.map((e) =>
-          e.id === id
-            ? { ...e, status, updatedAt: now() }
-            : e
+        ...b.state,
+        entries: b.state.entries.map((e) =>
+          e.id === id ? { ...e, status, updatedAt: now() } : e
         ),
         toast:
           status === "live"
@@ -265,9 +299,10 @@ export function useBookStore() {
       return {};
     },
     clearToast() {
-      ensure();
-      if (!state.toast) return;
-      persist({ ...state, toast: null });
+      refreshFromStorage();
+      const b = bag();
+      if (!b.state.toast) return;
+      persist({ ...b.state, toast: null });
     },
   };
 }

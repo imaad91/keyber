@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Sparkles } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { AdminButton } from "@/components/admin/AdminPrimitives";
 import {
   BookEntryCard,
   BookSection,
@@ -45,6 +48,15 @@ export default function BookLivePage() {
         ]}
         title="Book — Live"
       />
+
+      <div className="mb-4">
+        <Link href="/admin/book/generer">
+          <AdminButton type="button">
+            <Sparkles className="h-4 w-4" />
+            Générer des scénarios
+          </AdminButton>
+        </Link>
+      </div>
 
       <BookTabs />
 

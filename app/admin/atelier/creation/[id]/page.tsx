@@ -14,12 +14,10 @@ import {
   milestoneDone,
   useAtelierCreationStore,
 } from "@/lib/atelierCreationStore";
-import { buildScenarioGenerationPrompt } from "@/lib/atelierCreationPrompt";
 import { fieldsPreviewEntries } from "@/lib/atelierCreationExcel";
 import { useAtelierCompetencesStore } from "@/lib/atelierCompetencesStore";
 import {
   eventsFileLabel,
-  eventsPromptRule,
   useAtelierEventsStore,
 } from "@/lib/atelierEventsStore";
 import { useAtelierRolesStore } from "@/lib/atelierRolesStore";
@@ -60,7 +58,6 @@ export default function AtelierCreationDetailPage() {
   const [scenarioNom, setScenarioNom] = useState("");
   const [scenarioMode, setScenarioMode] =
     useState<AtelierScenarioMode>("histoire");
-  const [showPrompt, setShowPrompt] = useState(false);
 
   if (!creation) {
     return (
@@ -78,7 +75,6 @@ export default function AtelierCreationDetailPage() {
   const filled = fieldsPreviewEntries(creation.fields).filter((e) => e.filled);
   const locked = creation.dansBook;
   const entrepriseEvents = getEventsForFamily(creation.familyId);
-  const iaPrompt = buildScenarioGenerationPrompt(creation, entrepriseEvents);
 
   function toggleRole(nom: string) {
     if (locked) return;
@@ -203,46 +199,18 @@ export default function AtelierCreationDetailPage() {
         </p>
       </section>
 
-      {/* Prompt IA */}
+      {/* Génération déplacée dans le Book */}
       <section className="mb-8 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-900">
-          Générer des scénarios avec l&apos;IA
+          Génération des scénarios
         </h2>
-        <p className="mt-1 text-xs text-slate-600">
-          Copie le Prompt ci-dessous dans Cursor / Claude Sonnet. L&apos;IA
-          n&apos;invente aucun événement.
+        <p className="mt-1 text-sm text-slate-600">
+          La génération IA se fait dans le{" "}
+          <Link href="/admin/book/generer" className="font-medium underline">
+            Book → Générer des scénarios
+          </Link>
+          . Pas de bouton de génération ici.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <AdminButton type="button" onClick={() => setShowPrompt(true)}>
-            Générer des scénarios avec l&apos;IA
-          </AdminButton>
-          {showPrompt ? (
-            <AdminButton
-              type="button"
-              variant="secondary"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(iaPrompt);
-                  window.alert("Prompt copié");
-                } catch {
-                  window.alert("Impossible de copier — sélectionne le texte");
-                }
-              }}
-            >
-              Copier le Prompt
-            </AdminButton>
-          ) : null}
-        </div>
-        {showPrompt ? (
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-medium text-rose-800">
-              {eventsPromptRule(creation.nom)}
-            </p>
-            <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-800">
-              {iaPrompt}
-            </pre>
-          </div>
-        ) : null}
       </section>
 
       {/* Sélections (bibliothèques globales) */}

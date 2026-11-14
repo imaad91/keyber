@@ -46,7 +46,7 @@ const STEPS: {
   {
     n: 4,
     title: "Scénarios provisoires (IA)",
-    body: "Tu demandes à l'IA de générer des scénarios provisoires. Tu cliques sur « Générer des scénarios avec l'IA », tu copies le Prompt que l'Admin te donne, tu le colles dans Cursor / Claude Sonnet. L'IA utilise uniquement les données de ton Excel Contexte, tes rôles sélectionnés, tes compétences sélectionnées, et tes événements de cette entreprise. Elle n'invente aucun nouvel événement. Elle ne les implémente pas encore. Ce sont des provisoires.",
+    body: "Tu demandes à l'IA de générer des scénarios provisoires depuis le Book. Tu cliques sur « Générer des scénarios » en haut du Book, tu choisis le contexte, tu coches rôles et compétences, les événements de l'entreprise sont pris automatiquement, tu génères le Prompt, tu le copies dans Cursor / Claude Sonnet. L'IA n'invente aucun nouvel événement. Les coquilles arrivent en En cours de test, dans la bonne section.",
     accent: "bg-amber-50 border-amber-200",
     ring: "bg-amber-500",
     badge: "text-amber-950",

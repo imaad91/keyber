@@ -1,7 +1,7 @@
 /**
- * Book — récapitulatif des versions validées (Studio).
- * Cartes séparées : Scénarios (Mode Compétence) ≠ Histoires (Mode Histoire).
- * On ne crée / ne modifie rien ici : tout vient de Création.
+ * Book — scénarios / histoires (Studio).
+ * Cartes : Scénarios (Mode Compétence) ≠ Histoires (Mode Histoire).
+ * Génération Prompt + 3 vues + versionning V1/V2.
  * keyber-studio-book-v1 — pas de contenu inventé.
  */
 
@@ -12,6 +12,7 @@ import { uid } from "@/lib/adminTypes";
 import type { ContexteExcelFields } from "@/lib/atelierCreationExcel";
 import { emptyContexteFields } from "@/lib/atelierCreationExcel";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
+import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 
 const STORAGE_KEY = "keyber-studio-book-v1";
 
@@ -22,6 +23,26 @@ export type BookScenarioSnapshot = {
   id: string;
   nom: string;
   mode: AtelierScenarioMode;
+};
+
+export type BookGraphNode = {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+export type BookGraphEdge = {
+  from: string;
+  to: string;
+  label?: string;
+};
+
+export type BookGraphView = {
+  nodes: BookGraphNode[];
+  edges: BookGraphEdge[];
 };
 
 export type BookEntry = {
@@ -48,10 +69,38 @@ export type BookEntry = {
   fields: ContexteExcelFields;
   sourceCreationId: string;
   sourceScenarioId: string;
+  /** Vue Texte (structure Admin / Cursor — pas d'invention Studio). */
+  textContent: string;
+  /** Vue Graphique. */
+  graph: BookGraphView;
+  /** Vue Code — fichier de paramétrage JSON. */
+  paramFile: ScenarioParamFile | null;
+  paramFileName: string;
   validatedAt: string;
   createdAt: string;
   updatedAt: string;
 };
+
+export function emptyBookGraph(): BookGraphView {
+  return {
+    nodes: [
+      { id: "debut", label: "Début", x: 40, y: 180, w: 120, h: 48 },
+      {
+        id: "corps",
+        label: "Scénario (à compléter)",
+        x: 220,
+        y: 160,
+        w: 200,
+        h: 88,
+      },
+      { id: "fin", label: "Fin", x: 480, y: 180, w: 120, h: 48 },
+    ],
+    edges: [
+      { from: "debut", to: "corps", label: "" },
+      { from: "corps", to: "fin", label: "" },
+    ],
+  };
+}
 
 type BookState = {
   entries: BookEntry[];
@@ -152,6 +201,27 @@ function migrateLegacyRaw(raw: Record<string, unknown>): BookEntry[] {
   );
 }
 
+function normalizeGraph(g: Partial<BookGraphView> | undefined): BookGraphView {
+  if (!g || !Array.isArray(g.nodes) || !g.nodes.length) return emptyBookGraph();
+  return {
+    nodes: g.nodes.map((n) => ({
+      id: String(n.id),
+      label: String(n.label ?? ""),
+      x: Number(n.x) || 0,
+      y: Number(n.y) || 0,
+      w: Number(n.w) || 120,
+      h: Number(n.h) || 48,
+    })),
+    edges: Array.isArray(g.edges)
+      ? g.edges.map((ed) => ({
+          from: String(ed.from),
+          to: String(ed.to),
+          label: ed.label ? String(ed.label) : "",
+        }))
+      : [],
+  };
+}
+
 function normalizeEntry(
   e: Partial<BookEntry> & { id: string; familyId: string }
 ): BookEntry {
@@ -176,6 +246,13 @@ function normalizeEntry(
     fields: { ...emptyContexteFields(), ...(e.fields ?? {}) },
     sourceCreationId: e.sourceCreationId ?? "",
     sourceScenarioId: e.sourceScenarioId ?? "",
+    textContent: typeof e.textContent === "string" ? e.textContent : "",
+    graph: normalizeGraph(e.graph),
+    paramFile:
+      e.paramFile && typeof e.paramFile === "object"
+        ? (e.paramFile as ScenarioParamFile)
+        : null,
+    paramFileName: e.paramFileName ?? "",
     validatedAt: e.validatedAt ?? now(),
     createdAt: e.createdAt ?? now(),
     updatedAt: e.updatedAt ?? now(),
@@ -288,6 +365,31 @@ export type PublishScenarioInput = {
   fields: ContexteExcelFields;
   sourceCreationId: string;
   sourceScenarioId: string;
+  textContent?: string;
+  graph?: BookGraphView;
+  paramFile?: ScenarioParamFile | null;
+  paramFileName?: string;
+};
+
+export type CreateProvisionalShellInput = {
+  creationFamilyId: string;
+  sourceCreationId: string;
+  entrepriseNom: string;
+  secteur: string;
+  fields: ContexteExcelFields;
+  roleNames: string[];
+  competenceNames: string[];
+  items: {
+    mode: AtelierScenarioMode;
+    nom: string;
+    competenceName: string;
+    roleName: string;
+    itemKey: string;
+    textContent: string;
+    graph: BookGraphView;
+    paramFile: ScenarioParamFile;
+    paramFileName: string;
+  }[];
 };
 
 export type PublishToBookInput = {
@@ -411,6 +513,10 @@ export function useBookStore() {
           fields: { ...emptyContexteFields(), ...input.fields },
           sourceCreationId: input.sourceCreationId,
           sourceScenarioId: s.id,
+          textContent: "",
+          graph: emptyBookGraph(),
+          paramFile: null,
+          paramFileName: "",
           validatedAt: at,
           createdAt: at,
           updatedAt: at,
@@ -437,17 +543,159 @@ export function useBookStore() {
       const entry = b.state.entries.find((e) => e.id === id);
       if (!entry) return { error: "Entrée Book introuvable" };
       if (entry.status === status) return {};
+      const at = now();
       persist({
         ...b.state,
-        entries: b.state.entries.map((e) =>
-          e.id === id ? { ...e, status, updatedAt: now() } : e
-        ),
+        entries: b.state.entries.map((e) => {
+          if (e.id === id) return { ...e, status, updatedAt: at };
+          // Live = une version précise : les autres Live de la lignée repassent en test
+          if (
+            status === "live" &&
+            e.familyId === entry.familyId &&
+            e.status === "live"
+          ) {
+            return { ...e, status: "en_test" as BookStatus, updatedAt: at };
+          }
+          return e;
+        }),
         toast:
           status === "live"
             ? `${bookVersionLabel(entry)} passé en Live (visible joueurs)`
             : `${bookVersionLabel(entry)} retourné en En cours de test (Admin uniquement)`,
       });
       return {};
+    },
+    /**
+     * Première génération Prompt → coquilles V1 en En cours de test
+     * (1 scénario / compétence + 1 histoire). Pas de doublon même itemKey.
+     */
+    createProvisionalFromGeneration(
+      input: CreateProvisionalShellInput
+    ): { entries: BookEntry[] } | { error: string } {
+      refreshFromStorage();
+      const b = bag();
+      if (!input.creationFamilyId) {
+        return { error: "Famille de création manquante" };
+      }
+      if (!input.items.length) {
+        return { error: "Aucun scénario à créer" };
+      }
+      const at = now();
+      const created: BookEntry[] = [];
+      const skipped: string[] = [];
+
+      for (const item of input.items) {
+        const familyId = `${input.creationFamilyId}:gen:${item.itemKey}`;
+        const existing = b.state.entries.filter((e) => e.familyId === familyId);
+        if (existing.length) {
+          skipped.push(item.nom);
+          continue;
+        }
+        const entry = normalizeEntry({
+          id: uid("book"),
+          familyId,
+          creationFamilyId: input.creationFamilyId,
+          version: 1,
+          mode: item.mode,
+          nom: item.nom.trim(),
+          entrepriseNom: input.entrepriseNom.trim(),
+          secteur: input.secteur.trim(),
+          competenceName: item.competenceName,
+          roleName: item.roleName,
+          roleNames: [...input.roleNames],
+          competenceNames: [...input.competenceNames],
+          status: "en_test",
+          fields: { ...emptyContexteFields(), ...input.fields },
+          sourceCreationId: input.sourceCreationId,
+          sourceScenarioId: item.itemKey,
+          textContent: item.textContent,
+          graph: item.graph,
+          paramFile: item.paramFile,
+          paramFileName: item.paramFileName,
+          validatedAt: at,
+          createdAt: at,
+          updatedAt: at,
+        });
+        created.push(entry);
+      }
+
+      if (!created.length) {
+        return {
+          error: skipped.length
+            ? "Coquilles déjà présentes pour cette génération (V1 existante) — Prompt toujours disponible"
+            : "Aucune coquille créée",
+        };
+      }
+
+      persist({
+        ...b.state,
+        entries: [...created, ...b.state.entries],
+        toast: `${created.length} coquille(s) V1 ajoutée(s) au Book (En cours de test)${
+          skipped.length ? ` · ${skipped.length} déjà existante(s)` : ""
+        }`,
+      });
+      return { entries: created };
+    },
+    /**
+     * Sauvegarder une modif Texte/Graphique/Code → nouvelle version (V2…)
+     * sans écraser la précédente. Les 3 vues restent sync sur la nouvelle.
+     */
+    saveAsNewVersion(
+      id: string,
+      patch: {
+        textContent: string;
+        graph: BookGraphView;
+        paramFile: ScenarioParamFile | null;
+        paramFileName: string;
+      }
+    ): { entry: BookEntry } | { error: string } {
+      refreshFromStorage();
+      const b = bag();
+      const current = b.state.entries.find((e) => e.id === id);
+      if (!current) return { error: "Entrée Book introuvable" };
+
+      const nextVersion =
+        Math.max(
+          0,
+          ...b.state.entries
+            .filter((e) => e.familyId === current.familyId)
+            .map((e) => e.version)
+        ) + 1;
+
+      const at = now();
+      let paramFile = patch.paramFile;
+      let paramFileName = patch.paramFileName;
+      if (paramFile) {
+        paramFile = { ...paramFile, Version: nextVersion };
+        if (paramFileName) {
+          paramFileName = paramFileName.replace(
+            /_v\d+\.json$/i,
+            `_v${nextVersion}.json`
+          );
+          paramFile = { ...paramFile, fichier: paramFileName };
+        }
+      }
+
+      const entry = normalizeEntry({
+        ...current,
+        id: uid("book"),
+        version: nextVersion,
+        status: "en_test",
+        textContent: patch.textContent,
+        graph: patch.graph,
+        paramFile,
+        paramFileName,
+        validatedAt: at,
+        createdAt: at,
+        updatedAt: at,
+      });
+
+      persist({
+        ...b.state,
+        entries: [entry, ...b.state.entries],
+        toast: `${bookVersionLabel(entry)} enregistré (V${current.version} conservée)`,
+      });
+      return { entry };
     },
     deleteEntry(id: string): { error?: string } {
       refreshFromStorage();

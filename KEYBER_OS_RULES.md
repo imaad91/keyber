@@ -36,6 +36,8 @@ Sous-onglets Atelier (ordre fixe) :
 5. Événements (1 fichier = 1 entreprise, pas de biblio partagée)
 
 **Book** = espace Studio séparé (même niveau que Atelier / Keyber OS / Contrôle / Équipe), hors Atelier.
+Génération des scénarios : bouton « Générer des scénarios » dans le Book (pas dans Création).
+Chaque carte scénario/histoire a 3 vues (Texte · Graphique · Code / fichier de paramétrage) et un versionning V1, V2… (Live = une version précise).
 
 **Keyber OS** (ex-Système) = documentation lecture seule du moteur générique.
 Sous-onglets (ordre fixe) : Vue Globale · ERP · Moteur de Scénarios · Moteur de Décisions & Branches · Moteur d'Événements · Progression, Scores & Niveaux · Interface Joueur · Données & Sauvegarde.

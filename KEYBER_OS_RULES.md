@@ -6,7 +6,7 @@ Référence Studio — l’Admin lit et propose ; Cursor construit ; le jeu ne l
 
 - **KEYBER** = système d’exploitation (moteur, GameState, ERP, Ordinateur, Décider, Journal, Profil).
 - **Novacier** = module exemple installé dessus (données scénario uniquement).
-- **Admin Studio** = Atelier / Book / Système / Contrôle / Équipe. Ne joue pas, n’écrit pas dans le GameState.
+- **Admin Studio** = Atelier / Book / Keyber OS / Contrôle / Équipe. Ne joue pas, n’écrit pas dans le GameState.
 
 ## Séparation OS / exemple
 
@@ -34,7 +34,11 @@ Sous-onglets Atelier (ordre fixe) :
 3. Rôles  
 4. Compétences  
 
-**Book** = espace Studio séparé (même niveau que Atelier / Système / Contrôle / Équipe), hors Atelier.
+**Book** = espace Studio séparé (même niveau que Atelier / Keyber OS / Contrôle / Équipe), hors Atelier.
+
+**Keyber OS** (ex-Système) = documentation lecture seule du moteur générique.
+Sous-onglets (ordre fixe) : Vue Globale · ERP · Moteur de Scénarios · Moteur de Décisions & Branches · Moteur d'Événements · Progression, Scores & Niveaux · Interface Joueur · Données & Sauvegarde.
+Aucun contenu métier inventé — le moteur lit les fichiers de paramétrage.
 
 ## Agent Nettoyage
 

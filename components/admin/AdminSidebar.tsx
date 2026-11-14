@@ -44,13 +44,26 @@ const NAV: NavItem[] = [
   },
   {
     href: "/admin/systeme",
-    label: "Système",
+    label: "Keyber OS",
     icon: Shield,
     children: [
-      { href: "/admin/systeme/coeur", label: "Cœur" },
-      { href: "/admin/systeme/architecture", label: "Architecture" },
-      { href: "/admin/systeme/glossaire", label: "Glossaire" },
-      { href: "/admin/systeme/journal-decisions", label: "Journal des décisions" },
+      { href: "/admin/systeme/vue-globale", label: "Vue Globale" },
+      { href: "/admin/systeme/erp", label: "ERP" },
+      { href: "/admin/systeme/moteur-scenarios", label: "Moteur de Scénarios" },
+      {
+        href: "/admin/systeme/moteur-decisions",
+        label: "Moteur de Décisions & Branches",
+      },
+      { href: "/admin/systeme/moteur-evenements", label: "Moteur d'Événements" },
+      {
+        href: "/admin/systeme/progression",
+        label: "Progression, Scores & Niveaux",
+      },
+      { href: "/admin/systeme/interface-joueur", label: "Interface Joueur" },
+      {
+        href: "/admin/systeme/donnees-sauvegarde",
+        label: "Données & Sauvegarde",
+      },
     ],
   },
   {

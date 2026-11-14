@@ -40,6 +40,15 @@ export type AtelierContexte = {
   nom: string;
   /** Secteur d'activité obligatoire (id AtelierSecteur). */
   secteurId: string;
+  /** Lien vers le chantier de création (si issu d'un chantier). */
+  chantierId?: string;
+  /** Visible dans Atelier > Contextes seulement si publié. */
+  publie: boolean;
+  taille: string;
+  employes: string;
+  machines: string;
+  clients: string;
+  fournisseurs: string;
   organisation: string;
   stock: string;
   contrats: string;
@@ -122,6 +131,12 @@ function seedNovacier(): AtelierState {
     id: ctxId,
     nom: "Novacier",
     secteurId: "",
+    publie: true,
+    taille: "",
+    employes: "",
+    machines: "",
+    clients: "",
+    fournisseurs: "",
     organisation:
       "Usine métallurgique ~45 personnes, 3 lignes de production. Marie (chef d'atelier), Karim (maintenance), Laurent (direction), Henri (mentor). Organigramme plat, RP novice.",
     stock:
@@ -258,6 +273,15 @@ function normalizeContexte(c: Partial<AtelierContexte> & { id: string }): Atelie
     id: c.id,
     nom: c.nom ?? "",
     secteurId: c.secteurId ?? "",
+    chantierId: c.chantierId,
+    // Anciens contextes sans chantier → visibles ; brouillons chantier → non publiés.
+    publie:
+      typeof c.publie === "boolean" ? c.publie : !c.chantierId,
+    taille: c.taille ?? "",
+    employes: c.employes ?? "",
+    machines: c.machines ?? "",
+    clients: c.clients ?? "",
+    fournisseurs: c.fournisseurs ?? "",
     organisation: c.organisation ?? "",
     stock: c.stock ?? "",
     contrats: c.contrats ?? "",
@@ -471,6 +495,17 @@ export function useAtelierStore() {
     createContexte(input: {
       nom: string;
       secteurId: string;
+      chantierId?: string;
+      taille?: string;
+      employes?: string;
+      machines?: string;
+      clients?: string;
+      fournisseurs?: string;
+      organisation?: string;
+      stock?: string;
+      problematiques?: string;
+      contrats?: string;
+      comptabilite?: string;
     }): AtelierContexte | { error: string } {
       ensure();
       const nom = input.nom.trim();
@@ -483,11 +518,18 @@ export function useAtelierStore() {
         id: uid("ctx"),
         nom,
         secteurId: input.secteurId,
-        organisation: "",
-        stock: "",
-        contrats: "",
-        comptabilite: "",
-        problematiques: "",
+        chantierId: input.chantierId,
+        publie: false,
+        taille: (input.taille ?? "").trim(),
+        employes: (input.employes ?? "").trim(),
+        machines: (input.machines ?? "").trim(),
+        clients: (input.clients ?? "").trim(),
+        fournisseurs: (input.fournisseurs ?? "").trim(),
+        organisation: (input.organisation ?? "").trim(),
+        stock: (input.stock ?? "").trim(),
+        contrats: (input.contrats ?? "").trim(),
+        comptabilite: (input.comptabilite ?? "").trim(),
+        problematiques: (input.problematiques ?? "").trim(),
         createdAt: now(),
         updatedAt: now(),
       };
@@ -497,6 +539,27 @@ export function useAtelierStore() {
         toast: "Contexte créé",
       });
       return c;
+    },
+    setContextePublie(id: string, publie: boolean): { error?: string } {
+      ensure();
+      if (!state.contextes.some((c) => c.id === id)) {
+        return { error: "Contexte introuvable" };
+      }
+      persist({
+        ...state,
+        contextes: state.contextes.map((c) =>
+          c.id === id
+            ? { ...c, publie, updatedAt: now() }
+            : c
+        ),
+        toast: publie
+          ? "Contexte publié dans l'Atelier"
+          : "Contexte renvoyé au Chantier",
+      });
+      return {};
+    },
+    contextesPublies() {
+      return state.contextes.filter((c) => c.publie);
     },
     updateContexte(
       id: string,

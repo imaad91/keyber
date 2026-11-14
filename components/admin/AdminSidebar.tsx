@@ -25,6 +25,7 @@ const NAV: NavItem[] = [
     label: "Atelier",
     icon: Briefcase,
     children: [
+      { href: "/admin/atelier/chantier", label: "Chantier / Création" },
       { href: "/admin/atelier/contextes", label: "Contextes d'entreprise" },
       { href: "/admin/atelier/competences", label: "Compétences" },
       { href: "/admin/atelier/scenarios", label: "Scénarios" },

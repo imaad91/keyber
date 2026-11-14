@@ -29,10 +29,11 @@ Couches métier :
 3. Scénarios (liés à un contexte + compétences de ce contexte)
 
 Sous-onglets Studio Atelier :
-1. Contextes d’entreprise  
-2. Compétences  
-3. Scénarios  
-4. Workflow (BPMN 2.0 généré depuis le scénario — logique métier uniquement, jamais de code / fichiers / Novacier en dur dans l’UI)
+1. Chantier / Création (pipeline 6 étapes pour créer un contexte — pas de contenu inventé)  
+2. Contextes d’entreprise  
+3. Compétences  
+4. Scénarios  
+5. Workflow (BPMN 2.0 généré depuis le scénario — logique métier uniquement, jamais de code / fichiers / Novacier en dur dans l’UI)
 
 ## Agent Nettoyage
 

@@ -49,10 +49,17 @@ function normalizeEvent(
     id: e.id,
     familyId: e.familyId,
     entrepriseNom: e.entrepriseNom ?? "",
-    nom: e.nom ?? fields["Nom de l'événement"] ?? "",
+    nom:
+      e.nom ??
+      fields["Nom"] ??
+      (fields as Record<string, string>)["Nom de l'événement"] ??
+      "",
     type:
       e.type ??
       fields[
+        "Type (Logistique/Technique/Humain/Client/Fournisseur/Météo/Réglementation)"
+      ] ??
+      (fields as Record<string, string>)[
         "Type (ex : Logistique, Technique, Humain, Client, Fournisseur, Météo, Réglementation)"
       ] ??
       "",
@@ -155,9 +162,9 @@ function fromFields(
     id: uid("evtlib"),
     familyId,
     entrepriseNom,
-    nom: fields["Nom de l'événement"].trim(),
+    nom: fields["Nom"].trim(),
     type: fields[
-      "Type (ex : Logistique, Technique, Humain, Client, Fournisseur, Météo, Réglementation)"
+      "Type (Logistique/Technique/Humain/Client/Fournisseur/Météo/Réglementation)"
     ].trim(),
     description: fields["Description complète"].trim(),
     fields: { ...emptyEventFields(), ...fields },
@@ -183,6 +190,55 @@ export function useAtelierEventsStore() {
       return bag().state.events.find((e) => e.id === id);
     },
     /**
+     * Listing Atelier : 1 ligne = 1 entreprise / 1 fichier événements.
+     * Pas de bibliothèque partagée entre entreprises.
+     */
+    listEntrepriseFiles(): EntrepriseEventsFile[] {
+      ensure();
+      const byFamily = new Map<string, AtelierEntrepriseEvent[]>();
+      for (const e of bag().state.events) {
+        const list = byFamily.get(e.familyId) ?? [];
+        list.push(e);
+        byFamily.set(e.familyId, list);
+      }
+      const files: EntrepriseEventsFile[] = [];
+      for (const [familyId, list] of Array.from(byFamily.entries())) {
+        const nom = list[0]?.entrepriseNom?.trim() || "Entreprise";
+        const importedAt = list
+          .map((x) => x.updatedAt || x.createdAt)
+          .sort()
+          .slice(-1)[0]!;
+        files.push({
+          familyId,
+          entrepriseNom: nom,
+          eventCount: list.length,
+          importedAt,
+          label: eventsFileLabel(nom),
+        });
+      }
+      return files.sort((a, b) =>
+        b.importedAt.localeCompare(a.importedAt)
+      );
+    },
+    deleteEntrepriseFile(familyId: string): { error?: string } {
+      ensure();
+      const b = bag();
+      const before = b.state.events.length;
+      const next = b.state.events.filter((e) => e.familyId !== familyId);
+      if (next.length === before) {
+        return { error: "Fichier événements introuvable pour cette entreprise" };
+      }
+      const nom =
+        b.state.events.find((e) => e.familyId === familyId)?.entrepriseNom ??
+        "cette entreprise";
+      persist({
+        ...b.state,
+        events: next,
+        toast: `${eventsFileLabel(nom)} supprimé`,
+      });
+      return {};
+    },
+    /**
      * Import additif pour une entreprise : n'efface pas les anciens.
      * Homonymes (même nom, même familyId) ignorés.
      */
@@ -205,7 +261,7 @@ export function useAtelierEventsStore() {
       let skipped = 0;
 
       for (const fields of rows) {
-        const nom = fields["Nom de l'événement"]?.trim();
+        const nom = fields["Nom"]?.trim();
         if (!nom) {
           skipped += 1;
           continue;
@@ -264,7 +320,24 @@ export function useAtelierEventsStore() {
   };
 }
 
-/** Phrase obligatoire dans le Prompt IA — n'invente aucun événement. */
+export type EntrepriseEventsFile = {
+  familyId: string;
+  entrepriseNom: string;
+  eventCount: number;
+  importedAt: string;
+  label: string;
+};
+
+/** Ex. « Fichier Événements d'AgriBio » / « Fichier Événements de Novacier ». */
+export function eventsFileLabel(entrepriseNom: string): string {
+  const nom = entrepriseNom.trim() || "Entreprise";
+  const elision = /^[aeiouyhàâäéèêëïîôùûüç]/i.test(nom);
+  return elision
+    ? `Fichier Événements d'${nom}`
+    : `Fichier Événements de ${nom}`;
+}
+
+/** Phrase obligatoire dans le Prompt IA Création. */
 export function eventsPromptRule(entrepriseNom: string): string {
-  return `Utilise uniquement les événements importés pour cette entreprise (${entrepriseNom}). N'invente aucun nouvel événement. N'utilise pas les événements d'une autre entreprise. Chaque entreprise a ses propres événements.`;
+  return `Utilise automatiquement tous les événements importés pour cette entreprise (${entrepriseNom}). N'invente aucun nouvel événement. N'utilise pas les événements d'une autre entreprise. Il n'y a pas de sélection à faire pour les événements, ils sont déjà liés à l'entreprise.`;
 }

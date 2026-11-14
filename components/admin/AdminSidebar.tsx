@@ -31,6 +31,7 @@ const NAV: NavItem[] = [
       { href: "/admin/atelier/workflow", label: "Workflow" },
       { href: "/admin/atelier/roles", label: "Rôles" },
       { href: "/admin/atelier/competences", label: "Compétences" },
+      { href: "/admin/atelier/evenements", label: "Événements" },
     ],
   },
   {

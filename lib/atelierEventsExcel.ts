@@ -6,14 +6,14 @@
 import * as XLSX from "xlsx";
 
 export const EVENTS_EXCEL_COLUMNS = [
-  "Nom de l'événement",
-  "Type (ex : Logistique, Technique, Humain, Client, Fournisseur, Météo, Réglementation)",
+  "Nom",
+  "Type (Logistique/Technique/Humain/Client/Fournisseur/Météo/Réglementation)",
   "Description complète",
   "Conditions pour arriver",
-  "Probabilité (Rare / Moyenne / Fréquente, ou en %)",
+  "Probabilité (Rare/Moyenne/Fréquente ou %)",
   "Fréquence",
   "Impact sur (Stock, Trésorerie, Satisfaction client, Confiance de l'équipe, Production)",
-  "Gravité (Faible / Moyenne / Forte / Critique)",
+  "Gravité (Faible/Moyenne/Forte/Critique)",
   "Durée de l'impact",
   "Ce que le joueur peut faire",
   "Cet événement influence quelle décision plus tard",
@@ -21,6 +21,35 @@ export const EVENTS_EXCEL_COLUMNS = [
 
 export type EventExcelColumn = (typeof EVENTS_EXCEL_COLUMNS)[number];
 export type EventExcelFields = Record<EventExcelColumn, string>;
+
+/** Anciens en-têtes acceptés à l'import (compat templates précédents). */
+const COLUMN_ALIASES: Record<string, EventExcelColumn> = {
+  nom: "Nom",
+  "nom de l'événement": "Nom",
+  "nom de l'evenement": "Nom",
+  type: "Type (Logistique/Technique/Humain/Client/Fournisseur/Météo/Réglementation)",
+  "type (ex : logistique, technique, humain, client, fournisseur, météo, réglementation)":
+    "Type (Logistique/Technique/Humain/Client/Fournisseur/Météo/Réglementation)",
+  "type (logistique/technique/humain/client/fournisseur/météo/réglementation)":
+    "Type (Logistique/Technique/Humain/Client/Fournisseur/Météo/Réglementation)",
+  "description complète": "Description complète",
+  "conditions pour arriver": "Conditions pour arriver",
+  "probabilité (rare / moyenne / fréquente, ou en %)":
+    "Probabilité (Rare/Moyenne/Fréquente ou %)",
+  "probabilité (rare/moyenne/fréquente ou %)":
+    "Probabilité (Rare/Moyenne/Fréquente ou %)",
+  fréquence: "Fréquence",
+  "impact sur (stock, trésorerie, satisfaction client, confiance de l'équipe, production)":
+    "Impact sur (Stock, Trésorerie, Satisfaction client, Confiance de l'équipe, Production)",
+  "gravité (faible / moyenne / forte / critique)":
+    "Gravité (Faible/Moyenne/Forte/Critique)",
+  "gravité (faible/moyenne/forte/critique)":
+    "Gravité (Faible/Moyenne/Forte/Critique)",
+  "durée de l'impact": "Durée de l'impact",
+  "ce que le joueur peut faire": "Ce que le joueur peut faire",
+  "cet événement influence quelle décision plus tard":
+    "Cet événement influence quelle décision plus tard",
+};
 
 export function emptyEventFields(): EventExcelFields {
   const o = {} as EventExcelFields;
@@ -41,7 +70,15 @@ export function buildEventsTemplateWorkbook(): XLSX.WorkBook {
   return wb;
 }
 
-/** Template vide, nommé pour l'entreprise (aucune donnée inventée). */
+/** Template vide générique (onglet Atelier Événements). */
+export function downloadEventsTemplate() {
+  XLSX.writeFile(
+    buildEventsTemplateWorkbook(),
+    "KEYBER_Template_Evenements.xlsx"
+  );
+}
+
+/** @deprecated préférer downloadEventsTemplate — conservé pour compat. */
 export function downloadEventsTemplateForEntreprise(entrepriseNom: string) {
   const safe =
     entrepriseNom.trim().replace(/[^\w\-àâäéèêëïîôùûüçÀÂÄÉÈÊËÏÎÔÙÛÜÇ ]+/gi, "") ||
@@ -53,7 +90,7 @@ export function downloadEventsTemplateForEntreprise(entrepriseNom: string) {
 }
 
 function normalizeHeader(h: string): string {
-  return h.replace(/\s+/g, " ").trim();
+  return h.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 function matchColumn(header: string): EventExcelColumn | null {
@@ -61,7 +98,7 @@ function matchColumn(header: string): EventExcelColumn | null {
   for (const col of EVENTS_EXCEL_COLUMNS) {
     if (normalizeHeader(col) === n) return col;
   }
-  return null;
+  return COLUMN_ALIASES[n] ?? null;
 }
 
 export type ParseEventsExcelResult =
@@ -90,11 +127,11 @@ export function parseEventsExcel(data: ArrayBuffer): ParseEventsExcelResult {
       if (col) colIndex.set(col, i);
     });
 
-    if (!colIndex.has("Nom de l'événement")) {
+    if (!colIndex.has("Nom")) {
       return {
         ok: false,
         error:
-          "Colonne « Nom de l'événement » manquante. Utilisez le Template Événements.",
+          "Colonne « Nom » manquante. Utilisez le Template Événements.",
       };
     }
 
@@ -107,15 +144,14 @@ export function parseEventsExcel(data: ArrayBuffer): ParseEventsExcelResult {
         if (idx === undefined) continue;
         fields[col] = String(row[idx] ?? "").trim();
       }
-      if (!fields["Nom de l'événement"]) continue;
+      if (!fields["Nom"]) continue;
       out.push(fields);
     }
 
     if (!out.length) {
       return {
         ok: false,
-        error:
-          "Aucune ligne d'événement — remplissez au moins « Nom de l'événement »",
+        error: "Aucune ligne d'événement — remplissez au moins « Nom »",
       };
     }
 

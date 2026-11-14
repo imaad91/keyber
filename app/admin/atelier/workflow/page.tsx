@@ -30,7 +30,7 @@ const STEPS: {
   {
     n: 2,
     title: "Événements de cette entreprise",
-    body: "Tu crées les événements de cette entreprise, en Excel, cas par cas. Dans la fiche de ta création, tu télécharges le Template Événements pour cette entreprise, tu le remplis uniquement avec les événements de cette entreprise, tu l'importes, tu valides. Chaque entreprise a ses propres événements. On ne partage pas les événements entre entreprises, sinon ça devient lassant pour les joueurs.",
+    body: "Tu crées les événements de cette entreprise, en Excel, cas par cas. Dans Atelier → Événements (onglet unique), tu télécharges le Template Événements, tu choisis l'entreprise, tu remplis uniquement les événements de cette entreprise, tu importes, tu valides. Un fichier = une entreprise. On ne partage pas les événements entre entreprises (AgriBio ≠ Novacier), sinon ça devient lassant pour les joueurs. Pas de coches dans Création : l'import les lie automatiquement.",
     accent: "bg-rose-50 border-rose-200",
     ring: "bg-rose-600",
     badge: "text-rose-950",

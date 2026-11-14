@@ -33,6 +33,7 @@ Sous-onglets Atelier (ordre fixe) :
 2. Workflow  
 3. Rôles  
 4. Compétences  
+5. Événements (1 fichier = 1 entreprise, pas de biblio partagée)
 
 **Book** = espace Studio séparé (même niveau que Atelier / Keyber OS / Contrôle / Équipe), hors Atelier.
 

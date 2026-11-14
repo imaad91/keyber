@@ -12,44 +12,68 @@ const STEPS: {
   badge: string;
 }[] = [
   {
+    n: 0,
+    title: "Bibliothèques (une fois pour toutes)",
+    body: "Tu prépares tes bibliothèques, une fois pour toutes. Tu télécharges le Template Rôles, tu le remplis en Excel, tu l'importes, tu valides. Tu télécharges le Template Compétences + Cours (un seul Excel, 2 onglets : Onglet 1 Compétences, Onglet 2 Cours), tu le remplis, tu l'importes, tu valides. C'est fait une fois, tu les réutilises pour toutes les entreprises.",
+    accent: "bg-slate-50 border-slate-300",
+    ring: "bg-slate-700",
+    badge: "text-slate-800",
+  },
+  {
     n: 1,
     title: "Excel Contexte",
-    body: "Tu remplis un Excel Contexte hyper complet, tu l'importes, tu valides.",
+    body: "Tu crées ton contexte, en Excel. Tu télécharges le Template Contexte hyper complet, tu le remplis avec un maximum de détails, tu l'importes, tu valides la soumission. Tu ne remplis jamais les champs directement dans l'Admin.",
     accent: "bg-sky-50 border-sky-200",
     ring: "bg-sky-600",
     badge: "text-sky-900",
   },
   {
     n: 2,
-    title: "Rôles & Compétences",
-    body: "Tu sélectionnes les rôles et les compétences parmi tes bibliothèques. Tu ne recrées rien, tu coches.",
+    title: "Événements de cette entreprise",
+    body: "Tu crées les événements de cette entreprise, en Excel, cas par cas. Dans la fiche de ta création, tu télécharges le Template Événements pour cette entreprise, tu le remplis uniquement avec les événements de cette entreprise, tu l'importes, tu valides. Chaque entreprise a ses propres événements. On ne partage pas les événements entre entreprises, sinon ça devient lassant pour les joueurs.",
+    accent: "bg-rose-50 border-rose-200",
+    ring: "bg-rose-600",
+    badge: "text-rose-950",
+  },
+  {
+    n: 3,
+    title: "Sélectionner, ne pas recréer",
+    body: "Tu sélectionnes, tu ne recrées pas. Dans la fiche de ta création, tu coches les rôles possibles parmi ta Bibliothèque Rôles, et tu coches les compétences possibles parmi ta Bibliothèque Compétences. Tu ne recrées rien, tu sélectionnes.",
     accent: "bg-violet-50 border-violet-200",
     ring: "bg-violet-600",
     badge: "text-violet-900",
   },
   {
-    n: 3,
-    title: "Scénarios provisoires",
-    body: "Tu demandes à l'IA de générer des scénarios provisoires. Tu copies le Prompt que l'Admin te donne, tu le colles dans Cursor / Claude.",
+    n: 4,
+    title: "Scénarios provisoires (IA)",
+    body: "Tu demandes à l'IA de générer des scénarios provisoires. Tu cliques sur « Générer des scénarios avec l'IA », tu copies le Prompt que l'Admin te donne, tu le colles dans Cursor / Claude Sonnet. L'IA utilise uniquement les données de ton Excel Contexte, tes rôles sélectionnés, tes compétences sélectionnées, et tes événements de cette entreprise. Elle n'invente aucun nouvel événement. Elle ne les implémente pas encore. Ce sont des provisoires.",
     accent: "bg-amber-50 border-amber-200",
     ring: "bg-amber-500",
     badge: "text-amber-950",
   },
   {
-    n: 4,
-    title: "Discussion & validation",
-    body: "Tu discutes avec l'IA, tu modifies les provisoires, jusqu'à ce que tu sois content. Tu valides les scénarios que tu gardes.",
+    n: 5,
+    title: "Discussion & ajustements",
+    body: "Tu discutes avec l'IA, tu modifies les provisoires, jusqu'à ce que tu sois content. Tu gardes, tu modifies, tu supprimes les provisoires.",
     accent: "bg-orange-50 border-orange-200",
     ring: "bg-orange-500",
     badge: "text-orange-950",
   },
   {
-    n: 5,
-    title: "Prototype → Book",
-    body: "L'IA implémente un prototype. Tu testes le prototype. Si c'est bon, tu valides, ça part dans le Book. Si ce n'est pas bon, tu retournes en provisoire, tu rediscutes avec l'IA.",
+    n: 6,
+    title: "Prototype → Book (test)",
+    body: "Tu valides, l'IA implémente un prototype, tu testes. Si c'est bon, tu valides le prototype, ça part dans le Book, en En cours de test. Si ce n'est pas bon, tu retournes en provisoire, tu rediscutes avec l'IA.",
     accent: "bg-emerald-50 border-emerald-200",
     ring: "bg-emerald-600",
     badge: "text-emerald-950",
+  },
+  {
+    n: 7,
+    title: "Book : En cours de test → Live",
+    body: "Dans le module Book, à part, ta création apparaît en En cours de test, visible uniquement pour toi, l'Admin. Tu testes une dernière fois. C'est bon ? Tu cliques sur « Passer en Live ». Maintenant, les joueurs peuvent y jouer. Plus tard, si tu veux modifier, tu cliques sur « Retourner en Création », ça crée une V2, tu modifies, tu valides, la V2 apparaît dans le Book, en En cours de test, avec l'historique V1, V2.",
+    accent: "bg-teal-50 border-teal-200",
+    ring: "bg-teal-600",
+    badge: "text-teal-950",
   },
 ];
 
@@ -68,21 +92,20 @@ export default function AtelierWorkflowPage() {
       />
 
       <p className="mb-2 max-w-2xl text-sm text-slate-600">
-        Mode d&apos;emploi de la création — du début jusqu&apos;à
-        l&apos;implémentation. Toujours visible,{" "}
-        <strong>lecture seule</strong> : tu ne le modifies pas.
+        Mode d&apos;emploi de la création — des bibliothèques jusqu&apos;au
+        Live. Toujours visible, <strong>lecture seule</strong> : tu ne le
+        modifies pas.
       </p>
 
-      {/* Workflow graphique */}
       <section
         className="mt-6 select-none rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8"
-        aria-label="Workflow de création KEYBER"
+        aria-label="Workflow de création KEYBER — 8 étapes"
       >
         <h2 className="mb-6 text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-          De l&apos;Excel au Book — 5 étapes
+          Des bibliothèques au Live — 8 étapes (0 → 7)
         </h2>
 
-        <ol className="mx-auto flex max-w-xl flex-col items-stretch">
+        <ol className="mx-auto flex max-w-2xl flex-col items-stretch">
           {STEPS.map((step, i) => (
             <li key={step.n} className="flex flex-col items-center">
               <div
@@ -147,7 +170,6 @@ export default function AtelierWorkflowPage() {
         </ol>
       </section>
 
-      {/* Règle d'or */}
       <section className="mt-8 rounded-2xl border-2 border-slate-900 bg-slate-900 px-5 py-5 text-white shadow-sm">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
           Règle d&apos;or
@@ -159,7 +181,6 @@ export default function AtelierWorkflowPage() {
         </p>
       </section>
 
-      {/* 2 règles de mode */}
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <section className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-700">
@@ -176,8 +197,9 @@ export default function AtelierWorkflowPage() {
           </p>
           <p className="mt-2 text-sm leading-relaxed text-violet-950">
             Mode Histoire = Mise en pratique : Rôle → Secteur → Entreprise →
-            Histoire libre, événements aléatoires, décisions qui influencent
-            d&apos;autres décisions. Pas de choix de compétence au début.
+            Histoire libre, avec tes événements de cette entreprise, décisions
+            qui influencent d&apos;autres décisions. Pas de choix de compétence
+            au début.
           </p>
         </section>
       </div>

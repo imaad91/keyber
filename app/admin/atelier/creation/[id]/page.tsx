@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Download, Trash2, Upload } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { ModeBadge } from "@/components/admin/BookEntryCard";
@@ -14,8 +15,19 @@ import {
   milestoneDone,
   useAtelierCreationStore,
 } from "@/lib/atelierCreationStore";
+import { buildScenarioGenerationPrompt } from "@/lib/atelierCreationPrompt";
 import { fieldsPreviewEntries } from "@/lib/atelierCreationExcel";
 import { useAtelierCompetencesStore } from "@/lib/atelierCompetencesStore";
+import {
+  downloadEventsTemplateForEntreprise,
+  eventPreviewEntries,
+  parseEventsExcel,
+  type EventExcelFields,
+} from "@/lib/atelierEventsExcel";
+import {
+  eventsPromptRule,
+  useAtelierEventsStore,
+} from "@/lib/atelierEventsStore";
 import { useAtelierRolesStore } from "@/lib/atelierRolesStore";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import { cn } from "@/lib/utils";
@@ -46,13 +58,27 @@ export default function AtelierCreationDetailPage() {
     toast,
     clearToast,
   } = useAtelierCreationStore();
+  const {
+    getEventsForFamily,
+    validateEventsSubmission,
+    deleteEvent,
+    toast: eventsToast,
+    clearToast: clearEventsToast,
+  } = useAtelierEventsStore();
   const { roles } = useAtelierRolesStore();
   const { competences } = useAtelierCompetencesStore();
   const creation = getCreation(id);
+  const eventsFileRef = useRef<HTMLInputElement>(null);
 
   const [scenarioNom, setScenarioNom] = useState("");
   const [scenarioMode, setScenarioMode] =
     useState<AtelierScenarioMode>("histoire");
+  const [eventsPreview, setEventsPreview] = useState<EventExcelFields[] | null>(
+    null
+  );
+  const [eventsParseError, setEventsParseError] = useState<string | null>(null);
+  const [eventsBusy, setEventsBusy] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   if (!creation) {
     return (
@@ -69,6 +95,8 @@ export default function AtelierCreationDetailPage() {
   const pending = creationPendingItems(creation);
   const filled = fieldsPreviewEntries(creation.fields).filter((e) => e.filled);
   const locked = creation.dansBook;
+  const entrepriseEvents = getEventsForFamily(creation.familyId);
+  const iaPrompt = buildScenarioGenerationPrompt(creation, entrepriseEvents);
 
   function toggleRole(nom: string) {
     if (locked) return;
@@ -84,6 +112,40 @@ export default function AtelierCreationDetailPage() {
     if (set.has(nom)) set.delete(nom);
     else set.add(nom);
     setCompetenceNames(creation!.id, Array.from(set));
+  }
+
+  async function onEventsFileChange(file: File | null) {
+    setEventsParseError(null);
+    setEventsPreview(null);
+    if (!file) return;
+    setEventsBusy(true);
+    try {
+      const buf = await file.arrayBuffer();
+      const res = parseEventsExcel(buf);
+      if (!res.ok) {
+        setEventsParseError(res.error);
+        return;
+      }
+      setEventsPreview(res.rows);
+    } finally {
+      setEventsBusy(false);
+      if (eventsFileRef.current) eventsFileRef.current.value = "";
+    }
+  }
+
+  function confirmEventsSubmit() {
+    if (!eventsPreview?.length || !creation) return;
+    const res = validateEventsSubmission(
+      creation.familyId,
+      creation.nom,
+      eventsPreview
+    );
+    if (res.error && res.added === 0) {
+      setEventsParseError(res.error);
+      return;
+    }
+    setEventsPreview(null);
+    setEventsParseError(null);
   }
 
   return (
@@ -104,6 +166,18 @@ export default function AtelierCreationDetailPage() {
         <p className="mb-3 text-sm">
           {toast}{" "}
           <button type="button" className="underline" onClick={clearToast}>
+            OK
+          </button>
+        </p>
+      ) : null}
+      {eventsToast ? (
+        <p className="mb-3 text-sm">
+          {eventsToast}{" "}
+          <button
+            type="button"
+            className="underline"
+            onClick={clearEventsToast}
+          >
             OK
           </button>
         </p>
@@ -160,6 +234,205 @@ export default function AtelierCreationDetailPage() {
           </Link>
         </p>
       )}
+
+      {/* Événements — liés uniquement à cette entreprise */}
+      <section className="mb-8 rounded-2xl border border-rose-200 bg-rose-50/40 p-5 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">
+          Événements de {creation.nom}
+        </h2>
+        <p className="mt-1 text-xs text-slate-600">
+          Chaque entreprise a ses propres événements. Ils ne sont pas partagés
+          avec d&apos;autres créations (ex. Novacier). Import Excel uniquement —
+          aucun événement inventé.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <AdminButton
+            type="button"
+            variant="secondary"
+            onClick={() => downloadEventsTemplateForEntreprise(creation.nom)}
+          >
+            <Download className="h-4 w-4" />
+            Télécharger le Template Événements pour {creation.nom}
+          </AdminButton>
+          <AdminButton
+            type="button"
+            variant="secondary"
+            disabled={eventsBusy || locked}
+            onClick={() => eventsFileRef.current?.click()}
+          >
+            <Upload className="h-4 w-4" />
+            {entrepriseEvents.length > 0
+              ? `Réimporter un nouvel Excel Événements pour ${creation.nom}`
+              : `Importer mon Excel Événements pour ${creation.nom}`}
+          </AdminButton>
+          <input
+            ref={eventsFileRef}
+            type="file"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            className="hidden"
+            onChange={(e) =>
+              onEventsFileChange(e.target.files?.[0] ?? null)
+            }
+          />
+        </div>
+
+        {eventsParseError ? (
+          <p className="mt-3 text-sm text-rose-600">{eventsParseError}</p>
+        ) : null}
+
+        {eventsPreview ? (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+            <h3 className="text-sm font-semibold text-slate-900">
+              Aperçu de l&apos;import Événements
+            </h3>
+            <p className="mt-1 text-xs text-slate-600">
+              {eventsPreview.length} événement
+              {eventsPreview.length > 1 ? "s" : ""} pour {creation.nom} (les
+              noms déjà présents seront ignorés).
+            </p>
+            <div className="mt-3 max-h-[320px] space-y-3 overflow-y-auto">
+              {eventsPreview.map((fields, i) => {
+                const entries = eventPreviewEntries(fields).filter(
+                  (e) => e.filled
+                );
+                return (
+                  <div
+                    key={`${fields["Nom de l'événement"]}-${i}`}
+                    className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+                  >
+                    <p className="font-semibold text-slate-900">
+                      {fields["Nom de l'événement"]}
+                    </p>
+                    <ul className="mt-1 space-y-0.5 text-sm text-slate-700">
+                      {entries.slice(0, 5).map((e) => (
+                        <li key={e.label}>
+                          <span className="font-medium text-slate-500">
+                            {e.label} :
+                          </span>{" "}
+                          {e.value}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <AdminButton type="button" onClick={confirmEventsSubmit}>
+                Valider la soumission
+              </AdminButton>
+              <AdminButton
+                type="button"
+                variant="secondary"
+                onClick={() => setEventsPreview(null)}
+              >
+                Annuler
+              </AdminButton>
+            </div>
+          </div>
+        ) : null}
+
+        <h3 className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Liste ({entrepriseEvents.length})
+        </h3>
+        {entrepriseEvents.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">
+            Aucun événement pour {creation.nom}. Importez un Excel Événements.
+          </p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {entrepriseEvents.map((ev) => (
+              <div
+                key={ev.id}
+                className="flex flex-wrap items-start justify-between gap-2 rounded-xl border border-slate-200 bg-white p-4"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-slate-900">{ev.nom}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {ev.type || "Type —"}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-sm text-slate-600">
+                    {ev.description || "Description non renseignée"}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={`/admin/atelier/creation/${creation.id}/evenements/${ev.id}`}
+                  >
+                    <AdminButton variant="secondary" type="button">
+                      Voir
+                    </AdminButton>
+                  </Link>
+                  {!locked ? (
+                    <AdminButton
+                      variant="ghost"
+                      type="button"
+                      onClick={() => {
+                        if (
+                          !window.confirm(
+                            `Supprimer l'événement « ${ev.nom} » de ${creation.nom} ?`
+                          )
+                        )
+                          return;
+                        const res = deleteEvent(ev.id, creation.familyId);
+                        if (res.error) window.alert(res.error);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-rose-600" />
+                      Supprimer
+                    </AdminButton>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Prompt IA */}
+      <section className="mb-8 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">
+          Générer des scénarios avec l&apos;IA
+        </h2>
+        <p className="mt-1 text-xs text-slate-600">
+          Copie le Prompt ci-dessous dans Cursor / Claude Sonnet. L&apos;IA
+          n&apos;invente aucun événement.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <AdminButton
+            type="button"
+            onClick={() => setShowPrompt(true)}
+          >
+            Générer des scénarios avec l&apos;IA
+          </AdminButton>
+          {showPrompt ? (
+            <AdminButton
+              type="button"
+              variant="secondary"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(iaPrompt);
+                  window.alert("Prompt copié");
+                } catch {
+                  window.alert("Impossible de copier — sélectionne le texte");
+                }
+              }}
+            >
+              Copier le Prompt
+            </AdminButton>
+          ) : null}
+        </div>
+        {showPrompt ? (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-medium text-rose-800">
+              {eventsPromptRule(creation.nom)}
+            </p>
+            <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-800">
+              {iaPrompt}
+            </pre>
+          </div>
+        ) : null}
+      </section>
 
       {/* Sélections (bibliothèques globales) */}
       <section className="mb-8 grid gap-4 lg:grid-cols-2">

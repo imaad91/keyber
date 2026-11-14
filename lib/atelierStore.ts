@@ -14,9 +14,32 @@ export type CompetenceType = "generale" | "technique";
 export type CompetenceNiveau = "debutant" | "intermediaire" | "expert";
 export type ScenarioStatut = "brouillon" | "en_test" | "publie" | "archive";
 
+export type AtelierSecteur = {
+  id: string;
+  nom: string;
+  description: string;
+  contraintes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AtelierRole = {
+  id: string;
+  contexteId: string;
+  nom: string;
+  description: string;
+  responsabilites: string;
+  infosErp: string;
+  competenceIds: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type AtelierContexte = {
   id: string;
   nom: string;
+  /** Secteur d'activité obligatoire (id AtelierSecteur). */
+  secteurId: string;
   organisation: string;
   stock: string;
   contrats: string;
@@ -49,6 +72,8 @@ export type AtelierScenario = {
   titre: string;
   contexteId: string;
   competenceIds: string[];
+  /** Rôle jouable du contexte (optionnel). */
+  roleId?: string;
   situation: string;
   decisions: string;
   reglesFin: string;
@@ -60,7 +85,9 @@ export type AtelierScenario = {
 };
 
 type AtelierState = {
+  secteurs: AtelierSecteur[];
   contextes: AtelierContexte[];
+  roles: AtelierRole[];
   competences: AtelierCompetence[];
   scenarios: AtelierScenario[];
   toast: string | null;
@@ -94,6 +121,7 @@ function seedNovacier(): AtelierState {
   const ctx: AtelierContexte = {
     id: ctxId,
     nom: "Novacier",
+    secteurId: "",
     organisation:
       "Usine métallurgique ~45 personnes, 3 lignes de production. Marie (chef d'atelier), Karim (maintenance), Laurent (direction), Henri (mentor). Organigramme plat, RP novice.",
     stock:
@@ -216,11 +244,40 @@ function seedNovacier(): AtelierState {
   ];
 
   return {
+    secteurs: [],
     contextes: [ctx],
+    roles: [],
     competences: [planificationMrp, dimensionnement, negociation],
     scenarios,
     toast: null,
   };
+}
+
+function normalizeContexte(c: Partial<AtelierContexte> & { id: string }): AtelierContexte {
+  return {
+    id: c.id,
+    nom: c.nom ?? "",
+    secteurId: c.secteurId ?? "",
+    organisation: c.organisation ?? "",
+    stock: c.stock ?? "",
+    contrats: c.contrats ?? "",
+    comptabilite: c.comptabilite ?? "",
+    problematiques: c.problematiques ?? "",
+    createdAt: c.createdAt ?? now(),
+    updatedAt: c.updatedAt ?? now(),
+  };
+}
+
+/** Rôle verrouillé s'il est lié à un scénario déjà joué / publié / en test. */
+export function isRoleUsedInPlayedScenario(
+  roleId: string,
+  scenarios: AtelierScenario[]
+): boolean {
+  return scenarios.some(
+    (s) =>
+      s.roleId === roleId &&
+      (s.statut === "en_test" || s.statut === "publie" || s.statut === "archive")
+  );
 }
 
 function emptyState(): AtelierState {
@@ -235,7 +292,11 @@ function load(): AtelierState {
     const parsed = JSON.parse(raw) as Partial<AtelierState>;
     const seed = seedNovacier();
     return {
-      contextes: parsed.contextes?.length ? parsed.contextes : seed.contextes,
+      secteurs: Array.isArray(parsed.secteurs) ? parsed.secteurs : [],
+      contextes: parsed.contextes?.length
+        ? parsed.contextes.map((c) => normalizeContexte(c))
+        : seed.contextes,
+      roles: Array.isArray(parsed.roles) ? parsed.roles : [],
       competences: parsed.competences?.length
         ? parsed.competences
         : seed.competences,
@@ -305,8 +366,14 @@ export function useAtelierStore() {
 
   return {
     ...current,
+    getSecteur(id: string) {
+      return state.secteurs.find((s) => s.id === id);
+    },
     getContexte(id: string) {
       return state.contextes.find((c) => c.id === id);
+    },
+    getRole(id: string) {
+      return state.roles.find((r) => r.id === id);
     },
     getCompetence(id: string) {
       return state.competences.find((c) => c.id === id);
@@ -317,11 +384,105 @@ export function useAtelierStore() {
     competencesForContexte(contexteId: string) {
       return state.competences.filter((c) => c.contexteId === contexteId);
     },
-    createContexte(nom: string): AtelierContexte {
+    rolesForContexte(contexteId: string) {
+      return state.roles.filter((r) => r.contexteId === contexteId);
+    },
+    contextesUsingSecteur(secteurId: string) {
+      return state.contextes.filter((c) => c.secteurId === secteurId);
+    },
+    createSecteur(input: {
+      nom: string;
+      description?: string;
+      contraintes?: string;
+    }): AtelierSecteur | { error: string } {
       ensure();
+      const nom = input.nom.trim();
+      if (!nom) return { error: "Nom du secteur obligatoire" };
+      const s: AtelierSecteur = {
+        id: uid("sec"),
+        nom,
+        description: (input.description ?? "").trim(),
+        contraintes: (input.contraintes ?? "").trim(),
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      persist({
+        ...state,
+        secteurs: [s, ...state.secteurs],
+        toast: "Secteur créé",
+      });
+      return s;
+    },
+    updateSecteur(
+      id: string,
+      patch: Partial<Omit<AtelierSecteur, "id" | "createdAt">>
+    ): { error?: string } {
+      ensure();
+      if (!state.secteurs.some((s) => s.id === id)) {
+        return { error: "Secteur introuvable" };
+      }
+      if (patch.nom !== undefined && !patch.nom.trim()) {
+        return { error: "Nom du secteur obligatoire" };
+      }
+      persist({
+        ...state,
+        secteurs: state.secteurs.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                ...patch,
+                nom: patch.nom !== undefined ? patch.nom.trim() : s.nom,
+                description:
+                  patch.description !== undefined
+                    ? patch.description.trim()
+                    : s.description,
+                contraintes:
+                  patch.contraintes !== undefined
+                    ? patch.contraintes.trim()
+                    : s.contraintes,
+                id: s.id,
+                createdAt: s.createdAt,
+                updatedAt: now(),
+              }
+            : s
+        ),
+        toast: "Secteur enregistré",
+      });
+      return {};
+    },
+    deleteSecteur(id: string): { error?: string } {
+      ensure();
+      if (state.contextes.some((c) => c.secteurId === id)) {
+        return {
+          error:
+            "Impossible de supprimer : un contexte utilise encore ce secteur",
+        };
+      }
+      if (!state.secteurs.some((s) => s.id === id)) {
+        return { error: "Secteur introuvable" };
+      }
+      persist({
+        ...state,
+        secteurs: state.secteurs.filter((s) => s.id !== id),
+        toast: "Secteur supprimé",
+      });
+      return {};
+    },
+    createContexte(input: {
+      nom: string;
+      secteurId: string;
+    }): AtelierContexte | { error: string } {
+      ensure();
+      const nom = input.nom.trim();
+      if (!nom) return { error: "Nom du contexte obligatoire" };
+      if (!input.secteurId) return { error: "Secteur d'activité obligatoire" };
+      if (!state.secteurs.some((s) => s.id === input.secteurId)) {
+        return { error: "Secteur inconnu" };
+      }
       const c: AtelierContexte = {
         id: uid("ctx"),
-        nom: nom.trim() || "Nouveau contexte",
+        nom,
+        secteurId: input.secteurId,
         organisation: "",
         stock: "",
         contrats: "",
@@ -337,8 +498,20 @@ export function useAtelierStore() {
       });
       return c;
     },
-    updateContexte(id: string, patch: Partial<AtelierContexte>) {
+    updateContexte(
+      id: string,
+      patch: Partial<AtelierContexte>
+    ): { error?: string } {
       ensure();
+      const prev = state.contextes.find((c) => c.id === id);
+      if (!prev) return { error: "Contexte introuvable" };
+      const nextSecteur = patch.secteurId ?? prev.secteurId;
+      if (!nextSecteur) {
+        return { error: "Secteur d'activité obligatoire" };
+      }
+      if (!state.secteurs.some((s) => s.id === nextSecteur)) {
+        return { error: "Secteur inconnu" };
+      }
       persist({
         ...state,
         contextes: state.contextes.map((c) =>
@@ -346,6 +519,7 @@ export function useAtelierStore() {
             ? {
                 ...c,
                 ...patch,
+                secteurId: nextSecteur,
                 id: c.id,
                 createdAt: c.createdAt,
                 updatedAt: now(),
@@ -354,6 +528,120 @@ export function useAtelierStore() {
         ),
         toast: "Contexte enregistré",
       });
+      return {};
+    },
+    createRole(input: {
+      contexteId: string;
+      nom: string;
+      description?: string;
+      responsabilites?: string;
+      infosErp?: string;
+      competenceIds?: string[];
+    }): AtelierRole | { error: string } {
+      ensure();
+      const nom = input.nom.trim();
+      if (!nom) return { error: "Nom du rôle obligatoire" };
+      if (!input.contexteId) return { error: "Contexte obligatoire" };
+      if (!state.contextes.some((c) => c.id === input.contexteId)) {
+        return { error: "Contexte inconnu" };
+      }
+      const allowed = new Set(
+        state.competences
+          .filter((c) => c.contexteId === input.contexteId)
+          .map((c) => c.id)
+      );
+      const competenceIds = (input.competenceIds ?? []).filter((cid) =>
+        allowed.has(cid)
+      );
+      const r: AtelierRole = {
+        id: uid("role"),
+        contexteId: input.contexteId,
+        nom,
+        description: (input.description ?? "").trim(),
+        responsabilites: (input.responsabilites ?? "").trim(),
+        infosErp: (input.infosErp ?? "").trim(),
+        competenceIds,
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      persist({
+        ...state,
+        roles: [r, ...state.roles],
+        toast: "Rôle ajouté",
+      });
+      return r;
+    },
+    updateRole(
+      id: string,
+      patch: Partial<Omit<AtelierRole, "id" | "contexteId" | "createdAt">>
+    ): { error?: string } {
+      ensure();
+      const prev = state.roles.find((r) => r.id === id);
+      if (!prev) return { error: "Rôle introuvable" };
+      if (patch.nom !== undefined && !patch.nom.trim()) {
+        return { error: "Nom du rôle obligatoire" };
+      }
+      const allowed = new Set(
+        state.competences
+          .filter((c) => c.contexteId === prev.contexteId)
+          .map((c) => c.id)
+      );
+      const competenceIds =
+        patch.competenceIds !== undefined
+          ? patch.competenceIds.filter((cid) => allowed.has(cid))
+          : prev.competenceIds;
+      persist({
+        ...state,
+        roles: state.roles.map((r) =>
+          r.id === id
+            ? {
+                ...r,
+                ...patch,
+                nom: patch.nom !== undefined ? patch.nom.trim() : r.nom,
+                description:
+                  patch.description !== undefined
+                    ? patch.description.trim()
+                    : r.description,
+                responsabilites:
+                  patch.responsabilites !== undefined
+                    ? patch.responsabilites.trim()
+                    : r.responsabilites,
+                infosErp:
+                  patch.infosErp !== undefined
+                    ? patch.infosErp.trim()
+                    : r.infosErp,
+                competenceIds,
+                id: r.id,
+                contexteId: r.contexteId,
+                createdAt: r.createdAt,
+                updatedAt: now(),
+              }
+            : r
+        ),
+        toast: "Rôle enregistré",
+      });
+      return {};
+    },
+    deleteRole(id: string): { error?: string } {
+      ensure();
+      if (!state.roles.some((r) => r.id === id)) {
+        return { error: "Rôle introuvable" };
+      }
+      if (isRoleUsedInPlayedScenario(id, state.scenarios)) {
+        return {
+          error:
+            "Impossible de supprimer : ce rôle est utilisé dans un scénario joué",
+        };
+      }
+      persist({
+        ...state,
+        roles: state.roles.filter((r) => r.id !== id),
+        scenarios: state.scenarios.map((s) =>
+          s.roleId === id ? { ...s, roleId: undefined } : s
+        ),
+        toast: "Rôle supprimé",
+      });
+      return {};
     },
     createCompetence(input: {
       id: string;

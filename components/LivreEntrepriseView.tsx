@@ -12,7 +12,7 @@ import {
   Network,
 } from "lucide-react";
 import { Organigramme } from "@/components/Organigramme";
-import { livreNovacier } from "@/lib/mock";
+import { getLivreActif } from "@/lib/scenario";
 import { markLivreOpened } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ type TabId = (typeof TABS)[number]["id"];
 
 export function LivreEntrepriseView() {
   const [tab, setTab] = useState<TabId>("histoire");
-  const livre = livreNovacier;
+  const livre = getLivreActif();
 
   useEffect(() => {
     markLivreOpened();

@@ -59,10 +59,24 @@ export type AdminConsequence = {
   setValeur?: string;
 };
 
+/** Competence impact mirrored from Cœur / scenario seed (for rebuild safety). */
+export type AdminCompetenceImpact = {
+  competenceId: string;
+  type: "generale" | "ciblee";
+  xp: number;
+  feedback?: string;
+  indicateurIndex?: number;
+  indicateurTeste?: string;
+  feedbackSiReussi?: string;
+  feedbackSiEchoue?: string;
+};
+
 export type AdminChoice = {
   id: string;
   texte: string;
   consequences: AdminConsequence[];
+  /** Kept so rebuildCoeurFromSlices does not strip Cœur competence links. */
+  competencesImpactees?: AdminCompetenceImpact[];
 };
 
 export type AdminDecision = {
@@ -144,6 +158,10 @@ export type AdminScenario = {
   description: string;
   entrepriseId: string | null;
   statut: AdminScenarioStatus;
+  /** Closed Fiche→Scénario workflow (synced with Fiche / Cœur). */
+  statutWorkflow?: import("./adminWorkflow").StatutWorkflow;
+  /** Badge PROVISOIRE until retenu_publie. */
+  provisoire?: boolean;
   order: number;
   consultantPercent?: number;
   submittedBy?: string;
@@ -160,13 +178,30 @@ export type AdminConsultantSubmission = {
   notes?: string;
 };
 
+/** Per-scenario CŒUR documents (Admin Studio source of truth). */
+export type AdminCoeurMap = Record<string, import("./adminCoeur").ScenarioCoeur>;
+
 export type AdminState = {
   scenarios: AdminScenario[];
   entreprises: AdminEntreprise[];
   personnages: AdminPersonnage[];
   decisions: AdminDecision[];
   events: AdminEvent[];
+  /** Rich real-world intake sheets (module Fiches). */
+  fiches: import("./adminFiches").AdminFiche[];
+  /** Single source of truth for decisions & events per scenario. */
+  coeurs: AdminCoeurMap;
+  /** Versions, audit, highlights per scenario. */
+  coeurMeta: import("./coeurHistory").CoeurMetaMap;
+  /** Global agent profiles (pilot the CŒUR). */
+  agents: import("./agents").AgentProfile[];
+  /** Last multi-agent run reports (global). */
+  agentReports: import("./agents").AgentRunReport[];
   consultants: AdminConsultantSubmission[];
+  /** Workflow > Glossaire (dictionnaire données). */
+  glossaire: import("./adminGlossaire").GlossaireTerme[];
+  /** Workflow > Journal des décisions (mémoire du pourquoi, append-only). */
+  journalDecisions: import("./adminJournalDecisions").JournalDecision[];
   toast: string | null;
 };
 

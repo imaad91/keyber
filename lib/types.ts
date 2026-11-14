@@ -272,7 +272,8 @@ export type LivreEntreprise = {
   glossaire: GlossaireEntry[];
 };
 
-export type GameMode = "skills" | "story" | null;
+export type { ModeJeu } from "./gameState";
+export type GameMode = import("./gameState").ModeJeu | "skills" | "story" | null;
 
 export type PlayTab = "workspace" | "emails" | "chat" | "feed";
 

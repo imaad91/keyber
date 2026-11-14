@@ -1,10 +1,20 @@
 import { novacierDecisions } from "@/data/scenarioNovacier";
+import { cloneDefaultAgents } from "./agents";
+import { novacierCoeur } from "./adminCoeur";
+import { appendVersion, emptyCoeurMeta } from "./coeurHistory";
 import {
   livreNovacier,
-  SCENARIO_ID,
-  SCENARIO_TITLE,
   scenarioPersonnages,
-} from "./scenario";
+} from "@/data/contextes/novacier/scenarioContent";
+import { SCENARIO_ID, SCENARIO_TITLE } from "@/data/scenarioNovacier";
+import {
+  seedAtelierNordFiche,
+  seedNouveauProjetFiche,
+  seedNovacierFiche,
+} from "./adminFiches";
+import { emptyCoeur } from "./adminCoeur";
+import { seedGlossaire } from "./adminGlossaire";
+import { seedJournalDecisions } from "./adminJournalDecisions";
 import type {
   AdminDecision,
   AdminEntreprise,
@@ -16,6 +26,9 @@ import type {
 import { uid } from "./adminTypes";
 
 const ENTREPRISE_ID = "ent-novacier";
+const ENTREPRISE_ATELIER_ID = "ent-atelier-nord";
+const SCENARIO_ATELIER_ID = "scn-atelier-nord";
+const SCENARIO_NOUVEAU_ID = "scn-nouveau-projet";
 
 function seedEntreprise(): AdminEntreprise {
   return {
@@ -57,7 +70,64 @@ function seedScenario(): AdminScenario {
       "Cinq jours pour sauver le contrat AutoVolt chez Novacier. Brouillard de données, panne Machine 3, dilemmes éthiques.",
     entrepriseId: ENTREPRISE_ID,
     statut: "publie",
+    statutWorkflow: "retenu_publie",
+    provisoire: false,
     order: 1,
+  };
+}
+
+function seedAtelierNordScenario(): AdminScenario {
+  return {
+    id: SCENARIO_ATELIER_ID,
+    titre: "Atelier Nord — Lot aéronautique",
+    secteur: "Industrie",
+    competence: "Pilotage d'atelier",
+    niveau: "intermediaire",
+    dureeJours: 4,
+    description: "Scénario provisoire Atelier Nord — en test Agents.",
+    entrepriseId: ENTREPRISE_ATELIER_ID,
+    statut: "en_attente",
+    statutWorkflow: "en_test",
+    provisoire: true,
+    order: 2,
+  };
+}
+
+function seedNouveauProjetScenario(): AdminScenario {
+  return {
+    id: SCENARIO_NOUVEAU_ID,
+    titre: "Nouveau Projet",
+    secteur: "Industrie",
+    competence: "Responsable de Production",
+    niveau: "debutant",
+    dureeJours: 5,
+    description: "Scénario lié à une fiche encore en brouillon.",
+    entrepriseId: null,
+    statut: "brouillon",
+    statutWorkflow: "brouillon",
+    provisoire: false,
+    order: 3,
+  };
+}
+
+function seedAtelierNordEntreprise(): AdminEntreprise {
+  return {
+    id: ENTREPRISE_ATELIER_ID,
+    nom: "Atelier Nord",
+    ville: "Lille",
+    secteur: "Industrie",
+    histoire: "Sous-traitant usinage aéronautique.",
+    activite: "Usinage de précision",
+    produitsPhares: ["Lot A", "Lot B", "Outillage"],
+    chiffresCles: {
+      ca: "18 M€",
+      employes: 80,
+      machines: 12,
+      satisfaction: "82 %",
+    },
+    valeurs: ["Qualité", "Délai", "Sécurité"],
+    glossaire: [],
+    scenarioIds: [SCENARIO_ATELIER_ID],
   };
 }
 
@@ -122,6 +192,9 @@ function seedDecisions(): AdminDecision[] {
         ...(x.mode ? { mode: x.mode } : {}),
         ...(typeof x.setValeur === "string" ? { setValeur: x.setValeur } : {}),
       })),
+      ...(c.competencesImpactees?.length
+        ? { competencesImpactees: c.competencesImpactees.map((i) => ({ ...i })) }
+        : {}),
     })),
     order: idx + 1,
   }));
@@ -194,13 +267,76 @@ function seedEvents(): AdminEvent[] {
 }
 
 export function createAdminSeed(): AdminState {
+  const coeur = novacierCoeur();
+  coeur.scenario.statutWorkflow = "retenu_publie";
+  coeur.scenario.provisoire = false;
+  const meta = appendVersion(
+    emptyCoeurMeta(),
+    coeur,
+    "seed",
+    "Système",
+    "CŒUR Novacier initial"
+  );
+  // Seed highlights as already seen so Logique starts clean
+  meta.highlights = meta.highlights.map((h) => ({ ...h, seen: true }));
+
+  const atelierScn = seedAtelierNordScenario();
+  const nouveauScn = seedNouveauProjetScenario();
+  const atelierCoeur = emptyCoeur(atelierScn);
+  atelierCoeur.scenario.statutWorkflow = "en_test";
+  atelierCoeur.scenario.provisoire = true;
+  const atelierMeta = appendVersion(
+    emptyCoeurMeta(),
+    atelierCoeur,
+    "seed",
+    "Système",
+    "CŒUR Atelier Nord provisoire"
+  );
+  atelierMeta.highlights = atelierMeta.highlights.map((h) => ({
+    ...h,
+    seen: true,
+  }));
+
+  const nouveauCoeur = emptyCoeur(nouveauScn);
+  nouveauCoeur.scenario.statutWorkflow = "brouillon";
+  const nouveauMeta = appendVersion(
+    emptyCoeurMeta(),
+    nouveauCoeur,
+    "seed",
+    "Système",
+    "CŒUR Nouveau Projet"
+  );
+  nouveauMeta.highlights = nouveauMeta.highlights.map((h) => ({
+    ...h,
+    seen: true,
+  }));
+
   return {
-    scenarios: [seedScenario()],
-    entreprises: [seedEntreprise()],
+    scenarios: [seedScenario(), atelierScn, nouveauScn],
+    entreprises: [seedEntreprise(), seedAtelierNordEntreprise()],
     personnages: seedPersonnages(),
     decisions: seedDecisions(),
     events: seedEvents(),
+    fiches: [
+      seedNovacierFiche(),
+      seedAtelierNordFiche(SCENARIO_ATELIER_ID),
+      seedNouveauProjetFiche(SCENARIO_NOUVEAU_ID),
+    ],
+    coeurs: {
+      [SCENARIO_ID]: coeur,
+      [SCENARIO_ATELIER_ID]: atelierCoeur,
+      [SCENARIO_NOUVEAU_ID]: nouveauCoeur,
+    },
+    coeurMeta: {
+      [SCENARIO_ID]: meta,
+      [SCENARIO_ATELIER_ID]: atelierMeta,
+      [SCENARIO_NOUVEAU_ID]: nouveauMeta,
+    },
+    agents: cloneDefaultAgents(),
+    agentReports: [],
     consultants: [],
+    glossaire: seedGlossaire(),
+    journalDecisions: seedJournalDecisions(),
     toast: null,
   };
 }
@@ -216,6 +352,8 @@ export function emptyScenario(order: number): AdminScenario {
     description: "",
     entrepriseId: null,
     statut: "brouillon",
+    statutWorkflow: "brouillon",
+    provisoire: false,
     order,
   };
 }

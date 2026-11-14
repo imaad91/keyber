@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { getContexteActif } from "@/data/registry";
 import { roles } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
 
@@ -21,10 +22,13 @@ export function IntroNarrative() {
       />
       <div className="relative z-10 w-full max-w-2xl">
         <p className="mb-6 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-          Chapitre 1 — L&apos;arrivée · Novacier
+          {"Chapitre 1 — L'arrivée · " + getContexteActif().nom}
         </p>
         <div className="space-y-5">
-          {role.introLines.map((line, i) => (
+          {(getContexteActif().runtime.roleIntroLines.length
+            ? getContexteActif().runtime.roleIntroLines
+            : role.introLines
+          ).map((line, i) => (
             <p
               key={line}
               className="intro-line font-display text-2xl font-semibold leading-snug md:text-3xl"

@@ -1,5 +1,5 @@
 /**
- * Generic decision engine — no scenario names or hardcoded Novacier figures.
+ * Generic decision engine — no scenario / entreprise names.
  * All numbers come from GameState / Decision data.
  */
 
@@ -12,6 +12,7 @@ import type {
 import type {
   EndingKind,
   GameState,
+  ModeJeu,
   VisibilityTier,
 } from "./gameState";
 import {
@@ -21,8 +22,13 @@ import {
   maxVisibility,
   setPath,
   syncMetaClock,
+  toModeJeu,
 } from "./gameState";
 import { RELATION_ALIASES } from "./gameState";
+import { getContexteActif } from "@/data/registry";
+import { applyMissedDecision, checkEvenements } from "./evenements";
+import { applyCompetenceImpacts, skillLabel } from "./progression";
+import { getCompetenceDef } from "./competences";
 
 const XP_PER_LEVEL = 500;
 
@@ -39,22 +45,35 @@ export function canSpendTime(state: GameState, minutes: number): boolean {
 }
 
 export function advanceTime(state: GameState, minutes: number): GameState {
+  const prevMin = state.meta.minutesSinceStart;
   const nextMin = Math.min(
     state.meta.dayLengthMinutes,
-    state.meta.minutesSinceStart + minutes
+    prevMin + minutes
   );
-  const next: GameState = {
+  let next: GameState = {
     ...state,
     meta: { ...state.meta, minutesSinceStart: nextMin },
-    world: {
-      ...state.world,
-      feedbackFlash:
-        nextMin >= state.meta.dayLengthMinutes
-          ? "Fin de journée — plus de temps disponible."
-          : state.world.feedbackFlash,
-    },
   };
-  return syncMetaClock(next);
+  next = syncMetaClock(next);
+  next = checkEvenements(next);
+
+  if (
+    nextMin >= next.meta.dayLengthMinutes &&
+    prevMin < next.meta.dayLengthMinutes &&
+    next.meta.jourActuel >= 1
+  ) {
+    next = applyMissedDecision(next);
+    next = {
+      ...next,
+      world: {
+        ...next.world,
+        showDayEnd: true,
+        feedbackFlash: "Fin de journée — 18:00.",
+      },
+    };
+  }
+
+  return next;
 }
 
 function conditionPasses(
@@ -87,6 +106,33 @@ export function choixDisponibles(
   return decision.choix.filter((c) => {
     if (!c.requis || c.requis.length === 0) return true;
     return c.requis.every((r) => conditionPasses(state, r));
+  });
+}
+
+export type ChoixAnnoté = {
+  choix: DecisionChoix;
+  unlocked: boolean;
+  lockMessage: string | null;
+};
+
+/** All choices with lock state — locked ones stay visible (greyed). */
+export function annotateChoix(
+  state: GameState,
+  decision: Decision
+): ChoixAnnoté[] {
+  return decision.choix.map((choix) => {
+    const unlocked =
+      !choix.requis ||
+      choix.requis.length === 0 ||
+      choix.requis.every((r) => conditionPasses(state, r));
+    return {
+      choix,
+      unlocked,
+      lockMessage: unlocked
+        ? null
+        : choix.messageVerrouillage ??
+          "Conditions non remplies — entraîne-toi en Mode Compétence",
+    };
   });
 }
 
@@ -162,7 +208,7 @@ function applyConsequence(state: GameState, c: Consequence): GameState {
       const short = Object.entries(RELATION_ALIASES).find(([k]) => k === id)?.[1];
       if (alias && alias !== id) next = setPath(next, `relations.${alias}`, value);
       if (short && short !== id) next = setPath(next, `relations.${short}`, value);
-      // also set marie if pers-marie
+      // also set aliased relation keys (e.g. marie → pers-marie)
       for (const [shortName, longName] of Object.entries(RELATION_ALIASES)) {
         if (longName === id && shortName !== id) {
           next = setPath(next, `relations.${shortName}`, value);
@@ -331,7 +377,7 @@ export function applyDecision(
     next = applyConsequence(next, cons);
   }
 
-  // Bonus conditions (e.g. Marie trust gates, nego AND clauses)
+  // Bonus conditions (e.g. relation trust gates, nego AND clauses)
   if (choix.conditions) {
     for (const cond of choix.conditions) {
       if (fullConditionPasses(next, cond) && cond.alorsEffetSupplementaire) {
@@ -375,6 +421,19 @@ export function applyDecision(
       .filter((c) => c.cible === "xp" || c.cible === "progression.xp")
       .reduce((s, c) => s + c.valeur, 0) || decision.xpGagne;
 
+  const mode: ModeJeu =
+    toModeJeu(next.modeActuel) ??
+    toModeJeu(next.world.mode) ??
+    "histoire";
+  const modeLabel =
+    mode === "histoire"
+      ? getContexteActif().runtime.metaJourLabel(
+          Math.max(1, next.meta.jourActuel)
+        )
+      : decision.competenceId
+        ? skillLabel(decision.competenceId)
+        : "Entraînement";
+
   const journal = journalHas
     ? next.world.journal
     : [
@@ -385,29 +444,213 @@ export function applyDecision(
           narration: choix.feedbackTexte,
           xp: xpGagne,
           at: heure,
+          mode,
+          modeLabel,
         },
         ...next.world.journal,
       ];
 
+  const historiqueTagged = {
+    ...historique,
+    decisionsPrises: historique.decisionsPrises.map((d) =>
+      d.decisionId === decision.id && d.choixId === choixId
+        ? { ...d, mode, label: choix.label }
+        : d
+    ),
+  };
+
+  const cashLoss = choix.consequences
+    .filter((c) => c.cible === "tresorerie" && c.valeur < -5000)
+    .reduce((s, c) => s + Math.abs(c.valeur), 0);
+  const trustHit = choix.consequences
+    .filter(
+      (c) =>
+        (c.cible === "confianceClient" || c.cible === "ethique") &&
+        c.valeur <= -10
+    )
+    .reduce((s, c) => s + Math.abs(c.valeur), 0);
+  const failedHard = cashLoss >= 15000 || trustHit >= 15;
+  const failedSkill =
+    decision.jour === 5
+      ? "negociation"
+      : decision.jour === 3
+        ? "gestion_crise"
+        : decision.jour === 4
+          ? "leadership"
+          : decision.categorie?.toLowerCase().includes("négociation")
+            ? "negociation"
+            : "gestion_crise";
+
   next = {
     ...next,
-    historique,
+    historique: historiqueTagged,
     world: {
       ...next.world,
       dayDecisionId: choixId,
+      urgentBanner: null,
       feedbackFlash: choix.feedbackTexte,
       journal,
       badges: next.world.badges.map((b) =>
         b.id === "badge-first" ? { ...b, unlocked: true } : b
       ),
+      trainingPrompt: failedHard
+        ? {
+            competenceId: failedSkill,
+            competenceNom: skillLabel(failedSkill),
+            raison: `Tu as échoué en ${skillLabel(failedSkill)}. Veux-tu t'entraîner ?`,
+          }
+        : next.world.trainingPrompt,
     },
   };
+
+  if (choix.competencesImpactees?.length) {
+    const applied = applyCompetenceImpacts(next, choix.competencesImpactees);
+    next = applied.state;
+  }
 
   if (decision.bankProduction) {
     next = bankDailyProduction(next);
   }
 
   return checkObjectives(next);
+}
+
+/**
+ * Mode Compétence — apply a training Decision without the story day lock.
+ * Awards skill XP on the trained competence (shared progression).
+ */
+export function applyCompetenceTraining(
+  gameState: GameState,
+  decision: Decision,
+  choixId: string
+): GameState {
+  const competenceId = decision.competenceId;
+  if (!competenceId) {
+    return {
+      ...gameState,
+      world: {
+        ...gameState.world,
+        feedbackFlash: "Entraînement sans compétence associée.",
+      },
+    };
+  }
+
+  const choix = decision.choix.find((c) => c.id === choixId);
+  if (!choix) {
+    return {
+      ...gameState,
+      world: { ...gameState.world, feedbackFlash: "Choix invalide." },
+    };
+  }
+
+  let next: GameState = {
+    ...gameState,
+    modeActuel: "competence",
+    scenarioCompetenceId: competenceId,
+    world: {
+      ...gameState.world,
+      mode: "skills",
+      dayDecisionId: null,
+    },
+  };
+
+  for (const cons of choix.consequences) {
+    if (
+      cons.cible === "temps" ||
+      cons.cible === "meta.minutesSinceStart" ||
+      cons.cible === "xp" ||
+      cons.cible === "progression.xp"
+    ) {
+      continue; // time/xp handled by skill progression, not story clock
+    }
+    next = applyConsequence(next, cons);
+  }
+
+  const impacts =
+    choix.competencesImpactees?.length
+      ? choix.competencesImpactees
+      : [
+          {
+            competenceId,
+            type: (getCompetenceDef(competenceId)?.type ?? "generale") as
+              | "generale"
+              | "ciblee",
+            xp: Math.max(
+              60,
+              choix.consequences
+                .filter((c) => c.cible === "xp" || c.cible === "progression.xp")
+                .reduce((s, c) => s + c.valeur, 0) || decision.xpGagne
+            ),
+            feedback: choix.feedbackTexte,
+          },
+        ];
+
+  const applied = applyCompetenceImpacts(next, impacts);
+  next = applied.state;
+  next = normalizeXp(next);
+
+  const skillXpGain = impacts.reduce((s, i) => s + i.xp, 0);
+  const heure = next.meta.heureActuelle;
+  const modeLabel = skillLabel(competenceId);
+  const debriefNarration = applied.debrief.join("\n");
+
+  next = {
+    ...next,
+    historique: {
+      ...next.historique,
+      decisionsPrises: [
+        ...next.historique.decisionsPrises,
+        {
+          decisionId: decision.id,
+          jour: 0,
+          choixId,
+          heure,
+          mode: "competence",
+          competenceId,
+          label: choix.label,
+        },
+      ],
+    },
+    world: {
+      ...next.world,
+      feedbackFlash: applied.debrief[0] ?? choix.feedbackTexte,
+      lastSkillDebrief: applied.debrief,
+      journal: [
+        {
+          id: `j-train-${decision.id}-${Date.now()}`,
+          day: 0,
+          titre: choix.label,
+          narration: debriefNarration || choix.feedbackTexte,
+          xp: skillXpGain,
+          at: heure,
+          mode: "competence",
+          modeLabel,
+        },
+        ...next.world.journal,
+      ],
+      trainingsCompleted: [
+        {
+          competenceId,
+          decisionId: decision.id,
+          choixId,
+          label: choix.label,
+          at: new Date().toISOString(),
+          xp: skillXpGain,
+        },
+        ...next.world.trainingsCompleted,
+      ],
+      trainingPrompt: null,
+    },
+  };
+
+  return next;
+}
+
+export function clearTrainingPrompt(state: GameState): GameState {
+  return {
+    ...state,
+    world: { ...state.world, trainingPrompt: null },
+  };
 }
 
 export function addXP(state: GameState, amount: number): GameState {

@@ -20,6 +20,7 @@ import {
 import { onboardingStepsMeta } from "./mock";
 import { createScenarioDayState } from "./mock";
 import { clamp, RELATION_ALIASES } from "./gameState";
+import { getContexteActif } from "@/data/registry";
 
 export function advanceScenarioDay(state: GameState): GameState {
   if (state.world.showDebrief) return state;
@@ -35,10 +36,10 @@ export function advanceScenarioDay(state: GameState): GameState {
         ending,
         feedbackFlash:
           ending === "VICTOIRE"
-            ? "Victoire — contrat AutoVolt tenu"
+            ? getContexteActif().runtime.endingFlash.victoire
             : ending === "PARTIELLE"
-              ? "Victoire partielle"
-              : "Échec — contrat en danger",
+              ? getContexteActif().runtime.endingFlash.partielle
+              : getContexteActif().runtime.endingFlash.echec,
         badges: state.world.badges.map((b) =>
           b.id === "badge-victoire" && ending === "VICTOIRE"
             ? { ...b, unlocked: true }
@@ -145,13 +146,10 @@ function endingNarration(
 ): string {
   const q = state.finance.qualite;
   const e = state.humain.ethique;
-  if (ending === "VICTOIRE") {
-    return `Victoire. ${q} pièces qualité, éthique ${e}. AutoVolt reste. Novacier tient.`;
-  }
-  if (ending === "PARTIELLE") {
-    return `Victoire partielle. ${q} pièces qualité, éthique ${e}. Le contrat est fragile, mais vivant.`;
-  }
-  return `Échec. ${q} pièces qualité, éthique ${e}. AutoVolt s'éloigne — l'écho de 2022.`;
+  const copy = getContexteActif().runtime.endingNarration;
+  if (ending === "VICTOIRE") return copy.victoire(q, e);
+  if (ending === "PARTIELLE") return copy.partielle(q, e);
+  return copy.echec(q, e);
 }
 
 export function startScenarioWeek(state: GameState): GameState {
@@ -174,14 +172,13 @@ export function startScenarioWeek(state: GameState): GameState {
         "VIEW_ATELIER_LIVE",
       ],
       scenarioActive: true,
-      feedbackFlash: "Jour 1 — 08:15. Mail de Laurent. Brouillard total.",
+      feedbackFlash: getContexteActif().runtime.startWeekFlash,
       journal: [
         {
           id: `j-week-${Date.now()}`,
           day: 1,
-          titre: "Jour 1 — Le brouillard",
-          narration:
-            "Lundi. Tous les KPIs affichent ???. Laurent demande où en est le retard. Karim murmure qu'un capteur est mort.",
+          titre: getContexteActif().runtime.startWeekJournal.titre,
+          narration: getContexteActif().runtime.startWeekJournal.narration,
           xp: 10,
           at: "08:15",
         },
@@ -245,7 +242,7 @@ export function applyDialogueChoice(
         events: next.world.events.map((e) =>
           e.id === "ev-rumor-pl" ? { ...e, rumorResolved: true } : e
         ),
-        feedbackFlash: "Rumeur AutoVolt / Pologne confirmée via interview",
+        feedbackFlash: getContexteActif().runtime.rumorFlash,
       },
     };
   }
@@ -303,22 +300,21 @@ export function advanceOnboarding(
     messages = [
       {
         id: `msg-m-${Date.now()}`,
-        from: "Henri Vallon",
-        role: "Mentor",
-        text: "Bien. Maintenant va voir Marie — interview.",
+        from: getContexteActif().runtime.onboarding.step1Message.from,
+        role: getContexteActif().runtime.onboarding.step1Message.role,
+        text: getContexteActif().runtime.onboarding.step1Message.text,
         time: formatGameClock(state.meta.minutesSinceStart),
         mentor: true,
       },
       ...messages,
     ];
-    feedbackFlash = "Étape 1/4 — Atelier découvert";
+    feedbackFlash = getContexteActif().runtime.onboarding.step1Flash;
     journal = [
       {
         id: `j-ob-1-${Date.now()}`,
         day: 0,
-        titre: "Jour 0 — Atelier",
-        narration:
-          "Henri t'a fait ouvrir l'Atelier Live. Les machines respirent. La 3 clignote déjà rouge.",
+        titre: getContexteActif().runtime.onboarding.step1Journal.titre,
+        narration: getContexteActif().runtime.onboarding.step1Journal.narration,
         xp: 15,
         at: formatGameClock(state.meta.minutesSinceStart),
       },
@@ -330,22 +326,21 @@ export function advanceOnboarding(
     messages = [
       {
         id: `msg-m-${Date.now()}`,
-        from: "Henri Vallon",
-        role: "Mentor",
-        text: "Marie t'a parlé. Ouvre maintenant l'ordinateur — ERP et mails sont dessus.",
+        from: getContexteActif().runtime.onboarding.step2Message.from,
+        role: getContexteActif().runtime.onboarding.step2Message.role,
+        text: getContexteActif().runtime.onboarding.step2Message.text,
         time: formatGameClock(state.meta.minutesSinceStart),
         mentor: true,
       },
       ...messages,
     ];
-    feedbackFlash = "Étape 2/4 — Marie rencontrée";
+    feedbackFlash = getContexteActif().runtime.onboarding.step2Flash;
     journal = [
       {
         id: `j-ob-2-${Date.now()}`,
         day: 0,
-        titre: "Jour 0 — Marie",
-        narration:
-          "Tu as rencontré Marie Dubois. La confiance se gagne réponse après réponse.",
+        titre: getContexteActif().runtime.onboarding.step2Journal.titre,
+        narration: getContexteActif().runtime.onboarding.step2Journal.narration,
         xp: 15,
         at: formatGameClock(state.meta.minutesSinceStart),
       },
@@ -357,22 +352,21 @@ export function advanceOnboarding(
     messages = [
       {
         id: `msg-m-${Date.now()}`,
-        from: "Henri Vallon",
-        role: "Mentor",
-        text: "Dernière étape : ton premier objectif. Stabilise la machine 3 quand tu seras prêt.",
+        from: getContexteActif().runtime.onboarding.step3Message.from,
+        role: getContexteActif().runtime.onboarding.step3Message.role,
+        text: getContexteActif().runtime.onboarding.step3Message.text,
         time: formatGameClock(state.meta.minutesSinceStart),
         mentor: true,
       },
       ...messages,
     ];
-    feedbackFlash = "Étape 3/4 — Ordinateur découvert";
+    feedbackFlash = getContexteActif().runtime.onboarding.step3Flash;
     journal = [
       {
         id: `j-ob-3-${Date.now()}`,
         day: 0,
-        titre: "Jour 0 — Ordinateur",
-        narration:
-          "Tu as ouvert l'ordinateur Novacier. ERP, mails, chat : tout passe par là.",
+        titre: getContexteActif().runtime.onboarding.step3Journal.titre,
+        narration: getContexteActif().runtime.onboarding.step3Journal.narration,
         xp: 15,
         at: formatGameClock(state.meta.minutesSinceStart),
       },

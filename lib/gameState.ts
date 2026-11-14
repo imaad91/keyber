@@ -7,11 +7,17 @@ export type VisibilityTier = 0 | 1 | 2 | 3; // 0 Inconnu · 1 Estimé · 2 Préc
 
 export type EndingKind = "VICTOIRE" | "PARTIELLE" | "ECHEC" | null;
 
+/** Shared play mode — competence drills & story scenarios share one progression. */
+export type ModeJeu = "competence" | "histoire";
+
 export type DecisionRecord = {
   decisionId: string;
   jour: number;
   choixId: string;
   heure: string;
+  mode?: ModeJeu;
+  competenceId?: string;
+  label?: string;
 };
 
 export type EndingRuleBand = {
@@ -56,13 +62,22 @@ export type GameFinance = {
 export type GameHumain = {
   moralEquipe: number;
   ethique: number;
-  confianceClient: number; // AutoVolt-like client trust (generic)
+  confianceClient: number; // strategic client trust (generic)
+};
+
+export type CompetenceProgressState = {
+  niveau: number;
+  xp: number;
+  indicateursValides?: boolean[];
 };
 
 export type GameProgression = {
   xp: number;
   niveau: number;
-  competences: Record<string, number>;
+  /** @deprecated use competencesGenerales / competencesCiblees */
+  competences?: Record<string, number>;
+  competencesGenerales: Record<string, CompetenceProgressState>;
+  competencesCiblees: Record<string, CompetenceProgressState>;
 };
 
 export type GameHistorique = {
@@ -149,6 +164,44 @@ export type JournalEntryState = {
   narration: string;
   xp: number;
   at: string;
+  mode?: ModeJeu;
+  /** e.g. "Jour 3" or "Négociation" */
+  modeLabel?: string;
+};
+
+export type TrainingPrompt = {
+  competenceId: string;
+  competenceNom: string;
+  raison: string;
+};
+
+export type EventNotificationState = {
+  id: string;
+  titre: string;
+  type: string;
+  at: string;
+};
+
+export type UrgentBannerState = {
+  eventId: string;
+  message: string;
+  deadlineHeure: string;
+};
+
+export type TrainingCompletion = {
+  competenceId: string;
+  decisionId: string;
+  choixId: string;
+  label: string;
+  at: string;
+  xp: number;
+};
+
+export type HistoireCompletion = {
+  scenarioId: string;
+  titre: string;
+  ending: EndingKind;
+  at: string;
 };
 
 export type ChapitreState = {
@@ -161,7 +214,8 @@ export type ChapitreState = {
   status: "VERROUILLE" | "ACTIF" | "TERMINE";
 };
 
-export type GameMode = "skills" | "story" | null;
+/** @deprecated Prefer ModeJeu — kept for transitional UI ("skills"/"story"). */
+export type GameMode = ModeJeu | "skills" | "story" | null;
 
 export type ActionType =
   | "ACCESS_COMPUTER"
@@ -174,16 +228,21 @@ export type ActionType =
  * Core blocks match the decision-engine charter; `world` holds runtime content.
  */
 export type GameState = {
+  /** Active play mode — competence drills & histoire share progression. */
+  modeActuel: ModeJeu | null;
+  scenarioCompetenceId: string | null;
+  scenarioHistoireId: string | null;
   meta: GameMeta;
   finance: GameFinance;
   humain: GameHumain;
-  /** confiance keyed by personnage id (marie, karim, … or pers-marie) */
+  /** confiance keyed by personnage visual slot id (pers-marie, …) */
   relations: Record<string, number>;
   progression: GameProgression;
   visibilite: Record<string, VisibilityTier>;
   historique: GameHistorique;
   flags: GameFlags;
   world: {
+    /** Mirrors modeActuel for older UI (skills↔competence, story↔histoire). */
     mode: GameMode;
     ending: EndingKind;
     showDebrief: boolean;
@@ -206,9 +265,30 @@ export type GameState = {
     events: CompanyEventState[];
     rumors: RumorState[];
     unlockedInfos: string[];
+    /** @deprecated mirrored from competencesGenerales + competencesCiblees */
     skillProgress: Record<string, { niveau: number; xp: number }>;
+    trainingsCompleted: TrainingCompletion[];
+    histoiresCompleted: HistoireCompletion[];
+    trainingPrompt: TrainingPrompt | null;
+    /** Precise debrief lines after a decision / training */
+    lastSkillDebrief: string[];
+    eventNotifications: EventNotificationState[];
+    urgentBanner: UrgentBannerState | null;
+    showDayEnd: boolean;
   };
 };
+
+export function toModeJeu(mode: GameMode | ModeJeu | null | undefined): ModeJeu | null {
+  if (mode === "competence" || mode === "skills") return "competence";
+  if (mode === "histoire" || mode === "story") return "histoire";
+  return null;
+}
+
+export function legacyModeFrom(mode: ModeJeu | null): GameMode {
+  if (mode === "competence") return "skills";
+  if (mode === "histoire") return "story";
+  return null;
+}
 
 export function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
@@ -242,6 +322,14 @@ export function syncMetaClock(state: GameState): GameState {
 /** Resolve dotted path on GameState (finance.tresorerie, confiance.marie → relations.marie, etc.) */
 export function getPath(state: GameState, cible: string): number | string | undefined {
   const path = normalizeCible(cible);
+  if (path.startsWith("competenceLevel.")) {
+    const id = path.slice("competenceLevel.".length);
+    const g = state.progression.competencesGenerales?.[id];
+    if (g) return g.niveau;
+    const c = state.progression.competencesCiblees?.[id];
+    if (c) return c.niveau;
+    return state.progression.competences?.[id] ?? 1;
+  }
   const parts = path.split(".");
   let cur: unknown = state;
   for (const p of parts) {
@@ -320,7 +408,9 @@ export function normalizeCible(cible: string): string {
   if (cible.startsWith("finance.") || cible.startsWith("humain.") || cible.startsWith("relations.") || cible.startsWith("progression.") || cible.startsWith("meta.") || cible.startsWith("world."))
     return cible;
   if (cible.startsWith("competence.")) {
-    return `progression.competences.${cible.slice("competence.".length)}`;
+    const id = cible.slice("competence.".length);
+    // Resolved specially in getPath — keep as marker
+    return `competenceLevel.${id}`;
   }
   // bare flag name
   if (!cible.includes(".")) return `flags.${cible}`;

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { MessagesSquare } from "lucide-react";
 import { CharacterCard } from "@/components/characters/CharacterCard";
 import { Button } from "@/components/ui/button";
-import { examplePersonnages, livreNovacier } from "@/lib/mock";
+import { getLivreActif, getPersonnagesActifs } from "@/lib/scenario";
 import type { CharacterVisualId } from "@/lib/characterStyle";
 import { setSelectedPersonnageId, useGameStore } from "@/lib/store";
 
@@ -12,8 +12,9 @@ export function Organigramme({ paper = false }: { paper?: boolean }) {
   const router = useRouter();
   const { gameState } = useGameStore();
 
-  const people = livreNovacier.organigramme
-    .map((o) => examplePersonnages.find((p) => p.id === o.personnageId))
+  const personnages = getPersonnagesActifs();
+  const people = getLivreActif().organigramme
+    .map((o) => personnages.find((p) => p.id === o.personnageId))
     .filter(Boolean);
 
   return (

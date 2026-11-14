@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import {
-  AdminButton,
-  PageHeader,
-} from "@/components/admin/AdminPrimitives";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { useAdminStore } from "@/lib/adminStore";
 import type { CharacterVisualId } from "@/lib/characterStyle";
@@ -17,21 +15,30 @@ export default function AdminPersonnagesPage() {
 
   return (
     <div>
-      <PageHeader
+      <AdminBreadcrumb
+        backHref="/admin"
+        backLabel="← Admin"
+        crumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Bibliothèque", href: "/admin/entreprises" },
+          { label: "Personnages" },
+        ]}
         title="Personnages"
-        subtitle="Fiches, confiance de départ, dialogues et conséquences."
-        actions={
-          <AdminButton
-            onClick={() => {
-              const id = createPersonnage();
-              router.push(`/admin/personnages/${id}`);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Nouveau Personnage
-          </AdminButton>
-        }
       />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-slate-500">
+          Fiches, confiance de départ, dialogues et conséquences.
+        </p>
+        <AdminButton
+          onClick={() => {
+            const id = createPersonnage();
+            router.push(`/admin/personnages/${id}`);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Nouveau Personnage
+        </AdminButton>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {personnages.map((p) => {

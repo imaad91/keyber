@@ -5,14 +5,20 @@ import { COMPUTER_APP_TIME } from "./computerData";
 import type { Decision } from "./decisions";
 import {
   advanceTime,
+  applyCompetenceTraining as engineApplyTraining,
   applyDecision as engineApplyDecision,
   canSpendTime,
+  clearTrainingPrompt as engineClearTrainingPrompt,
   markEmailRead as engineMarkEmailRead,
   resolveRumor as engineResolveRumor,
   unlockBadge,
 } from "./engine";
-import type { GameState } from "./gameState";
+import { checkEvenements } from "./evenements";
+import type { GameState, ModeJeu } from "./gameState";
+import { legacyModeFrom, toModeJeu } from "./gameState";
+import { getContexteActif } from "@/data/registry";
 import { createInitialGameState } from "./mock";
+import { migrateGameState } from "./migrateGameState";
 import {
   advanceOnboarding,
   advanceScenarioDay,
@@ -20,6 +26,14 @@ import {
   completeOnboardingStep4,
   startScenarioWeek,
 } from "./runtime";
+import {
+  getActiveSlot,
+  prepareNewGameState,
+  saveSlotAndProgression,
+  setActiveSlot as persistActiveSlot,
+  type SavesBundle,
+} from "./saveStore";
+import type { SlotNumber } from "./sauvegarde";
 import type {
   Action,
   ComputerAppId,
@@ -38,10 +52,12 @@ type StoreSnapshot = {
   selectedPersonnageId: string | null;
   showVisibilityPanel: boolean;
   livreOpened: boolean;
+  lastSavedAt: string | null;
+  activeSlot: SlotNumber | null;
 };
 
 let snapshot: StoreSnapshot = {
-  state: createInitialGameState(),
+  state: migrateGameState(createInitialGameState()),
   activeAction: null,
   playTab: "workspace",
   computerApp: null,
@@ -49,7 +65,19 @@ let snapshot: StoreSnapshot = {
   selectedPersonnageId: "pers-marie",
   showVisibilityPanel: false,
   livreOpened: false,
+  lastSavedAt: null,
+  activeSlot: null,
 };
+
+function autoSave(state: GameState) {
+  const slot = snapshot.activeSlot ?? getActiveSlot();
+  if (!slot) return;
+  const { sauvegarde } = saveSlotAndProgression(slot, state);
+  setSnapshot({
+    lastSavedAt: sauvegarde.dateDerniereSauvegarde,
+    activeSlot: slot,
+  });
+}
 
 const listeners = new Set<() => void>();
 
@@ -58,7 +86,11 @@ function emit() {
 }
 
 function setSnapshot(partial: Partial<StoreSnapshot>) {
-  snapshot = { ...snapshot, ...partial };
+  const next = { ...snapshot, ...partial };
+  if (partial.state) {
+    next.state = migrateGameState(partial.state);
+  }
+  snapshot = next;
   emit();
 }
 
@@ -66,16 +98,23 @@ function patchState(updater: (s: GameState) => GameState) {
   setSnapshot({ state: updater(snapshot.state) });
 }
 
-export function setMode(mode: GameMode) {
+export function setMode(mode: GameMode | ModeJeu) {
+  const modeJeu = toModeJeu(mode);
   patchState((s) => ({
     ...s,
-    world: { ...s.world, mode },
+    modeActuel: modeJeu,
+    world: { ...s.world, mode: legacyModeFrom(modeJeu) ?? mode },
   }));
 }
 
 export function setRole(roleId: string) {
+  if (!snapshot.activeSlot && !getActiveSlot()) {
+    ensureActiveSlot(1);
+  }
   patchState((s) => ({
     ...s,
+    modeActuel: "histoire",
+    scenarioHistoireId: s.scenarioHistoireId ?? s.meta.scenarioId,
     meta: { ...s.meta, roleId },
     world: {
       ...s.world,
@@ -85,12 +124,71 @@ export function setRole(roleId: string) {
       onboardingStep: 1,
       unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
       feedbackFlash: "Rôle sélectionné — lit l'intro.",
+      trainingPrompt: null,
     },
   }));
   patchState((s) => ({
     ...s,
     meta: { ...s.meta, jourActuel: 0 },
   }));
+  autoSave(snapshot.state);
+}
+
+export function startCompetenceTraining(competenceId: string) {
+  patchState((s) => ({
+    ...s,
+    modeActuel: "competence",
+    scenarioCompetenceId: competenceId,
+    world: {
+      ...s.world,
+      mode: "skills",
+      feedbackFlash: null,
+      trainingPrompt: null,
+    },
+  }));
+}
+
+export function applyCompetenceTraining(decision: Decision, choixId: string) {
+  patchState((s) => engineApplyTraining(s, decision, choixId));
+  autoSave(snapshot.state);
+}
+
+export function clearTrainingPrompt() {
+  patchState((s) => engineClearTrainingPrompt(s));
+}
+
+export function dismissEventNotification(id?: string) {
+  patchState((s) => ({
+    ...s,
+    world: {
+      ...s.world,
+      eventNotifications: id
+        ? (s.world.eventNotifications ?? []).filter((n) => n.id !== id)
+        : (s.world.eventNotifications ?? []).slice(1),
+    },
+  }));
+}
+
+export function clearUrgentBanner() {
+  patchState((s) => ({
+    ...s,
+    world: { ...s.world, urgentBanner: null },
+  }));
+}
+
+export function closeDayEndAndAdvance() {
+  patchState((s) => {
+    const cleared = {
+      ...s,
+      world: { ...s.world, showDayEnd: false },
+    };
+    return advanceScenarioDay(cleared);
+  });
+  autoSave(snapshot.state);
+}
+
+export function runEventCheck() {
+  patchState((s) => checkEvenements(s));
 }
 
 export function markIntroSeen() {
@@ -104,9 +202,8 @@ export function markIntroSeen() {
           {
             id: `j-intro-${Date.now()}`,
             day: 0,
-            titre: "Lundi 8h00 — Arrivée",
-            narration:
-              "Tu franchis la porte de Novacier. Henri te salue. La Semaine Qui Décide De Tout commence.",
+            titre: getContexteActif().runtime.arrivalJournal.titre,
+            narration: getContexteActif().runtime.arrivalJournal.narration,
             xp: 10,
             at: "08:00",
           },
@@ -116,10 +213,64 @@ export function markIntroSeen() {
     };
     return startScenarioWeek(withIntro);
   });
+  autoSave(snapshot.state);
+}
+
+export function loadGameFromSave(state: GameState, slot: SlotNumber) {
+  persistActiveSlot(slot);
+  setSnapshot({
+    state: migrateGameState(state),
+    activeSlot: slot,
+    activeAction: null,
+    playTab: "workspace",
+    computerApp: null,
+    selectedDecisionId: null,
+    selectedPersonnageId: "pers-marie",
+    showVisibilityPanel: false,
+    livreOpened: false,
+    lastSavedAt: new Date().toISOString(),
+  });
+}
+
+export function startNewGameInSlot(slot: SlotNumber) {
+  persistActiveSlot(slot);
+  const fresh = prepareNewGameState(createInitialGameState());
+  setSnapshot({
+    state: fresh,
+    activeSlot: slot,
+    activeAction: null,
+    playTab: "workspace",
+    computerApp: null,
+    selectedDecisionId: null,
+    selectedPersonnageId: "pers-marie",
+    showVisibilityPanel: false,
+    livreOpened: false,
+    lastSavedAt: null,
+  });
+  const { sauvegarde } = saveSlotAndProgression(slot, fresh);
+  setSnapshot({ lastSavedAt: sauvegarde.dateDerniereSauvegarde });
+}
+
+export function ensureActiveSlot(slot?: SlotNumber) {
+  const s = slot ?? getActiveSlot() ?? 1;
+  persistActiveSlot(s);
+  setSnapshot({ activeSlot: s });
+  return s;
 }
 
 export function setActiveAction(action: Action | null) {
   if (action) {
+    if (snapshot.state.world.showDayEnd) {
+      patchState((s) => ({
+        ...s,
+        world: {
+          ...s.world,
+          feedbackFlash: "Fin de journée — passe au jour suivant.",
+        },
+      }));
+      return;
+    }
+
     const gated =
       snapshot.state.world.mode === "story" &&
       !snapshot.state.world.onboardingDone;
@@ -160,6 +311,7 @@ export function setActiveAction(action: Action | null) {
       computerApp: null,
       playTab: "workspace",
     });
+    autoSave(snapshot.state);
     return;
   }
 
@@ -178,7 +330,13 @@ export function openComputerApp(app: ComputerAppId) {
     }));
     return;
   }
-  const next = advanceTime(snapshot.state, cost);
+  let next = advanceTime(snapshot.state, cost);
+  if (app === "dashboard" && (next.flags.dashboardAlert ?? 0) >= 1) {
+    next = {
+      ...next,
+      flags: { ...next.flags, dashboardAlert: 0 },
+    };
+  }
   setSnapshot({
     state: {
       ...next,
@@ -188,6 +346,23 @@ export function openComputerApp(app: ComputerAppId) {
       },
     },
     computerApp: app,
+  });
+  autoSave(snapshot.state);
+}
+
+/** Open an app without spending time (notification “Voir”). */
+export function focusComputerApp(app: ComputerAppId) {
+  setSnapshot({
+    activeAction: {
+      id: "act-computer",
+      type: "ACCESS_COMPUTER",
+      titre: "Accès Ordinateur",
+      icone: "Monitor",
+      description: "",
+      timeCostMinutes: 0,
+    },
+    computerApp: app,
+    playTab: "workspace",
   });
 }
 
@@ -237,9 +412,8 @@ export function markLivreOpened() {
             {
               id: `j-livre-${Date.now()}`,
               day: Math.max(0, s.meta.jourActuel),
-              titre: "Livre de Novacier",
-              narration:
-                "Tu as ouvert le Livre : 1987, quasi-faillite 2022, AutoVolt 45 % du CA. La mémoire du lieu.",
+              titre: getContexteActif().runtime.livreOpened.titre,
+              narration: getContexteActif().runtime.livreOpened.narration,
               xp: 20,
               at: "—",
             },
@@ -254,16 +428,26 @@ export function markLivreOpened() {
 
 export function applyDecision(decision: Decision, choixId: string) {
   patchState((s) => {
-    let next = engineApplyDecision(s, decision, choixId);
+    let next = engineApplyDecision(
+      {
+        ...s,
+        modeActuel: s.modeActuel ?? "histoire",
+        world: { ...s.world, mode: s.world.mode ?? "story" },
+      },
+      decision,
+      choixId
+    );
     if (!next.world.onboardingDone && next.world.onboardingStep === 4) {
       next = completeOnboardingStep4(next);
     }
     return next;
   });
+  autoSave(snapshot.state);
 }
 
 export function advanceDay() {
   patchState((s) => advanceScenarioDay(s));
+  autoSave(snapshot.state);
 }
 
 export function applyDialogueChoice(
@@ -293,8 +477,9 @@ export function clearFeedback() {
 }
 
 export function resetState() {
+  const slot = snapshot.activeSlot ?? getActiveSlot();
   setSnapshot({
-    state: createInitialGameState(),
+    state: prepareNewGameState(createInitialGameState()),
     activeAction: null,
     playTab: "workspace",
     computerApp: null,
@@ -302,6 +487,8 @@ export function resetState() {
     selectedPersonnageId: "pers-marie",
     showVisibilityPanel: false,
     livreOpened: false,
+    lastSavedAt: null,
+    activeSlot: slot,
   });
 }
 
@@ -328,11 +515,21 @@ export function useGameStore() {
     selectedPersonnageId: current.selectedPersonnageId,
     showVisibilityPanel: current.showVisibilityPanel,
     livreOpened: current.livreOpened,
+    lastSavedAt: current.lastSavedAt,
+    activeSlot: current.activeSlot,
     setMode,
     setRole,
+    startCompetenceTraining,
+    applyCompetenceTraining,
+    clearTrainingPrompt,
+    dismissEventNotification,
+    clearUrgentBanner,
+    closeDayEndAndAdvance,
+    runEventCheck,
     markIntroSeen,
     setActiveAction,
     openComputerApp,
+    focusComputerApp,
     closeComputerApp,
     setPlayTab,
     setSelectedDecisionId,
@@ -347,5 +544,10 @@ export function useGameStore() {
     finishOnboarding,
     clearFeedback,
     resetState,
+    loadGameFromSave,
+    startNewGameInSlot,
+    ensureActiveSlot,
   };
 }
+
+export type { SavesBundle };

@@ -1,14 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { dayTitles } from "@/data/scenarioNovacier";
-import { choixDisponibles } from "@/lib/engine";
-import {
-  adminOverridesActive,
-  getPlayDecisionForDay,
-} from "@/lib/playContent";
-import { useGameStore } from "@/lib/store";
+import { getScenarioActif } from "@/data/registry";
+import { annotateChoix } from "@/lib/engine";
+import { getPlayDecisionForDay } from "@/lib/playContent";
+import { clearTrainingPrompt, useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export function DecisionCard() {
@@ -21,29 +18,17 @@ export function DecisionCard() {
     rawState,
   } = useGameStore();
 
-  const [studioTick, setStudioTick] = useState(0);
-  useEffect(() => {
-    const bump = () => setStudioTick((t) => t + 1);
-    window.addEventListener("focus", bump);
-    window.addEventListener("storage", bump);
-    window.addEventListener("keyber-admin-updated", bump);
-    bump();
-    return () => {
-      window.removeEventListener("focus", bump);
-      window.removeEventListener("storage", bump);
-      window.removeEventListener("keyber-admin-updated", bump);
-    };
-  }, []);
-
   const day = Math.min(5, Math.max(1, gameState.day || 1));
-  void studioTick; // re-read Admin localStorage after Studio saves / focus
+  const dayTitles = getScenarioActif().dayTitles ?? {};
   const decision = getPlayDecisionForDay(day);
-  const fromStudio = adminOverridesActive();
-  const choix = decision ? choixDisponibles(rawState, decision) : [];
+  const annotated = decision ? annotateChoix(rawState, decision) : [];
+  const unlockedChoix = annotated.filter((a) => a.unlocked).map((a) => a.choix);
 
   const selected =
-    choix.find((c) => c.id === selectedDecisionId) ?? choix[0];
+    unlockedChoix.find((c) => c.id === selectedDecisionId) ??
+    unlockedChoix[0];
   const already = Boolean(gameState.dayDecisionId);
+  const prompt = gameState.trainingPrompt;
 
   if (!decision || !selected) {
     return (
@@ -59,10 +44,9 @@ export function DecisionCard() {
     .filter((c) => c.cible === "tresorerie" && c.valeur < 0)
     .reduce((s, c) => s + Math.abs(c.valeur), 0);
 
-  const impacts =
-    fromStudio || !selected.impacts?.length
-      ? consequencesAsImpacts(selected.consequences)
-      : selected.impacts;
+  const impacts = !selected.impacts?.length
+    ? consequencesAsImpacts(selected.consequences)
+    : selected.impacts;
 
   return (
     <section className="view-enter grid h-full gap-4 lg:grid-cols-[280px_1fr]">
@@ -70,24 +54,21 @@ export function DecisionCard() {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
           {dayTitles[day] ?? `Jour ${day}`}
         </p>
-        {fromStudio ? (
-          <p className="rounded-md bg-accent/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent">
-            Paramétrage Studio actif
-          </p>
-        ) : null}
         <p className="text-sm leading-relaxed text-muted">{decision.dilemme}</p>
         <div className="space-y-1.5">
-          {choix.map((c) => (
+          {annotated.map(({ choix: c, unlocked, lockMessage }) => (
             <button
               key={c.id}
               type="button"
-              disabled={already}
-              onClick={() => setSelectedDecisionId(c.id)}
+              disabled={already || !unlocked}
+              onClick={() => unlocked && setSelectedDecisionId(c.id)}
               className={cn(
                 "w-full rounded-xl border px-3 py-2.5 text-left transition",
-                selected.id === c.id
+                unlocked && selected.id === c.id
                   ? "border-accent/50 bg-accent/10"
-                  : "border-white/10 bg-panel-2 hover:bg-white/5",
+                  : "border-white/10 bg-panel-2",
+                unlocked && !already && "hover:bg-white/5",
+                !unlocked && "cursor-not-allowed opacity-55 grayscale",
                 already && gameState.dayDecisionId === c.id && "ring-1 ring-ok",
                 already && "opacity-70"
               )}
@@ -95,12 +76,18 @@ export function DecisionCard() {
               <span className="block text-sm font-semibold text-foreground">
                 {c.label}
               </span>
-              <span className="text-[11px] text-muted">
-                {timeCostFor(c)} min
-                {cashFor(c)
-                  ? ` · ${cashFor(c)!.toLocaleString("fr-FR")} €`
-                  : ""}
-              </span>
+              {unlocked ? (
+                <span className="text-[11px] text-muted">
+                  {timeCostFor(c)} min
+                  {cashFor(c)
+                    ? ` · ${cashFor(c)!.toLocaleString("fr-FR")} €`
+                    : ""}
+                </span>
+              ) : (
+                <span className="mt-1 block text-[11px] leading-snug text-accent-warm">
+                  {lockMessage}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -137,6 +124,29 @@ export function DecisionCard() {
             </div>
           ))}
         </div>
+
+        {already && prompt ? (
+          <div className="mt-6 rounded-xl border border-accent-warm/40 bg-accent-warm/10 px-4 py-3 text-sm">
+            <p className="font-semibold text-foreground">{prompt.raison}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link
+                  href={`/jouer/competence/${prompt.competenceId}`}
+                  onClick={() => clearTrainingPrompt()}
+                >
+                  Aller en Mode Compétence — {prompt.competenceNom}
+                </Link>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => clearTrainingPrompt()}
+              >
+                Plus tard
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-8">
           <p className="text-xs text-muted">
@@ -180,11 +190,9 @@ function consequencesAsImpacts(
       value:
         c.mode === "set"
           ? `= ${c.valeur}`
-          : `${c.valeur > 0 ? "+" : ""}${c.valeur.toLocaleString("fr-FR")}`,
-      tone: (c.valeur > 0 ? "pos" : c.valeur < 0 ? "neg" : "neu") as
-        | "pos"
-        | "neg"
-        | "neu",
+          : `${c.valeur > 0 ? "+" : ""}${c.valeur}`,
+      tone:
+        c.valeur > 0 ? ("pos" as const) : c.valeur < 0 ? ("neg" as const) : ("neu" as const),
     }));
 }
 
@@ -196,9 +204,11 @@ function timeCostFor(c: {
     .reduce((s, x) => s + (x.mode === "set" ? 0 : x.valeur), 0);
 }
 
-function cashFor(c: { consequences: { cible: string; valeur: number }[] }) {
-  const v = c.consequences
+function cashFor(c: {
+  consequences: { cible: string; valeur: number }[];
+}) {
+  const n = c.consequences
     .filter((x) => x.cible === "tresorerie" && x.valeur < 0)
     .reduce((s, x) => s + Math.abs(x.valeur), 0);
-  return v || null;
+  return n || null;
 }

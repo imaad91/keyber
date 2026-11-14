@@ -3,15 +3,14 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import {
   AdminButton,
   Field,
-  PageHeader,
   inputClass,
   selectClass,
   textareaClass,
 } from "@/components/admin/AdminPrimitives";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { useAdminStore } from "@/lib/adminStore";
 import {
   ADMIN_NIVEAUX,
@@ -25,7 +24,8 @@ import {
 export default function AdminScenarioEditPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { scenarios, entreprises, updateScenario } = useAdminStore();
+  const { scenarios, entreprises, personnages, updateScenario } =
+    useAdminStore();
   const existing = scenarios.find((s) => s.id === id);
 
   const [form, setForm] = useState<AdminScenario | null>(null);
@@ -38,7 +38,10 @@ export default function AdminScenarioEditPage() {
     return (
       <div>
         <p className="text-sm text-slate-500">Scénario introuvable.</p>
-        <Link href="/admin/scenarios" className="mt-2 inline-block text-sm text-slate-900 underline">
+        <Link
+          href="/admin/scenarios"
+          className="mt-2 inline-block text-sm text-slate-900 underline"
+        >
           Retour
         </Link>
       </div>
@@ -49,29 +52,33 @@ export default function AdminScenarioEditPage() {
     setForm((f) => (f ? { ...f, [key]: value } : f));
   }
 
+  const linkedPersonnages = personnages.filter((p) =>
+    p.scenarioIds.includes(form.id)
+  );
+  const entreprise = entreprises.find((e) => e.id === form.entrepriseId);
+
   return (
     <div>
-      <Link
-        href="/admin/scenarios"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Scénarios
-      </Link>
-      <PageHeader
+      <AdminBreadcrumb
+        backHref="/admin/scenarios"
+        crumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Scénarios", href: "/admin/scenarios" },
+          { label: form.titre || "Scénario" },
+        ]}
         title={form.titre || "Scénario"}
-        subtitle="Formulaire de paramétrage — n'affecte pas la partie en cours du joueur."
-        actions={
-          <AdminButton
-            onClick={() => {
-              updateScenario(form.id, form);
-              router.push("/admin/scenarios");
-            }}
-          >
-            Enregistrer
-          </AdminButton>
-        }
       />
+
+      <div className="mb-4 flex justify-end">
+        <AdminButton
+          onClick={() => {
+            updateScenario(form.id, form);
+            router.push("/admin/scenarios");
+          }}
+        >
+          Enregistrer la fiche
+        </AdminButton>
+      </div>
 
       <div className="grid gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-2">
         <Field label="Titre">
@@ -79,6 +86,27 @@ export default function AdminScenarioEditPage() {
             className={inputClass}
             value={form.titre}
             onChange={(e) => set("titre", e.target.value)}
+          />
+        </Field>
+        <Field label="Entreprise">
+          <select
+            className={selectClass}
+            value={form.entrepriseId ?? ""}
+            onChange={(e) => set("entrepriseId", e.target.value || null)}
+          >
+            <option value="">— Aucune —</option>
+            {entreprises.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nom}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Rôle / compétence travaillée">
+          <input
+            className={inputClass}
+            value={form.competence}
+            onChange={(e) => set("competence", e.target.value)}
           />
         </Field>
         <Field label="Secteur">
@@ -93,13 +121,6 @@ export default function AdminScenarioEditPage() {
               </option>
             ))}
           </select>
-        </Field>
-        <Field label="Compétence travaillée" hint="Ex. Pilotage de production, Négociation…">
-          <input
-            className={inputClass}
-            value={form.competence}
-            onChange={(e) => set("competence", e.target.value)}
-          />
         </Field>
         <Field label="Niveau">
           <select
@@ -139,31 +160,6 @@ export default function AdminScenarioEditPage() {
             ))}
           </select>
         </Field>
-        <Field label="Entreprise liée">
-          <select
-            className={selectClass}
-            value={form.entrepriseId ?? ""}
-            onChange={(e) =>
-              set("entrepriseId", e.target.value || null)
-            }
-          >
-            <option value="">— Aucune —</option>
-            {entreprises.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nom}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Ordre bibliothèque joueur">
-          <input
-            type="number"
-            min={1}
-            className={inputClass}
-            value={form.order}
-            onChange={(e) => set("order", Number(e.target.value) || 1)}
-          />
-        </Field>
         <Field label="Description" className="lg:col-span-2">
           <textarea
             className={textareaClass}
@@ -172,6 +168,33 @@ export default function AdminScenarioEditPage() {
           />
         </Field>
       </div>
+
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">
+          Personnages liés
+        </h2>
+        {entreprise ? (
+          <p className="mt-1 text-xs text-slate-500">
+            Entreprise : {entreprise.nom}
+          </p>
+        ) : null}
+        <ul className="mt-3 space-y-1 text-sm text-slate-700">
+          {linkedPersonnages.map((p) => (
+            <li key={p.id}>
+              <Link
+                href={`/admin/personnages/${p.id}`}
+                className="hover:underline"
+              >
+                {p.prenom} {p.nom}
+              </Link>
+              <span className="text-slate-400"> — {p.poste}</span>
+            </li>
+          ))}
+          {linkedPersonnages.length === 0 ? (
+            <li className="text-slate-500">Aucun personnage lié.</li>
+          ) : null}
+        </ul>
+      </section>
     </div>
   );
 }

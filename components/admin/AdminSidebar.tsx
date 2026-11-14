@@ -37,7 +37,10 @@ const NAV: NavItem[] = [
     href: "/admin/book",
     label: "Book",
     icon: BookOpen,
-    children: [],
+    children: [
+      { href: "/admin/book/en-cours-de-test", label: "En cours de test" },
+      { href: "/admin/book/live", label: "Live" },
+    ],
   },
   {
     href: "/admin/systeme",

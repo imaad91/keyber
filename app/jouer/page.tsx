@@ -97,6 +97,11 @@ export default function JouerSlotsPage() {
         <p className="mt-2 text-sm text-muted">
           Sauvegarde auto à chaque décision. {progLabel}
         </p>
+        <p className="mt-3 text-sm">
+          <Link href="/jouer/live" className="text-accent underline">
+            Créations Live (Book)
+          </Link>
+        </p>
 
         <div className="mt-8 space-y-3">
           {SLOTS.map((slot) => {

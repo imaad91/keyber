@@ -1,21 +1,15 @@
 "use client";
 
-import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
-import { PLACEHOLDER_MESSAGE } from "@/components/admin/AtelierPlaceholderPage";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function BookPage() {
+/** Book : 2 sous-onglets uniquement — redirection vers En cours de test. */
+export default function BookIndexPage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/admin/book/en-cours-de-test");
+  }, [router]);
   return (
-    <div>
-      <AdminBreadcrumb
-        backHref="/admin"
-        backLabel="← Studio"
-        crumbs={[
-          { label: "Admin", href: "/admin" },
-          { label: "Book" },
-        ]}
-        title="Book"
-      />
-      <p className="mt-2 text-sm text-slate-600">{PLACEHOLDER_MESSAGE}</p>
-    </div>
+    <p className="text-sm text-slate-500">Redirection vers le Book…</p>
   );
 }

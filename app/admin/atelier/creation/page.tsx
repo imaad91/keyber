@@ -15,6 +15,7 @@ import {
 import {
   creationPendingItems,
   creationProgress,
+  creationVersionLabel,
   useAtelierCreationStore,
 } from "@/lib/atelierCreationStore";
 import { relativeTimeFr } from "@/lib/coeurHistory";
@@ -183,7 +184,14 @@ export default function AtelierCreationPage() {
                 className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-slate-900">{c.nom}</p>
+                  <p className="font-semibold text-slate-900">
+                    {creationVersionLabel(c)}
+                    {c.dansBook ? (
+                      <span className="ml-2 text-xs font-normal text-emerald-700">
+                        · Book
+                      </span>
+                    ) : null}
+                  </p>
                   <p className="mt-1 text-xs text-slate-500">
                     Secteur : {c.secteur || "—"}
                   </p>

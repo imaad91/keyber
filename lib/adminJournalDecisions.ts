@@ -43,7 +43,7 @@ export function seedJournalDecisions(): JournalDecision[] {
       consequenceSiChange:
         "Si on déverrouille, l'IA peut corrompre le Cœur.",
       moduleLie: "Cœur",
-      moduleHref: "/admin/systeme/coeur",
+      moduleHref: "/admin/systeme/vue-globale",
       locked: true,
       seed: true,
     },
@@ -52,13 +52,13 @@ export function seedJournalDecisions(): JournalDecision[] {
       date: "2026-11-13T11:00:00.000Z",
       titre: "Workflow en lecture seule",
       decision:
-        "Dans Système, je suis en lecture seule — aucune modification de l'OS.",
+        "Dans Keyber OS, je suis en lecture seule — aucune modification de l'OS.",
       pourquoi:
-        "Parce que Système, c'est pour comprendre KEYBER, pas pour toucher. Je paramètre uniquement dans Équipe.",
+        "Parce que Keyber OS, c'est pour comprendre KEYBER, pas pour toucher. Je paramètre uniquement dans Équipe.",
       consequenceSiChange:
-        "Si on autorise l'édition dans Système, on casse la séparation Studio / jeu et on risque des edits hors process.",
+        "Si on autorise l'édition dans Keyber OS, on casse la séparation Studio / jeu et on risque des edits hors process.",
       moduleLie: "Architecture",
-      moduleHref: "/admin/systeme/architecture",
+      moduleHref: "/admin/systeme/vue-globale",
       locked: true,
       seed: true,
     },
@@ -72,7 +72,7 @@ export function seedJournalDecisions(): JournalDecision[] {
       consequenceSiChange:
         "Passer trop tôt au cloud ralentit le POC et ajoute des dépendances avant que le modèle métier soit stable.",
       moduleLie: "Système",
-      moduleHref: "/admin/systeme/architecture",
+      moduleHref: "/admin/systeme/vue-globale",
       locked: true,
       seed: true,
     },
@@ -101,7 +101,7 @@ export function seedJournalDecisions(): JournalDecision[] {
       consequenceSiChange:
         "Des fiches courtes produisent des Cœurs génériques et des décisions peu crédibles.",
       moduleLie: "Fiches",
-      moduleHref: "/admin/atelier/contextes",
+      moduleHref: "/admin/atelier/creation",
       locked: true,
       seed: true,
     },
@@ -152,12 +152,12 @@ export function createLockedJournalDecision(input: {
 }
 
 export const JOURNAL_MODULE_HREFS: Record<JournalModuleLie, string> = {
-  Cœur: "/admin/systeme/coeur",
-  Workflow: "/admin/atelier/scenarios",
+  Cœur: "/admin/systeme/vue-globale",
+  Workflow: "/admin/atelier/workflow",
   Compétences: "/admin/atelier/competences",
-  Fiches: "/admin/atelier/contextes",
+  Fiches: "/admin/atelier/creation",
   Agents: "/admin/controle/agents",
-  Architecture: "/admin/systeme/architecture",
-  Glossaire: "/admin/systeme/glossaire",
-  Système: "/admin/systeme/architecture",
+  Architecture: "/admin/systeme/vue-globale",
+  Glossaire: "/admin/systeme/vue-globale",
+  Système: "/admin/systeme/vue-globale",
 };

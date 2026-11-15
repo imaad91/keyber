@@ -5,7 +5,7 @@ import { AdminToast } from "@/components/admin/AdminToast";
 export const metadata: Metadata = {
   title: "KEYBER Studio",
   description:
-    "Studio KEYBER — Atelier, Système, Contrôle, Équipe. Pas le jeu.",
+    "Studio KEYBER — Atelier, Book, Keyber OS, Contrôle, Équipe. Pas le jeu.",
 };
 
 export default function AdminLayout({

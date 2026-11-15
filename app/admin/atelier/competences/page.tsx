@@ -1,67 +1,139 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { Download, Trash2, Upload } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
+import { AdminButton } from "@/components/admin/AdminPrimitives";
 import {
-  AdminButton,
-  Field,
-  inputClass,
-  selectClass,
-} from "@/components/admin/AdminPrimitives";
-import {
-  COMPETENCE_TYPE_LABELS,
-  isTechniqueVague,
-  slugifyCompetenceId,
-  useAtelierStore,
-  type CompetenceType,
-} from "@/lib/atelierStore";
-
-type Filter = "toutes" | CompetenceType;
+  competencePreviewEntries,
+  coursPreviewEntries,
+  downloadCompetencesTemplate,
+  parseCompetencesExcel,
+  type CompetenceExcelFields,
+  type CoursExcelFields,
+} from "@/lib/atelierCompetencesExcel";
+import { useAtelierCompetencesStore } from "@/lib/atelierCompetencesStore";
 
 export default function AtelierCompetencesPage() {
-  const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const {
     competences,
-    contextes,
-    createCompetence,
+    cours,
+    getCoursForCompetence,
+    checkImportLinks,
+    validateCompetencesSubmission,
+    deleteCompetence,
     toast,
     clearToast,
-  } = useAtelierStore();
-  const [filter, setFilter] = useState<Filter>("toutes");
-  const [open, setOpen] = useState(false);
-  const [nom, setNom] = useState("");
-  const [idDraft, setIdDraft] = useState("");
-  const [type, setType] = useState<CompetenceType>("technique");
-  const [contexteId, setContexteId] = useState(contextes[0]?.id ?? "");
-  const [error, setError] = useState<string | null>(null);
+  } = useAtelierCompetencesStore();
 
-  const list = useMemo(() => {
-    return competences.filter((c) =>
-      filter === "toutes" ? true : c.type === filter
+  const [previewCompetences, setPreviewCompetences] = useState<
+    CompetenceExcelFields[] | null
+  >(null);
+  const [previewCours, setPreviewCours] = useState<CoursExcelFields[] | null>(
+    null
+  );
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof competences>();
+    for (const c of competences) {
+      const cat = c.categorie.trim() || "Sans catégorie";
+      const list = map.get(cat) ?? [];
+      list.push(c);
+      map.set(cat, list);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [competences]);
+
+  async function onFileChange(file: File | null) {
+    setParseError(null);
+    setPreviewCompetences(null);
+    setPreviewCours(null);
+    if (!file) return;
+    setBusy(true);
+    try {
+      const buf = await file.arrayBuffer();
+      const res = parseCompetencesExcel(buf);
+      if (!res.ok) {
+        setParseError(res.error);
+        return;
+      }
+      const link = checkImportLinks(res.competences, res.cours);
+      if (!link.ok) {
+        setParseError(link.error);
+        return;
+      }
+      setPreviewCompetences(res.competences);
+      setPreviewCours(res.cours);
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  function confirmSubmit() {
+    if (!previewCompetences || !previewCours) return;
+    const res = validateCompetencesSubmission(
+      previewCompetences,
+      previewCours
     );
-  }, [competences, filter]);
+    if (res.error && res.addedCompetences === 0 && res.addedCours === 0) {
+      setParseError(res.error);
+      return;
+    }
+    setPreviewCompetences(null);
+    setPreviewCours(null);
+    setParseError(null);
+  }
 
   return (
     <div>
       <AdminBreadcrumb
-        backHref="/admin/atelier/contextes"
-        backLabel="← Atelier"
+        backHref="/admin"
+        backLabel="← Studio"
         crumbs={[
           { label: "Admin", href: "/admin" },
-          { label: "Atelier", href: "/admin/atelier/contextes" },
+          { label: "Atelier", href: "/admin/atelier/creation" },
           { label: "Compétences" },
         ]}
         title="Atelier — Compétences"
       />
 
       <p className="mb-4 max-w-2xl text-sm text-slate-600">
-        Couche 2 — référentiel à travailler dans un contexte. Générales =
-        transverses. Techniques = hyper précises (formule, indicateurs,
-        erreurs).
+        Bibliothèque globale : une compétence (et ses cours) se définit{" "}
+        <strong>une fois</strong> ici, pour toutes les entreprises. Import Excel
+        unique à 2 onglets (Compétences + Cours). Un nouvel import ajoute sans
+        effacer l&apos;existant.
       </p>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        <AdminButton
+          type="button"
+          onClick={() => downloadCompetencesTemplate()}
+        >
+          <Download className="h-4 w-4" />
+          Télécharger le Template Compétences + Cours
+        </AdminButton>
+        <AdminButton
+          type="button"
+          variant="secondary"
+          disabled={busy}
+          onClick={() => fileRef.current?.click()}
+        >
+          <Upload className="h-4 w-4" />
+          Importer mon Excel Compétences + Cours
+        </AdminButton>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+          className="hidden"
+          onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+        />
+      </div>
 
       {toast ? (
         <p className="mb-3 text-sm">
@@ -71,165 +143,201 @@ export default function AtelierCompetencesPage() {
           </button>
         </p>
       ) : null}
+      {parseError ? (
+        <p className="mb-3 text-sm text-rose-600">{parseError}</p>
+      ) : null}
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2 text-xs font-semibold">
-          {(
-            [
-              ["toutes", "Toutes"],
-              ["generale", "Générales"],
-              ["technique", "Techniques"],
-            ] as const
-          ).map(([k, label]) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setFilter(k)}
-              className={
-                filter === k
-                  ? "rounded-md bg-slate-900 px-3 py-1.5 text-white"
-                  : "rounded-md bg-slate-100 px-3 py-1.5 text-slate-600"
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <AdminButton onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Créer une compétence
-        </AdminButton>
-      </div>
+      {previewCompetences && previewCours ? (
+        <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-base font-semibold text-slate-900">
+            Aperçu de l&apos;import
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Voilà les compétences que j&apos;ai comprises, voilà les cours,
+            voilà à quelles compétences ils sont liés.
+          </p>
 
-      {open ? (
-        <div className="mb-6 space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-semibold">Nouvelle compétence</h2>
-          {error ? (
-            <p className="text-sm text-rose-700">{error}</p>
-          ) : null}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Nom">
-              <input
-                className={inputClass}
-                value={nom}
-                onChange={(e) => {
-                  setNom(e.target.value);
-                  if (!idDraft || idDraft === slugifyCompetenceId(nom)) {
-                    setIdDraft(slugifyCompetenceId(e.target.value));
-                  }
-                }}
-              />
-            </Field>
-            <Field label="Id (unique, non modifiable ensuite)">
-              <input
-                className={inputClass}
-                value={idDraft}
-                onChange={(e) => setIdDraft(slugifyCompetenceId(e.target.value))}
-              />
-            </Field>
-            <Field label="Type">
-              <select
-                className={selectClass}
-                value={type}
-                onChange={(e) => setType(e.target.value as CompetenceType)}
-              >
-                <option value="generale">Générale</option>
-                <option value="technique">Technique</option>
-              </select>
-            </Field>
-            <Field label="Contexte lié (obligatoire)">
-              <select
-                className={selectClass}
-                value={contexteId}
-                onChange={(e) => setContexteId(e.target.value)}
-              >
-                {contextes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nom}
-                  </option>
-                ))}
-              </select>
-            </Field>
+          <h3 className="mt-4 text-sm font-semibold text-slate-800">
+            Compétences ({previewCompetences.length})
+          </h3>
+          <div className="mt-2 max-h-[240px] space-y-3 overflow-y-auto">
+            {previewCompetences.map((fields, i) => {
+              const entries = competencePreviewEntries(fields).filter(
+                (e) => e.filled
+              );
+              return (
+                <div
+                  key={`${fields["Nom de la compétence"]}-${i}`}
+                  className="rounded-xl border border-slate-100 bg-slate-50 p-4"
+                >
+                  <p className="font-semibold text-slate-900">
+                    {fields["Nom de la compétence"]}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {fields["Catégorie"] || "Sans catégorie"}
+                    {fields["Type (Transverse ou Ciblée)"]
+                      ? ` · ${fields["Type (Transverse ou Ciblée)"]}`
+                      : ""}
+                  </p>
+                  <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                    {entries.slice(0, 4).map((e) => (
+                      <li key={e.label}>
+                        <span className="font-medium text-slate-500">
+                          {e.label} :
+                        </span>{" "}
+                        {e.value}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
-          <div className="flex gap-2">
+
+          <h3 className="mt-5 text-sm font-semibold text-slate-800">
+            Cours ({previewCours.length})
+          </h3>
+          <div className="mt-2 max-h-[240px] space-y-3 overflow-y-auto">
+            {previewCours.map((fields, i) => {
+              const entries = coursPreviewEntries(fields).filter((e) => e.filled);
+              return (
+                <div
+                  key={`${fields["Titre du cours"]}-${i}`}
+                  className="rounded-xl border border-slate-100 bg-slate-50 p-4"
+                >
+                  <p className="font-semibold text-slate-900">
+                    {fields["Titre du cours"]}
+                  </p>
+                  <p className="mt-0.5 text-xs text-emerald-700">
+                    Lié à : {fields["Nom de la compétence liée"]}
+                  </p>
+                  <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                    {entries.slice(0, 4).map((e) => (
+                      <li key={e.label}>
+                        <span className="font-medium text-slate-500">
+                          {e.label} :
+                        </span>{" "}
+                        {e.value}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+            {previewCours.length === 0 ? (
+              <p className="text-sm text-slate-500">Aucun cours dans ce fichier.</p>
+            ) : null}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <AdminButton type="button" onClick={confirmSubmit}>
+              Valider la soumission
+            </AdminButton>
             <AdminButton
+              type="button"
+              variant="secondary"
               onClick={() => {
-                const res = createCompetence({
-                  id: idDraft,
-                  nom,
-                  type,
-                  contexteId,
-                });
-                if ("error" in res) {
-                  setError(res.error);
-                  return;
-                }
-                setOpen(false);
-                router.push(`/admin/atelier/competences/${res.id}`);
+                setPreviewCompetences(null);
+                setPreviewCours(null);
               }}
             >
-              Créer
-            </AdminButton>
-            <AdminButton variant="secondary" onClick={() => setOpen(false)}>
               Annuler
             </AdminButton>
           </div>
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3">Id</th>
-              <th className="px-4 py-3">Nom</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Contexte</th>
-              <th className="px-4 py-3">Niveau</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((c) => {
-              const ctx = contextes.find((x) => x.id === c.contexteId);
-              const vague = isTechniqueVague(c);
-              return (
-                <tr key={c.id} className="border-b border-slate-50">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-500">
-                    <Link
-                      href={`/admin/atelier/competences/${c.id}`}
-                      className="hover:underline"
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        Bibliothèque de compétences ({competences.length}) · cours ({cours.length})
+      </h2>
+      {competences.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-sm text-slate-500">
+          Aucune compétence pour l&apos;instant. Importez un Excel Compétences +
+          Cours.
+        </p>
+      ) : (
+        <div className="space-y-8">
+          {grouped.map(([categorie, list]) => (
+            <section key={categorie}>
+              <h3 className="mb-3 text-sm font-semibold text-slate-800">
+                {categorie}
+              </h3>
+              <div className="space-y-3">
+                {list.map((comp) => {
+                  const linked = getCoursForCompetence(comp.id);
+                  return (
+                    <div
+                      key={comp.id}
+                      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
                     >
-                      {c.id}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-slate-900">
-                    <Link
-                      href={`/admin/atelier/competences/${c.id}`}
-                      className="hover:underline"
-                    >
-                      {c.nom}
-                    </Link>
-                    {vague ? (
-                      <span className="ml-2 text-[11px] font-semibold text-amber-700">
-                        trop vague
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3">
-                    {COMPETENCE_TYPE_LABELS[c.type]}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {ctx?.nom ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-500">
-                    D / I / E
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-slate-900">
+                            {comp.nom}
+                          </p>
+                          <p className="mt-0.5 text-xs text-slate-500">
+                            {comp.type || "Type non renseigné"}
+                          </p>
+                          <p className="mt-1 line-clamp-2 text-sm text-slate-600">
+                            {comp.description || "Description non renseignée"}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Link href={`/admin/atelier/competences/${comp.id}`}>
+                            <AdminButton variant="secondary" type="button">
+                              Voir
+                            </AdminButton>
+                          </Link>
+                          <AdminButton
+                            variant="ghost"
+                            type="button"
+                            onClick={() => {
+                              if (
+                                !window.confirm(
+                                  `Supprimer la compétence « ${comp.nom} » et ses cours ?`
+                                )
+                              )
+                                return;
+                              const res = deleteCompetence(comp.id);
+                              if (res.error) window.alert(res.error);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-rose-600" />
+                            Supprimer
+                          </AdminButton>
+                        </div>
+                      </div>
+                      {linked.length > 0 ? (
+                        <ul className="mt-3 space-y-1 border-t border-slate-100 pt-3 text-sm text-slate-700">
+                          {linked.map((c) => (
+                            <li key={c.id} className="flex flex-wrap gap-2">
+                              <span className="font-medium">{c.titre}</span>
+                              {c.niveau ? (
+                                <span className="text-xs text-slate-400">
+                                  · {c.niveau}
+                                </span>
+                              ) : null}
+                              {c.description ? (
+                                <span className="text-slate-500">
+                                  — {c.description}
+                                </span>
+                              ) : null}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-400">
+                          Aucun cours lié
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

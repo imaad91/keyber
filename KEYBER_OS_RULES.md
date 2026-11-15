@@ -5,12 +5,12 @@ Référence Studio — l’Admin lit et propose ; Cursor construit ; le jeu ne l
 ## Identité
 
 - **KEYBER** = système d’exploitation (moteur, GameState, ERP, Ordinateur, Décider, Journal, Profil).
-- **Novacier** = module exemple installé dessus (données scénario uniquement).
-- **Admin Studio** = Atelier / Système / Contrôle / Équipe. Ne joue pas, n’écrit pas dans le GameState.
+- **Modules exemple** = données scénario installées dessus (hors moteur générique).
+- **Admin Studio** = Atelier / Book / Keyber OS / Contrôle / Équipe. Ne joue pas, n’écrit pas dans le GameState.
 
 ## Séparation OS / exemple
 
-1. Aucune donnée Novacier / AutoVolt / personnages démo dans le moteur générique.
+1. Aucune donnée d’entreprise / personnages démo dans le moteur générique (`lib/keyberOsRuntime.ts`, `lib/osBookPlay.ts`, moteurs OS).
 2. Les données d’exemple vivent sous `data/` (ou `data/scenarios/<id>/`), jamais hardcodées dans `lib/engine.ts`, `lib/gameState.ts`, `lib/playContent.ts` (hors bridge temporaire documenté).
 3. Un 2ᵉ scénario doit pouvoir s’installer sans toucher l’OS.
 
@@ -21,23 +21,36 @@ Référence Studio — l’Admin lit et propose ; Cursor construit ; le jeu ne l
 3. Pas de bandeau « Studio » dans Décider / play.
 4. Les agents (Contrôle) relisent et proposent — ils ne patchent pas le Cœur ni le code.
 
-## Atelier — couches + sous-onglets (ordre fixe)
+## Atelier + Book (Studio)
 
-Couches métier :
-1. Contexte d’entreprise  
-2. Compétences (générales vs techniques précises)  
-3. Scénarios (liés à un contexte + compétences de ce contexte)
+Règle scénario (non négociable) : chaque scénario a **un seul Mode** —
+**Mode Compétence** *ou* **Mode Histoire** (jamais les deux, jamais aucun).
+- Mode Compétence = entraînement intensif, pas de rôle, 1 compétence précise, avec Cours.
+- Mode Histoire = mise en pratique, Rôle → Secteur → Entreprise, événements aléatoires.
 
-Sous-onglets Studio Atelier :
-1. Chantier / Création (pipeline 6 étapes pour créer un contexte — pas de contenu inventé)  
-2. Contextes d’entreprise  
-3. Compétences  
-4. Scénarios  
-5. Workflow (BPMN 2.0 généré depuis le scénario — logique métier uniquement, jamais de code / fichiers / Novacier en dur dans l’UI)
+Sous-onglets Atelier (ordre fixe) :
+1. Création  
+2. Workflow  
+3. Rôles  
+4. Compétences  
+5. Événements (1 fichier = 1 entreprise, pas de biblio partagée)
+
+**Book** = espace Studio séparé (même niveau que Atelier / Keyber OS / Contrôle / Équipe), hors Atelier.
+Génération des scénarios : bouton « Générer des scénarios » dans le Book (pas dans Création).
+Chaque carte scénario/histoire a 3 vues (Texte · Graphique · Code / fichier de paramétrage) et un versionning V1, V2… (Live = une version précise).
+Jouer une carte Book : `/jouer/book/[id]` — bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
+Démo optionnelle seed Studio localStorage uniquement (données sous `data/scenarios/<id>/`, jamais dans le code OS).
+
+**Keyber OS** = moteur générique du jeu (composantes) + documentation Admin.
+Sous-onglets (ordre fixe) : Vue Globale · ERP · Moteur de Scénarios · Moteur de Décisions & Branches · Moteur d'Événements · Progression, Scores & Niveaux · Interface Joueur · Données & Sauvegarde.
+Aucun contenu métier inventé — le moteur lit les fichiers de paramétrage.
+Config runtime OS : `keyber-os-runtime-v1` (ex. facteur Trésorerie ERP) — Admin et Front-End partagent la même source.
+Pont Book → Front-End : `keyber-play-catalog-v1` (Live uniquement). Le jeu ne lit pas `keyber-studio-*` (Atelier).
+Sans fichier sous `data/scenarios/`, le scénario disparaît du catalogue joueur.
 
 ## Agent Nettoyage
 
 - Identifie, priorise, propose. **Ne supprime jamais** tout seul.
 - Ne modifie jamais le Cœur.
 - Ne crée jamais un 2ᵉ scénario.
-- Si donnée d’exemple dans l’OS → proposition du type « Déplacer vers `data/scenarios/novacier/` », pas « Supprimer ».
+- Si donnée d’exemple dans l’OS → proposition du type « Déplacer vers `data/scenarios/<id>/` », pas « Supprimer ».

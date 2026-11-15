@@ -1,0 +1,79 @@
+{
+  "Nom": "Histoire — Logisticien",
+  "Version": 1,
+  "Type": "Histoire",
+  "Mode": "Histoire",
+  "Rôle": "Logisticien",
+  "Compétence": "",
+  "Secteur": "E-commerce / Éclairage",
+  "Entreprise": "Lumière & Co",
+  "Contexte": {
+    "Nom de l'entreprise": "Lumière & Co",
+    "Secteur d'activité": "E-commerce / Éclairage",
+    "Nombre d'employés": "6"
+  },
+  "Événements entreprise": [
+    {
+      "nom": "Colis perdu par le transporteur",
+      "type": "Logistique",
+      "description": "Un colis client disparaît chez le transporteur après enlèvement. Le client relance le SAV."
+    },
+    {
+      "nom": "Fournisseur en retard",
+      "type": "Fournisseur",
+      "description": "MingLight annonce +12 jours sur le container Halo. Stock bas déjà."
+    },
+    {
+      "nom": "Pic de commandes à Noël",
+      "type": "Client",
+      "description": "Volume x3 sur 10 jours. Packing saturé, délais J+2 menacés."
+    },
+    {
+      "nom": "Lampe cassée dans l'entrepôt",
+      "type": "Technique",
+      "description": "Chute d'un carton Halo depuis le rack haut : 18 unités cassées + zone bloquée."
+    }
+  ],
+  "Rôles sélectionnés": [
+    "Logisticien"
+  ],
+  "Compétences sélectionnées": [
+    {
+      "nom": "Planification MRP",
+      "cours": [
+        "Intro MRP"
+      ]
+    }
+  ],
+  "Décisions": [
+    {
+      "id": "h1",
+      "titre": "Priorité du jour",
+      "options": [
+        "Traiter le retard fournisseur",
+        "Sauver le colis perdu",
+        "Sécuriser le rack"
+      ]
+    },
+    {
+      "id": "h2",
+      "titre": "Pic Noël",
+      "options": [
+        "Heures sup packing",
+        "Couper pubs",
+        "Prioriser top SKU"
+      ]
+    }
+  ],
+  "Fins": [
+    {
+      "id": "fin-semaine",
+      "label": "Semaine tenue, clients livrés"
+    },
+    {
+      "id": "fin-chaos",
+      "label": "Retards massifs J+2"
+    }
+  ],
+  "fichier": "lumiere-co_logisticien-histoire_v1.json"
+}

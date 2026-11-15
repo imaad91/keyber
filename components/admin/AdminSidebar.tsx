@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  BookOpen,
   Bot,
   Briefcase,
   LayoutDashboard,
@@ -16,6 +17,7 @@ type NavItem = {
   href: string;
   label: string;
   icon: typeof LayoutDashboard;
+  /** Sous-onglets ; vide = entrée feuille (ex. Book). */
   children: { href: string; label: string }[];
 };
 
@@ -25,22 +27,44 @@ const NAV: NavItem[] = [
     label: "Atelier",
     icon: Briefcase,
     children: [
-      { href: "/admin/atelier/chantier", label: "Chantier / Création" },
-      { href: "/admin/atelier/contextes", label: "Contextes d'entreprise" },
-      { href: "/admin/atelier/competences", label: "Compétences" },
-      { href: "/admin/atelier/scenarios", label: "Scénarios" },
+      { href: "/admin/atelier/creation", label: "Création" },
       { href: "/admin/atelier/workflow", label: "Workflow" },
+      { href: "/admin/atelier/roles", label: "Rôles" },
+      { href: "/admin/atelier/competences", label: "Compétences" },
+      { href: "/admin/atelier/evenements", label: "Événements" },
+    ],
+  },
+  {
+    href: "/admin/book",
+    label: "Book",
+    icon: BookOpen,
+    children: [
+      { href: "/admin/book/en-cours-de-test", label: "En cours de test" },
+      { href: "/admin/book/live", label: "Live" },
     ],
   },
   {
     href: "/admin/systeme",
-    label: "Système",
+    label: "Keyber OS",
     icon: Shield,
     children: [
-      { href: "/admin/systeme/coeur", label: "Cœur" },
-      { href: "/admin/systeme/architecture", label: "Architecture" },
-      { href: "/admin/systeme/glossaire", label: "Glossaire" },
-      { href: "/admin/systeme/journal-decisions", label: "Journal des décisions" },
+      { href: "/admin/systeme/vue-globale", label: "Vue Globale" },
+      { href: "/admin/systeme/erp", label: "ERP" },
+      { href: "/admin/systeme/moteur-scenarios", label: "Moteur de Scénarios" },
+      {
+        href: "/admin/systeme/moteur-decisions",
+        label: "Moteur de Décisions & Branches",
+      },
+      { href: "/admin/systeme/moteur-evenements", label: "Moteur d'Événements" },
+      {
+        href: "/admin/systeme/progression",
+        label: "Progression, Scores & Niveaux",
+      },
+      { href: "/admin/systeme/interface-joueur", label: "Interface Joueur" },
+      {
+        href: "/admin/systeme/donnees-sauvegarde",
+        label: "Données & Sauvegarde",
+      },
     ],
   },
   {
@@ -91,10 +115,11 @@ export function AdminSidebar() {
             pathMatches(pathname, item.href) ||
             item.children.some((c) => pathMatches(pathname, c.href));
           const Icon = item.icon;
+          const entryHref = item.children[0]?.href ?? item.href;
           return (
             <div key={item.href}>
               <Link
-                href={item.children[0]!.href}
+                href={entryHref}
                 className={cn(
                   "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
                   active
@@ -105,7 +130,7 @@ export function AdminSidebar() {
                 <Icon className="h-4 w-4 shrink-0 opacity-80" />
                 {item.label}
               </Link>
-              {active ? (
+              {active && item.children.length > 0 ? (
                 <div className="mb-1 ml-4 mt-0.5 space-y-0.5 border-l border-slate-200 pl-3">
                   {item.children.map((child) => {
                     const childActive = pathMatches(pathname, child.href);

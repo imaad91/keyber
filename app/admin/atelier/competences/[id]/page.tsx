@@ -2,66 +2,19 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import {
-  AdminButton,
-  Field,
-  inputClass,
-  selectClass,
-  textareaClass,
-} from "@/components/admin/AdminPrimitives";
-import {
-  COMPETENCE_TYPE_LABELS,
-  isTechniqueVague,
-  useAtelierStore,
-  type CompetenceType,
-} from "@/lib/atelierStore";
-
-function linesToList(s: string) {
-  return s
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-}
+  competencePreviewEntries,
+  coursPreviewEntries,
+} from "@/lib/atelierCompetencesExcel";
+import { useAtelierCompetencesStore } from "@/lib/atelierCompetencesStore";
 
 export default function AtelierCompetenceDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const {
-    getCompetence,
-    contextes,
-    updateCompetence,
-    toast,
-    clearToast,
-  } = useAtelierStore();
-  const def = getCompetence(id);
+  const { getCompetence, getCoursForCompetence } = useAtelierCompetencesStore();
+  const competence = getCompetence(id);
 
-  const [nom, setNom] = useState("");
-  const [type, setType] = useState<CompetenceType>("technique");
-  const [contexteId, setContexteId] = useState("");
-  const [definitionExacte, setDefinitionExacte] = useState("");
-  const [formule, setFormule] = useState("");
-  const [indicateurs, setIndicateurs] = useState("");
-  const [erreurs, setErreurs] = useState("");
-  const [debutant, setDebutant] = useState("");
-  const [intermediaire, setIntermediaire] = useState("");
-  const [expert, setExpert] = useState("");
-
-  useEffect(() => {
-    if (!def) return;
-    setNom(def.nom);
-    setType(def.type);
-    setContexteId(def.contexteId);
-    setDefinitionExacte(def.definitionExacte);
-    setFormule(def.formule);
-    setIndicateurs(def.indicateurs.join("\n"));
-    setErreurs(def.erreursFrequentes.join("\n"));
-    setDebutant(def.niveaux.debutant);
-    setIntermediaire(def.niveaux.intermediaire);
-    setExpert(def.niveaux.expert);
-  }, [def]);
-
-  if (!def) {
+  if (!competence) {
     return (
       <p className="text-sm text-slate-500">
         Compétence introuvable.{" "}
@@ -72,162 +25,92 @@ export default function AtelierCompetenceDetailPage() {
     );
   }
 
-  const draft = {
-    ...def,
-    nom,
-    type,
-    contexteId,
-    definitionExacte,
-    formule,
-    indicateurs: linesToList(indicateurs),
-    erreursFrequentes: linesToList(erreurs),
-    niveaux: { debutant, intermediaire, expert },
-  };
-  const vague = isTechniqueVague(draft);
+  const entries = competencePreviewEntries(competence.fields);
+  const linked = getCoursForCompetence(competence.id);
 
   return (
     <div>
       <AdminBreadcrumb
         backHref="/admin/atelier/competences"
-        backLabel="← Retour à la liste"
+        backLabel="← Retour aux Compétences"
         crumbs={[
           { label: "Admin", href: "/admin" },
-          { label: "Atelier", href: "/admin/atelier/contextes" },
+          { label: "Atelier", href: "/admin/atelier/creation" },
           { label: "Compétences", href: "/admin/atelier/competences" },
-          { label: def.nom },
+          { label: competence.nom },
         ]}
-        title={def.nom}
+        title={competence.nom}
       />
 
-      {vague ? (
-        <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-950">
-          Fiche technique trop vague — ajoutez une formule et au moins un
-          indicateur précis.
-        </div>
-      ) : null}
+      <p className="mb-4 text-sm text-slate-600">
+        Lecture seule — bibliothèque globale. Pour ajouter des cours ou des
+        compétences, réimportez un Excel (homonymes ignorés).
+      </p>
 
-      {toast ? (
-        <p className="mb-3 text-sm">
-          {toast}{" "}
-          <button type="button" className="underline" onClick={clearToast}>
-            OK
-          </button>
+      <div className="mb-8 space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        {entries.map((e) => (
+          <div
+            key={e.label}
+            className="border-b border-slate-50 pb-3 last:border-0"
+          >
+            <p className="text-xs font-medium text-slate-500">{e.label}</p>
+            <p
+              className={
+                e.filled
+                  ? "mt-0.5 whitespace-pre-wrap text-sm text-slate-900"
+                  : "mt-0.5 text-sm text-slate-400"
+              }
+            >
+              {e.filled ? e.value : "—"}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+        Cours liés ({linked.length})
+      </h2>
+      {linked.length === 0 ? (
+        <p className="text-sm text-slate-500">
+          Aucun cours pour cette compétence.
         </p>
-      ) : null}
-
-      <div className="mb-4">
-        <AdminButton
-          onClick={() =>
-            updateCompetence(id, {
-              nom,
-              type,
-              contexteId,
-              definitionExacte,
-              formule,
-              indicateurs: linesToList(indicateurs),
-              erreursFrequentes: linesToList(erreurs),
-              niveaux: { debutant, intermediaire, expert },
-            })
-          }
-        >
-          Enregistrer
-        </AdminButton>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Id (non modifiable)">
-          <input className={inputClass} value={def.id} readOnly disabled />
-        </Field>
-        <Field label="Nom">
-          <input
-            className={inputClass}
-            value={nom}
-            onChange={(e) => setNom(e.target.value)}
-          />
-        </Field>
-        <Field label="Type">
-          <select
-            className={selectClass}
-            value={type}
-            onChange={(e) => setType(e.target.value as CompetenceType)}
-          >
-            <option value="generale">{COMPETENCE_TYPE_LABELS.generale}</option>
-            <option value="technique">{COMPETENCE_TYPE_LABELS.technique}</option>
-          </select>
-        </Field>
-        <Field label="Contexte lié (obligatoire)">
-          <select
-            className={selectClass}
-            value={contexteId}
-            onChange={(e) => setContexteId(e.target.value)}
-          >
-            {contextes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nom}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Définition exacte" className="sm:col-span-2">
-          <textarea
-            className={textareaClass}
-            value={definitionExacte}
-            onChange={(e) => setDefinitionExacte(e.target.value)}
-          />
-        </Field>
-        <Field
-          label="Formule (technique)"
-          hint="Ex. Besoin net = Besoin brut - Stock - En-cours"
-          className="sm:col-span-2"
-        >
-          <input
-            className={inputClass}
-            value={formule}
-            onChange={(e) => setFormule(e.target.value)}
-          />
-        </Field>
-        <Field
-          label="Indicateurs précis (1 par ligne)"
-          className="sm:col-span-2"
-        >
-          <textarea
-            className={textareaClass}
-            value={indicateurs}
-            onChange={(e) => setIndicateurs(e.target.value)}
-          />
-        </Field>
-        <Field
-          label="Erreurs fréquentes (1 par ligne)"
-          className="sm:col-span-2"
-        >
-          <textarea
-            className={textareaClass}
-            value={erreurs}
-            onChange={(e) => setErreurs(e.target.value)}
-          />
-        </Field>
-        <Field label="Niveau Débutant">
-          <textarea
-            className={textareaClass}
-            value={debutant}
-            onChange={(e) => setDebutant(e.target.value)}
-          />
-        </Field>
-        <Field label="Niveau Intermédiaire">
-          <textarea
-            className={textareaClass}
-            value={intermediaire}
-            onChange={(e) => setIntermediaire(e.target.value)}
-          />
-        </Field>
-        <Field label="Niveau Expert" className="sm:col-span-2">
-          <textarea
-            className={textareaClass}
-            value={expert}
-            onChange={(e) => setExpert(e.target.value)}
-          />
-        </Field>
-      </div>
+      ) : (
+        <div className="space-y-4">
+          {linked.map((cours) => {
+            const cEntries = coursPreviewEntries(cours.fields);
+            return (
+              <div
+                key={cours.id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <p className="font-semibold text-slate-900">{cours.titre}</p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {cours.niveau || "Niveau —"}
+                  {cours.ordre ? ` · ordre ${cours.ordre}` : ""}
+                </p>
+                <div className="mt-3 space-y-2">
+                  {cEntries.map((e) => (
+                    <div key={e.label}>
+                      <p className="text-xs font-medium text-slate-500">
+                        {e.label}
+                      </p>
+                      <p
+                        className={
+                          e.filled
+                            ? "mt-0.5 whitespace-pre-wrap text-sm text-slate-800"
+                            : "mt-0.5 text-sm text-slate-400"
+                        }
+                      >
+                        {e.filled ? e.value : "—"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

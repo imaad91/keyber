@@ -2,105 +2,322 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { BookPlayStatusBanner } from "@/components/BookPlayStatusBanner";
 import { ModeBadge } from "@/components/admin/BookEntryCard";
-import { BookScenarioGraph } from "@/components/admin/BookScenarioGraph";
+import { AdminButton } from "@/components/admin/AdminPrimitives";
 import {
   bookVersionLabel,
   useBookStore,
+  type BookStatus,
 } from "@/lib/bookStore";
+import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
+import {
+  applyOsBookChoice,
+  createOsBookPlayState,
+  osBookErpSnapshot,
+  type OsBookPlayState,
+} from "@/lib/osBookPlay";
+import {
+  fetchParamFile,
+  getAdminPlaySession,
+  getPlayCatalogEntry,
+  paramFileExists,
+  setAdminPlaySession,
+} from "@/lib/playCatalog";
+import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 
 /**
- * Lecture / « jeu » d'une carte Book Studio (test ou Live).
- * Ne touche pas aux parcours Novacier en dur (/jouer/histoire, /jouer/competence).
+ * Front-End play d'une carte Book — appelle Keyber OS (param → décisions →
+ * événements → ERP facteur → progression). Pas d'Atelier.
  */
 export default function JouerBookEntryPage() {
   const { id } = useParams<{ id: string }>();
-  const { getEntry } = useBookStore();
-  const entry = getEntry(id);
+  const { getEntry, syncPlayerCatalog } = useBookStore();
+  const { config: osConfig } = useKeyberOsRuntime();
+  const bookEntry = getEntry(id);
+  const catalogEntry = getPlayCatalogEntry(id);
 
-  if (!entry) {
+  const [status, setStatus] = useState<BookStatus>(
+    bookEntry?.status ?? catalogEntry?.status ?? "en_test"
+  );
+  const [param, setParam] = useState<ScenarioParamFile | null>(null);
+  const [fileMissing, setFileMissing] = useState(false);
+  const [play, setPlay] = useState<OsBookPlayState | null>(null);
+  const [adminSession, setAdminSession] = useState(getAdminPlaySession());
+
+  const meta = bookEntry || catalogEntry;
+  const paramFileName =
+    bookEntry?.paramFileName || catalogEntry?.paramFileName || "";
+  const entryStatus: BookStatus =
+    bookEntry?.status ?? catalogEntry?.status ?? "en_test";
+
+  useEffect(() => {
+    syncPlayerCatalog();
+    const session = getAdminPlaySession();
+    setAdminSession((prev) => {
+      if (!prev && !session) return prev;
+      if (
+        prev &&
+        session &&
+        prev.bookEntryId === session.bookEntryId &&
+        prev.status === session.status &&
+        prev.returnHref === session.returnHref
+      ) {
+        return prev;
+      }
+      return session;
+    });
+    // Une seule fois au montage — syncPlayerCatalog n'est pas stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus(entryStatus);
+    async function boot() {
+      const entry = getEntry(id);
+      const catalog = getPlayCatalogEntry(id);
+      const embedded = entry?.paramFile || catalog?.paramFile || null;
+      const name =
+        entry?.paramFileName || catalog?.paramFileName || paramFileName;
+
+      const apply = (resolved: ScenarioParamFile, missing: boolean) => {
+        if (cancelled) return;
+        setFileMissing(missing);
+        setParam(resolved);
+        setPlay(createOsBookPlayState(resolved));
+      };
+      const fail = () => {
+        if (cancelled) return;
+        setFileMissing(true);
+        setParam(null);
+        setPlay(null);
+      };
+
+      if (!name) {
+        if (embedded) apply(embedded, false);
+        else fail();
+        return;
+      }
+
+      const exists = await paramFileExists(name);
+      if (cancelled) return;
+      if (!exists) {
+        // Admin / Book : fichier absent → param embarqué si dispo.
+        if (embedded) apply(embedded, true);
+        else fail();
+        return;
+      }
+
+      const fromDisk = await fetchParamFile(name);
+      if (cancelled) return;
+      const resolved = fromDisk || embedded;
+      if (resolved) apply(resolved, !fromDisk);
+      else fail();
+    }
+    void boot();
+    return () => {
+      cancelled = true;
+    };
+    // Intentionnel : id + status + nom de fichier (pas l'objet entry).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, paramFileName, entryStatus]);
+
+  // Relit le runtime OS (ex. facteur trésorerie) à chaque render — pas de 2e moteur.
+  const erp = play ? osBookErpSnapshot(play) : null;
+  void osConfig.tresorerieFacteur;
+
+  const returnHref =
+    adminSession?.returnHref ||
+    (status === "live" ? "/admin/book/live" : "/admin/book/en-cours-de-test");
+
+  if (!meta && fileMissing) {
     return (
       <div className="min-h-screen bg-slate-50 p-8 text-sm text-slate-600">
-        Scénario Book introuvable.{" "}
-        <Link href="/admin/book/en-cours-de-test" className="underline">
-          Retour Book
+        Scénario indisponible (fichier de paramétrage manquant).{" "}
+        <Link href="/jouer/live" className="underline">
+          Catalogue Live
         </Link>
       </div>
     );
   }
 
-  const backHref =
-    entry.status === "live"
-      ? "/admin/book/live"
-      : "/admin/book/en-cours-de-test";
+  if (!meta) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-8 text-sm text-slate-600">
+        Scénario Book introuvable.{" "}
+        <Link href="/jouer/live" className="underline">
+          Retour
+        </Link>
+      </div>
+    );
+  }
+
+  if (fileMissing && status === "live" && !adminSession) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-8 text-sm text-slate-600">
+        Ce scénario Live n&apos;a plus de fichier de paramétrage — retiré du
+        Front-End joueur.
+      </div>
+    );
+  }
+
+  const decision = play?.decisions[play.stepIndex];
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
-      <BookPlayStatusBanner status={entry.status} />
+      <BookPlayStatusBanner status={status} />
+
+      {adminSession ? (
+        <div className="border-b border-slate-200 bg-white px-4 py-2">
+          <Link href={returnHref}>
+            <AdminButton
+              type="button"
+              variant="secondary"
+              onClick={() => setAdminPlaySession(null)}
+            >
+              ← Retour à l&apos;Admin
+            </AdminButton>
+          </Link>
+        </div>
+      ) : null}
 
       <div className="mx-auto max-w-3xl px-6 py-8">
-        <Link
-          href={backHref}
-          className="mb-4 inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Retour Book
-        </Link>
+        {!adminSession ? (
+          <Link
+            href="/jouer/live"
+            className="mb-4 inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Catalogue Live
+          </Link>
+        ) : null}
 
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <ModeBadge mode={entry.mode} />
+          <ModeBadge mode={meta.mode} />
           <span className="text-xs text-slate-500">
-            {entry.entrepriseNom} · V{entry.version}
+            {meta.entrepriseNom} · V{meta.version}
           </span>
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          {bookVersionLabel(entry)}
+          {bookVersionLabel(meta)}
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          {entry.mode === "competence"
-            ? `Compétence : ${entry.competenceName || "—"}`
-            : `Rôle : ${entry.roleName || "—"}`}
+          {meta.mode === "competence"
+            ? `Compétence : ${meta.competenceName || "—"}`
+            : `Rôle : ${meta.roleName || "—"} · Secteur : ${meta.secteur || "—"}`}
         </p>
 
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Vue Texte
-          </h2>
-          <pre className="mt-3 whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800">
-            {entry.textContent || "—"}
-          </pre>
-        </section>
+        {/* ERP via Keyber OS */}
+        {erp ? (
+          <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <ErpTile
+              label="Trésorerie"
+              value={`${erp.tresorerie.toLocaleString("fr-FR")} €`}
+              hint={`brute ${erp.tresorerieBrute.toLocaleString("fr-FR")} ×${erp.facteur}`}
+            />
+            <ErpTile label="Stock" value={String(erp.stock)} />
+            <ErpTile label="Production" value={String(erp.production)} />
+            <ErpTile label="Commandes" value={String(erp.commandes)} />
+          </section>
+        ) : null}
 
-        <section className="mt-6">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Vue Graphique
-          </h2>
-          <BookScenarioGraph
-            graph={entry.graph}
-            title={`${entry.nom} — flux`}
-          />
-        </section>
+        <p className="mt-2 text-xs text-slate-500">
+          ERP Keyber OS — {osConfig.tresorerieFormuleLabel}
+        </p>
 
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-950 p-5 shadow-sm">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-emerald-200/80">
-            Fichier de paramétrage
-          </h2>
-          <p className="mt-1 font-mono text-xs text-emerald-300/70">
-            {entry.paramFileName || "—"}
+        {/* Progression */}
+        {play ? (
+          <p className="mt-3 text-sm text-slate-700">
+            XP {play.xp} · Niveau {play.niveau} · Score {play.score}
+            {play.eventsFired.length
+              ? ` · Événements : ${play.eventsFired.join(", ")}`
+              : ""}
           </p>
-          <pre className="mt-3 max-h-[320px] overflow-auto whitespace-pre-wrap font-mono text-xs text-emerald-100">
-            {entry.paramFile
-              ? JSON.stringify(entry.paramFile, null, 2)
-              : "—"}
-          </pre>
+        ) : null}
+
+        {/* Décision */}
+        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          {!play ? (
+            <p className="text-sm text-slate-500">
+              {fileMissing
+                ? "Fichier de paramétrage introuvable (et aucun param embarqué). Ce scénario ne peut pas être joué tant que le fichier n’est pas régénéré / présent sous data/scenarios/."
+                : "Chargement du paramétrage…"}
+            </p>
+          ) : play.finished ? (
+            <div>
+              <h2 className="text-lg font-semibold">Fin de scénario</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Score {play.score} · XP {play.xp} · Niveau {play.niveau}
+              </p>
+              <pre className="mt-4 max-h-48 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-50 p-3 text-xs text-slate-700">
+                {(meta as { textContent?: string }).textContent ||
+                  param?.Nom ||
+                  "—"}
+              </pre>
+            </div>
+          ) : decision ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Moteur de Décisions & Branches — étape {play.stepIndex + 1}/
+                {play.decisions.length}
+              </p>
+              <h2 className="mt-2 text-lg font-semibold">{decision.titre}</h2>
+              <div className="mt-4 space-y-2">
+                {decision.options.map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-medium hover:border-slate-400 hover:bg-white"
+                    onClick={() => setPlay(applyOsBookChoice(play, o.id))}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              {play.feedback ? (
+                <p className="mt-3 text-sm text-emerald-700">{play.feedback}</p>
+              ) : null}
+            </div>
+          ) : null}
         </section>
 
-        <p className="mt-8 text-center text-xs text-slate-500">
-          Démo Studio — contenu Lumière & Co. Novacier n&apos;est pas modifié.
-        </p>
+        {/* Pipeline OS log */}
+        {play ? (
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-950 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200/70">
+              Pipeline Keyber OS
+            </p>
+            <ul className="mt-2 space-y-1 font-mono text-[11px] text-emerald-100">
+              {play.log.map((line, i) => (
+                <li key={`${i}-${line.slice(0, 24)}`}>{line}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+function ErpTile({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-semibold tabular-nums">{value}</p>
+      {hint ? <p className="mt-0.5 text-[10px] text-slate-400">{hint}</p> : null}
     </div>
   );
 }

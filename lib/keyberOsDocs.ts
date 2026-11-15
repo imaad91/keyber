@@ -151,7 +151,7 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "advanceTime → suite ou fin de journée",
       ],
       ceQueCaNeFaitPas: [
-        "Ne hardcode aucun scénario Novacier / entreprise dans le moteur générique.",
+        "Ne hardcode aucun scénario ni aucune entreprise dans le moteur générique.",
         "Ne lit pas le localStorage Studio (keyber-studio-*).",
         "N’écrit pas de contenu métier : il lit des fichiers de paramétrage.",
       ],

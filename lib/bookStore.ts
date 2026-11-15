@@ -13,6 +13,11 @@ import type { ContexteExcelFields } from "@/lib/atelierCreationExcel";
 import { emptyContexteFields } from "@/lib/atelierCreationExcel";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
+import {
+  removePlayCatalogEntry,
+  syncPlayCatalogFromBook,
+  upsertPlayCatalogFromBookEntry,
+} from "@/lib/playCatalog";
 
 const STORAGE_KEY = "keyber-studio-book-v1";
 
@@ -544,25 +549,30 @@ export function useBookStore() {
       if (!entry) return { error: "Entrée Book introuvable" };
       if (entry.status === status) return {};
       const at = now();
+      const nextEntries = b.state.entries.map((e) => {
+        if (e.id === id) return { ...e, status, updatedAt: at };
+        // Live = une version précise : les autres Live de la lignée repassent en test
+        if (
+          status === "live" &&
+          e.familyId === entry.familyId &&
+          e.status === "live"
+        ) {
+          return { ...e, status: "en_test" as BookStatus, updatedAt: at };
+        }
+        return e;
+      });
       persist({
         ...b.state,
-        entries: b.state.entries.map((e) => {
-          if (e.id === id) return { ...e, status, updatedAt: at };
-          // Live = une version précise : les autres Live de la lignée repassent en test
-          if (
-            status === "live" &&
-            e.familyId === entry.familyId &&
-            e.status === "live"
-          ) {
-            return { ...e, status: "en_test" as BookStatus, updatedAt: at };
-          }
-          return e;
-        }),
+        entries: nextEntries,
         toast:
           status === "live"
             ? `${bookVersionLabel(entry)} passé en Live (visible joueurs)`
             : `${bookVersionLabel(entry)} retourné en En cours de test (Admin uniquement)`,
       });
+      // Pont Book → Front-End (catalogue joueur, hors keyber-studio-*)
+      syncPlayCatalogFromBook(nextEntries);
+      const updated = nextEntries.find((e) => e.id === id);
+      if (updated) upsertPlayCatalogFromBookEntry(updated);
       return {};
     },
     /**
@@ -702,12 +712,20 @@ export function useBookStore() {
       const b = bag();
       const entry = b.state.entries.find((e) => e.id === id);
       if (!entry) return { error: "Entrée Book introuvable" };
+      const nextEntries = b.state.entries.filter((e) => e.id !== id);
       persist({
         ...b.state,
-        entries: b.state.entries.filter((e) => e.id !== id),
+        entries: nextEntries,
         toast: `${bookVersionLabel(entry)} supprimé du Book`,
       });
+      removePlayCatalogEntry(id);
+      syncPlayCatalogFromBook(nextEntries);
       return {};
+    },
+    /** Resync manuel catalogue joueur depuis le Book. */
+    syncPlayerCatalog() {
+      refreshFromStorage();
+      syncPlayCatalogFromBook(bag().state.entries);
     },
     clearToast() {
       refreshFromStorage();

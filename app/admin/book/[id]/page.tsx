@@ -17,6 +17,7 @@ import {
   useBookStore,
   type BookGraphView,
 } from "@/lib/bookStore";
+import { setAdminPlaySession } from "@/lib/playCatalog";
 import { cn } from "@/lib/utils";
 
 type ViewTab = "texte" | "graphique" | "code";
@@ -65,6 +66,7 @@ export default function BookDetailPage() {
         : JSON.stringify({ note: "Fichier de paramétrage vide" }, null, 2)
     );
     setDirty(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- remount editors when entry id changes
   }, [entry?.id]);
 
   const history = useMemo(
@@ -83,7 +85,19 @@ export default function BookDetailPage() {
     );
   }
 
-  const playHref = `/jouer/book/${entry.id}`;
+  const current = entry;
+  const playHref = `/jouer/book/${current.id}`;
+
+  function markAdminPlay() {
+    setAdminPlaySession({
+      bookEntryId: current.id,
+      status: current.status,
+      returnHref:
+        current.status === "live"
+          ? "/admin/book/live"
+          : "/admin/book/en-cours-de-test",
+    });
+  }
 
   function parseGraph(): BookGraphView | null {
     try {
@@ -210,7 +224,7 @@ export default function BookDetailPage() {
       ) : null}
 
       <div className="mb-4 flex flex-wrap gap-2">
-        <Link href={playHref}>
+        <Link href={playHref} onClick={markAdminPlay}>
           <AdminButton variant="secondary" type="button">
             {entry.status === "live" ? "Jouer" : "Tester"}
           </AdminButton>

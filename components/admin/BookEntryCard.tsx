@@ -9,6 +9,7 @@ import {
   isPlayerVisible,
   type BookEntry,
 } from "@/lib/bookStore";
+import { setAdminPlaySession } from "@/lib/playCatalog";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,17 @@ export function BookEntryCard({
 }) {
   const playHref = `/jouer/book/${entry.id}`;
   const isCompetence = entry.mode === "competence";
+
+  function markAdminPlay() {
+    setAdminPlaySession({
+      bookEntryId: entry.id,
+      status: entry.status,
+      returnHref:
+        entry.status === "live"
+          ? "/admin/book/live"
+          : "/admin/book/en-cours-de-test",
+    });
+  }
 
   return (
     <div
@@ -151,7 +163,7 @@ export function BookEntryCard({
 
           {variant === "en_test" ? (
             <>
-              <Link href={playHref}>
+              <Link href={playHref} onClick={markAdminPlay}>
                 <AdminButton variant="secondary" type="button">
                   Tester
                 </AdminButton>
@@ -181,7 +193,7 @@ export function BookEntryCard({
             </>
           ) : (
             <>
-              <Link href={playHref}>
+              <Link href={playHref} onClick={markAdminPlay}>
                 <AdminButton type="button">Jouer</AdminButton>
               </Link>
               {onRetournerEnTest ? (

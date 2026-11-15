@@ -388,6 +388,27 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
   bookEntries = [...createdBook, ...bookEntries];
   writeJson(KEY_BOOK, { entries: bookEntries });
 
+  // Catalogue joueur (hors studio) — uniquement Live
+  const liveOnly = createdBook.filter((e) => e.status === "live");
+  writeJson("keyber-play-catalog-v1", {
+    entries: liveOnly.map((e) => ({
+      id: e.id,
+      familyId: e.familyId,
+      version: e.version,
+      mode: e.mode,
+      nom: e.nom,
+      entrepriseNom: e.entrepriseNom,
+      secteur: e.secteur,
+      competenceName: e.competenceName,
+      roleName: e.roleName,
+      paramFileName: e.paramFileName,
+      paramFile: e.paramFile,
+      textContent: e.textContent,
+      status: e.status,
+      updatedAt: e.updatedAt,
+    })),
+  });
+
   // Invalider les singletons in-memory (prochain chargement reprend le LS)
   const w = window as unknown as {
     __keyberBookStoreV1?: unknown;

@@ -61,6 +61,11 @@ const NAV: NavItem[] = [
         label: "Progression, Scores & Niveaux",
       },
       { href: "/admin/systeme/interface-joueur", label: "Interface Joueur" },
+      { href: "/admin/systeme/ordinateur", label: "Ordinateur" },
+      { href: "/admin/systeme/temps", label: "Temps & Horloge" },
+      { href: "/admin/systeme/interviews", label: "Interviews / PNJ" },
+      { href: "/admin/systeme/objectifs", label: "Objectifs" },
+      { href: "/admin/systeme/visibilite", label: "Visibilité" },
       {
         href: "/admin/systeme/donnees-sauvegarde",
         label: "Données & Sauvegarde",

@@ -4,7 +4,8 @@
  */
 
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
-import { isOsModuleEnabled } from "@/lib/keyberOsRuntime";
+import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
+import { buildComputerPackFromParam } from "@/lib/keyberOs/ordinateurPack";
 import type { OsDecision, OsPlayState } from "@/lib/keyberOs/types";
 
 function parseTresorerie(param: ScenarioParamFile): number {
@@ -52,6 +53,7 @@ export function osScenariosBoot(
   priorLog: string[] = []
 ): OsPlayState {
   const enabled = isOsModuleEnabled("moteur-scenarios");
+  const cfg = getOsRuntimeConfig();
   const decisions = enabled ? osScenariosParseDecisions(param) : [];
   const log = [...priorLog];
   if (!enabled) {
@@ -60,22 +62,46 @@ export function osScenariosBoot(
     log.push(`Moteur de Scénarios → ${param.Mode} — ${param.Nom}`);
   }
 
+  const tresorerieBrute = parseTresorerie(param);
+  const stock = parseStock(param);
+  const production = 60;
+  const commandes = 12;
+  const pack = buildComputerPackFromParam(
+    param,
+    tresorerieBrute,
+    stock,
+    production,
+    commandes
+  );
+
   return {
     sessionId,
     param,
     stepIndex: 0,
     decisions,
     eventsFired: [],
-    tresorerieBrute: parseTresorerie(param),
-    stock: parseStock(param),
-    production: 60,
-    commandes: 12,
+    tresorerieBrute,
+    stock,
+    production,
+    commandes,
     xp: 0,
     niveau: 1,
     score: 0,
     log,
     finished: !enabled || decisions.length === 0,
     feedback: null,
+    day: cfg.temps.startDay,
+    week: 1,
+    minutesSinceStart: cfg.temps.startMinutes,
+    dayLengthMinutes: cfg.temps.dayLengthMinutes,
+    visibilityLevel: cfg.visibilite.defaultLevel,
+    sensorInstalled: cfg.visibilite.sensorDefaultInstalled,
+    activeAction: null,
+    computerApp: null,
+    selectedInterviewId: null,
+    computer: pack.computer,
+    interviews: pack.interviews,
+    objectives: pack.objectives,
   };
 }
 

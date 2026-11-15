@@ -59,6 +59,39 @@ export type KeyberOsRuntimeConfig = {
     showErpTiles: boolean;
     showPipelineLog: boolean;
     showProgressionLine: boolean;
+    showShell: boolean;
+    showClock: boolean;
+    showObjectives: boolean;
+  };
+  ordinateur: {
+    enabled: boolean;
+    apps: {
+      erp: boolean;
+      mail: boolean;
+      dashboard: boolean;
+      documents: boolean;
+      chat: boolean;
+      browser: boolean;
+    };
+  };
+  temps: {
+    enabled: boolean;
+    dayLengthMinutes: number;
+    startDay: number;
+    startMinutes: number;
+  };
+  interviews: {
+    enabled: boolean;
+  };
+  objectifs: {
+    enabled: boolean;
+  };
+  visibilite: {
+    enabled: boolean;
+    fogEnabled: boolean;
+    fogBelowLevel: number;
+    defaultLevel: number;
+    sensorDefaultInstalled: boolean;
   };
 };
 
@@ -98,8 +131,37 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
   interfaceJoueur: {
     enabled: true,
     showErpTiles: true,
-    showPipelineLog: true,
+    showPipelineLog: false,
     showProgressionLine: true,
+    showShell: true,
+    showClock: true,
+    showObjectives: true,
+  },
+  ordinateur: {
+    enabled: true,
+    apps: {
+      erp: true,
+      mail: true,
+      dashboard: true,
+      documents: true,
+      chat: true,
+      browser: true,
+    },
+  },
+  temps: {
+    enabled: true,
+    dayLengthMinutes: 600,
+    startDay: 1,
+    startMinutes: 8 * 60,
+  },
+  interviews: { enabled: true },
+  objectifs: { enabled: true },
+  visibilite: {
+    enabled: true,
+    fogEnabled: true,
+    fogBelowLevel: 2,
+    defaultLevel: 1,
+    sensorDefaultInstalled: false,
   },
 };
 
@@ -255,6 +317,60 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
       showProgressionLine:
         raw.interfaceJoueur?.showProgressionLine ??
         d.interfaceJoueur.showProgressionLine,
+      showShell: raw.interfaceJoueur?.showShell ?? d.interfaceJoueur.showShell,
+      showClock: raw.interfaceJoueur?.showClock ?? d.interfaceJoueur.showClock,
+      showObjectives:
+        raw.interfaceJoueur?.showObjectives ?? d.interfaceJoueur.showObjectives,
+    },
+    ordinateur: {
+      enabled: raw.ordinateur?.enabled ?? d.ordinateur.enabled,
+      apps: {
+        erp: raw.ordinateur?.apps?.erp ?? d.ordinateur.apps.erp,
+        mail: raw.ordinateur?.apps?.mail ?? d.ordinateur.apps.mail,
+        dashboard:
+          raw.ordinateur?.apps?.dashboard ?? d.ordinateur.apps.dashboard,
+        documents:
+          raw.ordinateur?.apps?.documents ?? d.ordinateur.apps.documents,
+        chat: raw.ordinateur?.apps?.chat ?? d.ordinateur.apps.chat,
+        browser: raw.ordinateur?.apps?.browser ?? d.ordinateur.apps.browser,
+      },
+    },
+    temps: {
+      enabled: raw.temps?.enabled ?? d.temps.enabled,
+      dayLengthMinutes: clamp(
+        Number(raw.temps?.dayLengthMinutes ?? d.temps.dayLengthMinutes),
+        60,
+        24 * 60
+      ),
+      startDay: clamp(Number(raw.temps?.startDay ?? d.temps.startDay), 0, 7),
+      startMinutes: clamp(
+        Number(raw.temps?.startMinutes ?? d.temps.startMinutes),
+        0,
+        24 * 60 - 1
+      ),
+    },
+    interviews: {
+      enabled: raw.interviews?.enabled ?? d.interviews.enabled,
+    },
+    objectifs: {
+      enabled: raw.objectifs?.enabled ?? d.objectifs.enabled,
+    },
+    visibilite: {
+      enabled: raw.visibilite?.enabled ?? d.visibilite.enabled,
+      fogEnabled: raw.visibilite?.fogEnabled ?? d.visibilite.fogEnabled,
+      fogBelowLevel: clamp(
+        Number(raw.visibilite?.fogBelowLevel ?? d.visibilite.fogBelowLevel),
+        0,
+        3
+      ),
+      defaultLevel: clamp(
+        Number(raw.visibilite?.defaultLevel ?? d.visibilite.defaultLevel),
+        0,
+        3
+      ),
+      sensorDefaultInstalled:
+        raw.visibilite?.sensorDefaultInstalled ??
+        d.visibilite.sensorDefaultInstalled,
     },
   };
 }
@@ -342,6 +458,18 @@ export function setOsRuntimeConfig(
       ...b.config.interfaceJoueur,
       ...patch.interfaceJoueur,
     },
+    ordinateur: {
+      ...b.config.ordinateur,
+      ...patch.ordinateur,
+      apps: {
+        ...b.config.ordinateur.apps,
+        ...patch.ordinateur?.apps,
+      },
+    },
+    temps: { ...b.config.temps, ...patch.temps },
+    interviews: { ...b.config.interviews, ...patch.interviews },
+    objectifs: { ...b.config.objectifs, ...patch.objectifs },
+    visibilite: { ...b.config.visibilite, ...patch.visibilite },
   };
   const next = normalize(merged);
   next.updatedAt = new Date().toISOString();
@@ -381,6 +509,16 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.progression.enabled;
     case "interface-joueur":
       return c.interfaceJoueur.enabled;
+    case "ordinateur":
+      return c.ordinateur.enabled;
+    case "temps":
+      return c.temps.enabled;
+    case "interviews":
+      return c.interviews.enabled;
+    case "objectifs":
+      return c.objectifs.enabled;
+    case "visibilite":
+      return c.visibilite.enabled;
     default:
       return true;
   }

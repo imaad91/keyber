@@ -1,6 +1,5 @@
 /**
  * Keyber OS — Interface Joueur
- * Décide quoi exposer à l'UI (flags Admin). N'invente pas de contenu.
  */
 
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
@@ -11,6 +10,9 @@ export type OsInterfaceViewModel = {
   showErpTiles: boolean;
   showPipelineLog: boolean;
   showProgressionLine: boolean;
+  showShell: boolean;
+  showClock: boolean;
+  showObjectives: boolean;
   stepLabel: string | null;
 };
 
@@ -22,6 +24,9 @@ export function osInterfaceViewModel(state: OsPlayState): OsInterfaceViewModel {
     showErpTiles: enabled && cfg.showErpTiles,
     showPipelineLog: enabled && cfg.showPipelineLog,
     showProgressionLine: enabled && cfg.showProgressionLine,
+    showShell: enabled && cfg.showShell,
+    showClock: enabled && cfg.showClock,
+    showObjectives: enabled && cfg.showObjectives,
     stepLabel:
       !state.finished && state.decisions.length
         ? `étape ${state.stepIndex + 1}/${state.decisions.length}`

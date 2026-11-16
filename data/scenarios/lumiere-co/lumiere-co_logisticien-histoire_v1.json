@@ -14,24 +14,84 @@
   },
   "Événements entreprise": [
     {
+      "id": "lumiere-ev-1",
       "nom": "Colis perdu par le transporteur",
       "type": "Logistique",
-      "description": "Un colis client disparaît chez le transporteur après enlèvement. Le client relance le SAV."
+      "description": "Un colis client disparaît chez le transporteur après enlèvement. Le client relance le SAV.",
+      "jour": 1,
+      "heure": "11:00",
+      "consequences": [
+        {
+          "cible": "confianceClient",
+          "valeur": -8
+        },
+        {
+          "cible": "tresorerie",
+          "valeur": -400
+        }
+      ]
     },
     {
+      "id": "lumiere-ev-2",
       "nom": "Fournisseur en retard",
       "type": "Fournisseur",
-      "description": "MingLight annonce +12 jours sur le container Halo. Stock bas déjà."
+      "description": "MingLight annonce +12 jours sur le container Halo. Stock bas déjà.",
+      "jour": 1,
+      "heure": "09:00",
+      "consequences": [
+        {
+          "cible": "stock",
+          "valeur": -15
+        }
+      ]
     },
     {
+      "id": "lumiere-ev-3",
       "nom": "Pic de commandes à Noël",
       "type": "Client",
-      "description": "Volume x3 sur 10 jours. Packing saturé, délais J+2 menacés."
+      "description": "Volume x3 sur 10 jours. Packing saturé, délais J+2 menacés.",
+      "jour": 2,
+      "heure": "08:30",
+      "consequences": [
+        {
+          "cible": "commandes",
+          "valeur": 3
+        },
+        {
+          "cible": "moral",
+          "valeur": -5
+        }
+      ]
     },
     {
+      "id": "lumiere-ev-4",
       "nom": "Lampe cassée dans l'entrepôt",
       "type": "Technique",
-      "description": "Chute d'un carton Halo depuis le rack haut : 18 unités cassées + zone bloquée."
+      "description": "Chute d'un carton Halo depuis le rack haut : 18 unités cassées + zone bloquée.",
+      "jour": 1,
+      "heure": "10:00",
+      "urgent": true,
+      "deadlineHeure": "16:00",
+      "consequences": [
+        {
+          "cible": "stock",
+          "valeur": -18
+        },
+        {
+          "cible": "moral",
+          "valeur": -4
+        }
+      ],
+      "consequencesDeadline": [
+        {
+          "cible": "qualite",
+          "valeur": -20
+        },
+        {
+          "cible": "confianceClient",
+          "valeur": -10
+        }
+      ]
     }
   ],
   "Rôles sélectionnés": [

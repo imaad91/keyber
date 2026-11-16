@@ -11,6 +11,7 @@ import {
   emptyEventFields,
   type EventExcelFields,
 } from "@/lib/atelierEventsExcel";
+import { applyOsPlayToEventFields } from "@/lib/atelierEventsToParam";
 import type { BookGraphView } from "@/lib/bookStore";
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 
@@ -119,13 +120,17 @@ function ev(
   extra: Partial<EventExcelFields> = {},
   play?: LumiereEventPlay
 ): LumiereEventSeed {
-  const fields = emptyEventFields();
+  let fields = emptyEventFields();
   fields["Nom"] = nom;
   fields[
     "Type (Logistique/Technique/Humain/Client/Fournisseur/Météo/Réglementation)"
   ] = type;
   fields["Description complète"] = description;
   Object.assign(fields, extra);
+  /** Étape 24 : play OS aussi dans les colonnes Excel (re-import → param). */
+  if (play) {
+    fields = applyOsPlayToEventFields(fields, play) as EventExcelFields;
+  }
   return { nom, type, description, fields, play };
 }
 

@@ -265,19 +265,21 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Pousse toast + bannière urgente (via module Notifications).",
       ],
       deQuoiCompose: [
+        "lib/atelierEventsToParam.ts — pont Excel Atelier → param (Étape 24).",
         "lib/keyberOs/moteurEvenements.ts — osEvenementsTrigger.",
         "Param : heure, jour, urgent, deadlineHeure, condition, consequences.",
         "UI : OsEventNotificationToast, OsUrgentEventBanner (sous-onglet Notifications).",
       ],
       commentCaMarche: [
-        "Après chaque avancée de temps (apps, décision, DayEnd) → osEvenementsTrigger.",
+        "Atelier Événements Excel (colonnes OS) → Book Générer / seed → param.",
+        "Après chaque avancée de temps → osEvenementsTrigger.",
         "Heure absente → fallbackHeures Admin (index catalogue).",
         "Urgent + deadlineHeure → bannière ; dépassement → consequencesDeadline.",
       ],
       workflowSteps: [
-        "Avance temps",
-        "osEvenementsTrigger (heure + conditions)",
-        "Événement déclenché",
+        "Excel Atelier → mapAtelierEventToParamEventRich",
+        "Param « Événements entreprise »",
+        "Avance temps → osEvenementsTrigger",
         "Effet ERP / flags / mail",
         "Toast + bannière (Notifications)",
       ],
@@ -287,10 +289,11 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Ne remplace pas le Moteur de Décisions.",
       ],
       codeRefs: [
+        "lib/atelierEventsToParam.ts",
         "lib/keyberOs/moteurEvenements.ts",
         "lib/keyberOs/pipeline.ts",
-        "lib/keyberOs/ordinateur.ts",
         "app/admin/systeme/moteur-evenements/page.tsx",
+        "app/admin/atelier/evenements/page.tsx",
       ],
     },
     notifications: {

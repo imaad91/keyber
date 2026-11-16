@@ -49,8 +49,9 @@ export function KeyberOsComposanteView({ doc }: { doc: ComposanteDoc }) {
       <KeyberOsSubNav />
 
       <p className="mb-6 max-w-2xl text-sm text-slate-600">
-        Lecture seule. Description du moteur générique — aucun scénario ni
-        entreprise inventés ici.
+        Documentation + module runtime (bandeau vert ci-dessous). Aucun
+        scénario ni entreprise inventés ici — le Front appelle{" "}
+        <code className="text-xs">lib/keyberOs/</code>.
       </p>
 
       <Section title="Ce que fait cette composante">

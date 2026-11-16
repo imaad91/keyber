@@ -17,6 +17,7 @@ import {
   applyOsBookChoice,
   createOsBookPlayState,
   osBookErpSnapshot,
+  osBookInterfaceView,
   type OsBookPlayState,
 } from "@/lib/osBookPlay";
 import {
@@ -87,7 +88,7 @@ export default function JouerBookEntryPage() {
         if (cancelled) return;
         setFileMissing(missing);
         setParam(resolved);
-        setPlay(createOsBookPlayState(resolved));
+        setPlay(createOsBookPlayState(resolved, String(id)));
       };
       const fail = () => {
         if (cancelled) return;
@@ -125,9 +126,13 @@ export default function JouerBookEntryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, paramFileName, entryStatus]);
 
-  // Relit le runtime OS (ex. facteur trésorerie) à chaque render — pas de 2e moteur.
+  // Relit le runtime OS à chaque render — modules Admin branchés.
   const erp = play ? osBookErpSnapshot(play) : null;
-  void osConfig.tresorerieFacteur;
+  const ui = play ? osBookInterfaceView(play) : null;
+  void osConfig.erp.tresorerieFacteur;
+  void osConfig.interfaceJoueur;
+  void osConfig.progression;
+  void osConfig.moteurDecisions;
 
   const returnHref =
     adminSession?.returnHref ||
@@ -210,8 +215,8 @@ export default function JouerBookEntryPage() {
             : `Rôle : ${meta.roleName || "—"} · Secteur : ${meta.secteur || "—"}`}
         </p>
 
-        {/* ERP via Keyber OS */}
-        {erp ? (
+        {/* ERP via module Keyber OS */}
+        {erp && ui?.showErpTiles ? (
           <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <ErpTile
               label="Trésorerie"
@@ -225,11 +230,12 @@ export default function JouerBookEntryPage() {
         ) : null}
 
         <p className="mt-2 text-xs text-slate-500">
-          ERP Keyber OS — {osConfig.tresorerieFormuleLabel}
+          ERP Keyber OS — {osConfig.erp.tresorerieFormuleLabel}
+          {erp ? ` · équipe ${erp.equipe}` : ""}
         </p>
 
-        {/* Progression */}
-        {play ? (
+        {/* Progression via module OS */}
+        {play && ui?.showProgressionLine ? (
           <p className="mt-3 text-sm text-slate-700">
             XP {play.xp} · Niveau {play.niveau} · Score {play.score}
             {play.eventsFired.length
@@ -284,8 +290,8 @@ export default function JouerBookEntryPage() {
           ) : null}
         </section>
 
-        {/* Pipeline OS log */}
-        {play ? (
+        {/* Pipeline OS log (module Interface Joueur) */}
+        {play && ui?.showPipelineLog ? (
           <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-950 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200/70">
               Pipeline Keyber OS

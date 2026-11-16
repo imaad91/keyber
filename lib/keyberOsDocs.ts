@@ -116,11 +116,10 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "N’est pas le Studio Admin (pas de keyber-studio-*).",
       ],
       codeRefs: [
-        "lib/computerTypes.ts",
-        "lib/computerData.ts",
-        "components/computer/ComputerErp.tsx",
-        "app/erp/page.tsx",
-        "lib/gameState.ts",
+        "lib/keyberOs/erp.ts",
+        "lib/keyberOsRuntime.ts",
+        "app/admin/systeme/erp/page.tsx",
+        "app/jouer/book/[id]/page.tsx",
       ],
     },
     "moteur-scenarios": {
@@ -156,10 +155,9 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "N’écrit pas de contenu métier : il lit des fichiers de paramétrage.",
       ],
       codeRefs: [
-        "data/registry.ts",
-        "lib/playContent.ts",
-        "lib/runtime.ts",
-        "lib/engine.ts",
+        "lib/keyberOs/moteurScenarios.ts",
+        "lib/keyberOs/pipeline.ts",
+        "app/admin/systeme/moteur-scenarios/page.tsx",
       ],
     },
     "moteur-decisions": {
@@ -194,9 +192,9 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Ne remplace pas le Moteur d’Événements (autre pipeline).",
       ],
       codeRefs: [
-        "lib/decisions.ts",
-        "lib/engine.ts",
-        "components/DecisionCard.tsx",
+        "lib/keyberOs/moteurDecisions.ts",
+        "lib/keyberOs/pipeline.ts",
+        "app/admin/systeme/moteur-decisions/page.tsx",
       ],
     },
     "moteur-evenements": {
@@ -231,9 +229,9 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Ne remplace pas le Moteur de Décisions.",
       ],
       codeRefs: [
-        "lib/evenements.ts",
-        "lib/engine.ts",
-        "data/contextes/*/evenements.ts",
+        "lib/keyberOs/moteurEvenements.ts",
+        "lib/keyberOs/pipeline.ts",
+        "app/admin/systeme/moteur-evenements/page.tsx",
       ],
     },
     progression: {
@@ -269,10 +267,9 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Ne décide pas à la place du joueur.",
       ],
       codeRefs: [
-        "lib/progression.ts",
-        "lib/competences.ts",
-        "lib/engine.ts",
-        "lib/sauvegarde.ts",
+        "lib/keyberOs/progression.ts",
+        "lib/keyberOs/pipeline.ts",
+        "app/admin/systeme/progression/page.tsx",
       ],
     },
     "interface-joueur": {
@@ -308,10 +305,9 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "N’invente pas le contenu des cartes : il l’affiche.",
       ],
       codeRefs: [
-        "app/play/page.tsx",
-        "components/KpiBar.tsx",
-        "components/DecisionCard.tsx",
-        "app/jouer/page.tsx",
+        "lib/keyberOs/interfaceJoueur.ts",
+        "app/jouer/book/[id]/page.tsx",
+        "app/admin/systeme/interface-joueur/page.tsx",
       ],
     },
     "donnees-sauvegarde": {
@@ -346,10 +342,9 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "N’est pas une source de contenu métier inventé.",
       ],
       codeRefs: [
-        "lib/saveStore.ts",
-        "lib/sauvegarde.ts",
-        "data/registry.ts",
-        "KEYBER_OS_RULES.md",
+        "lib/keyberOs/donneesSauvegarde.ts",
+        "lib/keyberOs/pipeline.ts",
+        "app/admin/systeme/donnees-sauvegarde/page.tsx",
       ],
     },
   };

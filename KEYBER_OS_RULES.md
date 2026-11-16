@@ -41,10 +41,11 @@ Chaque carte scénario/histoire a 3 vues (Texte · Graphique · Code / fichier d
 Jouer une carte Book : `/jouer/book/[id]` — bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
 Démo optionnelle seed Studio localStorage uniquement (données sous `data/scenarios/<id>/`, jamais dans le code OS).
 
-**Keyber OS** = moteur générique du jeu (composantes) + documentation Admin.
+**Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
 Sous-onglets (ordre fixe) : Vue Globale · ERP · Moteur de Scénarios · Moteur de Décisions & Branches · Moteur d'Événements · Progression, Scores & Niveaux · Interface Joueur · Données & Sauvegarde.
+Pipeline Front : `lib/keyberOs/pipeline.ts` (Données → Scénarios → Décisions → Événements → ERP → Progression → Interface → Sauvegarde).
 Aucun contenu métier inventé — le moteur lit les fichiers de paramétrage.
-Config runtime OS : `keyber-os-runtime-v1` (ex. facteur Trésorerie ERP) — Admin et Front-End partagent la même source.
+Config runtime OS : `keyber-os-runtime-v1` (une section par composante) — Admin et Front-End partagent la même source. Progression jeu : `keyber-os-play-saves-v1`.
 Pont Book → Front-End : `keyber-play-catalog-v1` (Live uniquement). Le jeu ne lit pas `keyber-studio-*` (Atelier).
 Sans fichier sous `data/scenarios/`, le scénario disparaît du catalogue joueur.
 

@@ -43,6 +43,7 @@ Checklist parité feeling (Étape 22) : `lib/bookParityChecklist.ts` — cases r
 Génération Book (Étape 23) : `buildSkeletonParamFile` + prompt imposent tous les blocs (Ordinateur structuré, Jours, Interviews…) — données Atelier seulement, pas d'invention.
 Pont Événements (Étape 24) : Excel Atelier → `atelierEventsToParam` → « Événements entreprise » (jour/heure/urgent/condition/conséquences) → Moteur d'Événements OS.
 Contrôle parité (Étape 25) : `/admin/controle/rapports/parite` — rapport lisible (Book checklist, modules OS OFF, double moteur) ; propose, ne patche pas.
+Gouvernance Live (Étape 26) : flag `peutPublierLive` sur Équipe — visible fiche + note Book ; V1 n’empêche pas `setStatus(live)`.
 Jouer une carte Book : **`/jouer/book/[id]`** — **chemin officiel Keyber OS** (Étape 20).
 Bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
 Shell : `components/osPlay/OsPlayShell.tsx` ← pipeline `lib/keyberOs/pipeline.ts`.

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { ModeBadge } from "@/components/admin/BookEntryCard";
+import { BookLiveGovernanceNote } from "@/components/admin/BookLiveGovernanceNote";
 import { BookParityChecklist } from "@/components/admin/BookParityChecklist";
 import { BookScenarioGraph } from "@/components/admin/BookScenarioGraph";
 import { useAtelierCreationStore } from "@/lib/atelierCreationStore";
@@ -277,6 +278,8 @@ export default function BookDetailPage() {
           </ul>
         </div>
       ) : null}
+
+      <BookLiveGovernanceNote />
 
       <div className="mb-4 flex flex-wrap gap-2">
         <Link href={playHref} onClick={markAdminPlay}>

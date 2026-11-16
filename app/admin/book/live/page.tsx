@@ -9,6 +9,7 @@ import {
   BookEntryCard,
   BookSection,
 } from "@/components/admin/BookEntryCard";
+import { BookLiveGovernanceNote } from "@/components/admin/BookLiveGovernanceNote";
 import { BookTabs } from "@/components/admin/BookTabs";
 import { useAtelierCreationStore } from "@/lib/atelierCreationStore";
 import { useBookStore } from "@/lib/bookStore";
@@ -59,6 +60,8 @@ export default function BookLivePage() {
       </div>
 
       <BookTabs />
+
+      <BookLiveGovernanceNote />
 
       <p className="mb-6 max-w-2xl text-sm text-slate-600">
         Disponible pour les joueurs. Scénarios et Histoires restent séparés.

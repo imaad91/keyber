@@ -23,6 +23,7 @@ function moduleEnabled(
     ordinateur: config.ordinateur.enabled,
     temps: config.temps.enabled,
     "cycle-vie": config.cycleVie.enabled,
+    notifications: config.notifications.enabled,
     interviews: config.interviews.enabled,
     objectifs: config.objectifs.enabled,
     visibilite: config.visibilite.enabled,

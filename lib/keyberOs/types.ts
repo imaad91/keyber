@@ -363,6 +363,7 @@ export type OsModuleId =
   | "ordinateur"
   | "temps"
   | "cycle-vie"
+  | "notifications"
   | "interviews"
   | "objectifs"
   | "visibilite";

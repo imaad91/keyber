@@ -41,6 +41,19 @@ export type KeyberOsRuntimeConfig = {
     enabled: boolean;
     /** Impact stock quand un événement catalogue se déclenche. */
     stockImpact: number;
+    /**
+     * Heures de repli (HH:MM) si le param n'a pas de champ `heure`
+     * — indexé sur le catalogue.
+     */
+    fallbackHeures: string[];
+  };
+  /** Toasts + bannière urgente (Étape 15). */
+  notifications: {
+    enabled: boolean;
+    toastDurationMs: number;
+    showUrgentBanner: boolean;
+    /** Force le prochain event catalogue au prochain rendu Book. */
+    pendingForceEvent: boolean;
   };
   erp: {
     enabled: boolean;
@@ -134,7 +147,17 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     ],
     commandesDelta: 1,
   },
-  moteurEvenements: { enabled: true, stockImpact: -5 },
+  moteurEvenements: {
+    enabled: true,
+    stockImpact: -5,
+    fallbackHeures: ["09:00", "10:00", "11:00", "14:00"],
+  },
+  notifications: {
+    enabled: true,
+    toastDurationMs: 5000,
+    showUrgentBanner: true,
+    pendingForceEvent: false,
+  },
   erp: {
     enabled: true,
     tresorerieFacteur: 1,
@@ -300,6 +323,26 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
         -100,
         100
       ),
+      fallbackHeures: Array.isArray(raw.moteurEvenements?.fallbackHeures)
+        ? raw.moteurEvenements.fallbackHeures
+            .map((h) => String(h).trim())
+            .filter(Boolean)
+        : [...d.moteurEvenements.fallbackHeures],
+    },
+    notifications: {
+      enabled: raw.notifications?.enabled ?? d.notifications.enabled,
+      toastDurationMs: clamp(
+        Number(
+          raw.notifications?.toastDurationMs ?? d.notifications.toastDurationMs
+        ),
+        1000,
+        30000
+      ),
+      showUrgentBanner:
+        raw.notifications?.showUrgentBanner ?? d.notifications.showUrgentBanner,
+      pendingForceEvent:
+        raw.notifications?.pendingForceEvent ??
+        d.notifications.pendingForceEvent,
     },
     erp: {
       enabled: erpIn.enabled ?? d.erp.enabled,
@@ -489,6 +532,13 @@ export function setOsRuntimeConfig(
     moteurEvenements: {
       ...b.config.moteurEvenements,
       ...patch.moteurEvenements,
+      fallbackHeures:
+        patch.moteurEvenements?.fallbackHeures ??
+        b.config.moteurEvenements.fallbackHeures,
+    },
+    notifications: {
+      ...b.config.notifications,
+      ...patch.notifications,
     },
     erp: {
       ...b.config.erp,
@@ -554,6 +604,8 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.moteurDecisions.enabled;
     case "moteur-evenements":
       return c.moteurEvenements.enabled;
+    case "notifications":
+      return c.notifications.enabled;
     case "erp":
       return c.erp.enabled;
     case "progression":

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { ModeBadge } from "@/components/admin/BookEntryCard";
+import { BookParityChecklist } from "@/components/admin/BookParityChecklist";
 import { BookScenarioGraph } from "@/components/admin/BookScenarioGraph";
 import { useAtelierCreationStore } from "@/lib/atelierCreationStore";
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
@@ -347,6 +348,10 @@ export default function BookDetailPage() {
           </>
         ) : null}
       </p>
+
+      <div className="mb-4">
+        <BookParityChecklist param={liveParam} />
+      </div>
 
       {/* 3 onglets */}
       <div className="mb-4 flex flex-wrap gap-2 border-b border-slate-200 pb-2">

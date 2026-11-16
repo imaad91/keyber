@@ -12,6 +12,7 @@ import {
 import { setAdminPlaySession } from "@/lib/playCatalog";
 import { osBookPlayHref } from "@/lib/keyberOs/bookBridge";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
+import { BookParityChecklist } from "@/components/admin/BookParityChecklist";
 import { cn } from "@/lib/utils";
 
 function formatDateFr(iso: string): string {
@@ -150,6 +151,9 @@ export function BookEntryCard({
               </span>
             )}
           </p>
+          <div className="mt-3">
+            <BookParityChecklist param={entry.paramFile} compact />
+          </div>
           <p className="mt-1 text-xs text-slate-400">
             Validé {formatDateFr(entry.validatedAt)} (Europe/Paris)
           </p>

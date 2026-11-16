@@ -63,6 +63,16 @@ export type OsChoiceImpact = {
   tone: "pos" | "neg" | "neu";
 };
 
+/** Impact compétence sur un choix (feeling CompetenceImpact POC). */
+export type OsSkillImpact = {
+  /** Id Atelier / slug param — jamais un nom Novacier hardcodé. */
+  competenceId: string;
+  type?: "generale" | "ciblee";
+  xp: number;
+  feedback?: string;
+  indicateurIndex?: number;
+};
+
 export type OsChoice = {
   id: string;
   label: string;
@@ -70,6 +80,8 @@ export type OsChoice = {
   feedbackTexte?: string;
   consequences?: OsConsequence[];
   impacts?: OsChoiceImpact[];
+  /** XP compétences précises pour ce choix. */
+  competenceImpacts?: OsSkillImpact[];
 };
 
 export type OsDecision = {
@@ -78,7 +90,16 @@ export type OsDecision = {
   dilemme?: string;
   jour?: number;
   xpGagne?: number;
+  /** Compétence scénario (Mode Compétence) — id param. */
+  competenceId?: string;
   options: OsChoice[];
+};
+
+/** Entrée catalogue compétences session (labels depuis param). */
+export type OsSkillCatalogEntry = {
+  id: string;
+  nom: string;
+  type: "generale" | "ciblee";
 };
 
 export type OsDecisionRecord = {
@@ -131,6 +152,8 @@ export type OsProgressionBlock = {
   score: number;
   competencesGenerales: Record<string, OsCompetenceProgress>;
   competencesCiblees: Record<string, OsCompetenceProgress>;
+  /** Labels issus du param (pas de catalogue hardcodé). */
+  catalog?: OsSkillCatalogEntry[];
 };
 
 /** Capteur / investissement Visibilité (inventaire param). */

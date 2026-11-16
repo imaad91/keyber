@@ -599,6 +599,7 @@ export function lumiereCompetenceParam(
         titre: "Réappro Halo",
         dilemme: "Le stock Halo fond — quelle manœuvre ?",
         xpGagne: 20,
+        competenceId: LUMIERE_COMPETENCE,
         options: [
           {
             id: "d1-opt0",
@@ -611,6 +612,15 @@ export function lumiereCompetenceParam(
             impacts: [
               { label: "Stock", value: "+40", tone: "pos" },
               { label: "Cash", value: "−3 k€", tone: "neg" },
+            ],
+            competenceImpacts: [
+              {
+                competenceId: LUMIERE_COMPETENCE,
+                type: "ciblee" as const,
+                xp: 20,
+                feedback: "Plan MRP : réappro immédiat chiffré.",
+                indicateurIndex: 0,
+              },
             ],
           },
           {
@@ -626,6 +636,15 @@ export function lumiereCompetenceParam(
               { label: "Stock", value: "+20", tone: "pos" },
               { label: "Prod", value: "−3", tone: "neg" },
             ],
+            competenceImpacts: [
+              {
+                competenceId: LUMIERE_COMPETENCE,
+                type: "ciblee" as const,
+                xp: 25,
+                feedback: "Plan MRP : multi-sources + buffer.",
+                indicateurIndex: 1,
+              },
+            ],
           },
           {
             id: "d1-opt2",
@@ -639,6 +658,15 @@ export function lumiereCompetenceParam(
             impacts: [
               { label: "Cash", value: "+1,5 k€", tone: "pos" },
               { label: "Confiance", value: "−5", tone: "neg" },
+            ],
+            competenceImpacts: [
+              {
+                competenceId: LUMIERE_COMPETENCE,
+                type: "ciblee" as const,
+                xp: 12,
+                feedback: "Plan MRP : demande révisée (promo coupée).",
+                indicateurIndex: 2,
+              },
             ],
           },
         ],

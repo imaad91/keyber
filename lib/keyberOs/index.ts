@@ -22,6 +22,8 @@ export type {
   OsPlayState,
   OsPlayerAction,
   OsProgressionBlock,
+  OsSkillCatalogEntry,
+  OsSkillImpact,
   OsVisibiliteBlock,
   OsWorld,
 } from "@/lib/keyberOs/types";
@@ -110,6 +112,16 @@ export {
   osApplyConsequence,
   osApplyConsequences,
 } from "@/lib/keyberOs/consequences";
+export {
+  OS_XP_PER_SKILL_LEVEL_DEFAULT,
+  osAddSkillXp,
+  osApplySkillImpacts,
+  osProgressionApply,
+  osProgressionBootFromParam,
+  osSkillProgressList,
+  osSkillSlug,
+  osSkillsFromParam,
+} from "@/lib/keyberOs/progression";
 export {
   osClearUrgentBanner,
   osDismissEventNotification,

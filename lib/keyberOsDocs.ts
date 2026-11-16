@@ -375,10 +375,11 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       ceQueCaNeFaitPas: [
         "N'invente pas de mails métier en dur.",
         "Ne lit pas useGameStore / Novacier.",
-        "ERP 10 modules complets = Étape 4 (pas encore).",
+        "N'utilise pas ComputerErp legacy / useGameStore.",
       ],
       codeRefs: [
         "components/osPlay/OsComputerDesktop.tsx",
+        "components/osPlay/OsComputerErp.tsx",
         "lib/keyberOs/ordinateur.ts",
         "app/admin/systeme/ordinateur/page.tsx",
       ],

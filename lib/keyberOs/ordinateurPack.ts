@@ -20,6 +20,7 @@ type ParamOrdinateur = {
   machines?: OsComputerPack["machines"];
   clients?: OsComputerPack["clients"];
   fournisseurs?: OsComputerPack["fournisseurs"];
+  maintenance?: OsComputerPack["maintenance"];
   emails?: OsEmail[];
   chatContacts?: OsComputerPack["chatContacts"];
   chatThreads?: OsComputerPack["chatThreads"];
@@ -341,6 +342,20 @@ export function buildComputerPackFromParam(
       },
     ];
 
+  const maintenance =
+    o?.maintenance ??
+    [
+      {
+        id: "maint-1",
+        equipement: machines[0]?.nom || "Poste principal",
+        type: "Préventive",
+        echeance: "J+20",
+        technicien: "Tech A",
+        statut: "Planifiée" as const,
+        priorite: "Normale" as const,
+      },
+    ];
+
   return {
     computer: {
       stock,
@@ -351,6 +366,7 @@ export function buildComputerPackFromParam(
       machines,
       clients,
       fournisseurs,
+      maintenance,
       emails,
       chatContacts,
       chatThreads,

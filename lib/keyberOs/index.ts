@@ -9,12 +9,26 @@ export type {
   OsDecision,
   OsEmail,
   OsErpSnapshot,
+  OsFinance,
+  OsHumain,
   OsInterview,
+  OsKpiDef,
+  OsMeta,
   OsModuleId,
   OsObjective,
+  OsPhase,
   OsPlayState,
   OsPlayerAction,
+  OsProgressionBlock,
+  OsVisibiliteBlock,
+  OsWorld,
 } from "@/lib/keyberOs/types";
+
+export {
+  OS_STATE_FIELD_FAMILIES,
+  osStateSchemaFamilyCount,
+  osStateSchemaFieldCount,
+} from "@/lib/keyberOs/stateSchema";
 
 export {
   osPipelineBoot,

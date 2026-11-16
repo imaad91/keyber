@@ -7,7 +7,6 @@
 
 import {
   formatOsClock,
-  osOrdinateurMarkEmailRead,
   osOrdinateurOpenApp,
   osOrdinateurSetAction,
   type OsComputerAppId,
@@ -17,6 +16,7 @@ import { DAY_LABELS } from "@/lib/computerData";
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import { cn } from "@/lib/utils";
 import { OsComputerErp } from "@/components/osPlay/OsComputerErp";
+import { OsComputerMail } from "@/components/osPlay/OsComputerMail";
 import {
   Database,
   FileText,
@@ -212,7 +212,7 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
             </div>
             <div
               className={
-                computerApp === "erp"
+                computerApp === "erp" || computerApp === "mail"
                   ? "min-h-0 flex-1 overflow-hidden"
                   : "min-h-0 flex-1 overflow-auto p-3 text-sm"
               }
@@ -221,7 +221,7 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
                 <OsComputerErp play={play} fog={fog} />
               ) : null}
               {computerApp === "mail" ? (
-                <OsMailLite play={play} setPlay={setPlay} />
+                <OsComputerMail play={play} setPlay={setPlay} />
               ) : null}
               {computerApp === "dashboard" ? (
                 <OsDashLite play={play} fog={fog} />
@@ -259,40 +259,7 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
   );
 }
 
-/** Contenu apps temporaire (Étapes 5–8 enrichiront mail/chat/…). */
-function OsMailLite({
-  play,
-  setPlay,
-}: {
-  play: OsPlayState;
-  setPlay: (s: OsPlayState) => void;
-}) {
-  return (
-    <ul className="space-y-2">
-      {play.computer.emails.map((e) => (
-        <li key={e.id}>
-          <button
-            type="button"
-            className={cn(
-              "w-full rounded-lg border p-3 text-left",
-              e.read ? "bg-slate-50" : "border-sky-300 bg-sky-50"
-            )}
-            onClick={() => setPlay(osOrdinateurMarkEmailRead(play, e.id))}
-          >
-            <p className="text-xs text-slate-500">
-              {e.from} · J{e.day} {e.read ? "" : "· non lu"}
-            </p>
-            <p className="font-semibold">{e.subject}</p>
-            <pre className="mt-1 whitespace-pre-wrap text-xs text-slate-700">
-              {e.body}
-            </pre>
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
+/** Contenu apps temporaire (Étapes 6–8 : chat / dashboard / docs). */
 function OsDashLite({ play, fog }: { play: OsPlayState; fog: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-3">

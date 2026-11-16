@@ -22,14 +22,14 @@ export default function Page() {
       <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-sm text-emerald-950">
         <p className="font-semibold">Chrome desktop (Étape 3)</p>
         <p className="mt-1 text-emerald-900/80">
-          Chrome desktop +{" "}
-          <code className="rounded bg-white/80 px-1 text-xs">OsComputerErp</code>{" "}
-          (10 modules, tri/filtre/fog). Mail/chat/docs encore lite (Étapes
-          5–8).
+          Chrome desktop · ERP 10 modules ·{" "}
+          <code className="rounded bg-white/80 px-1 text-xs">OsComputerMail</code>{" "}
+          (inbox lus/non lus, détail, badge). Chat/dashboard/docs encore lite
+          (Étapes 6–8).
         </p>
         <p className="mt-2 text-xs text-emerald-800">
-          Vérif : Book → Ordinateur → ERP → naviguer Stock…Maintenance ; fog si
-          Visibilité sans capteur.
+          Vérif Mail : Book → Ordinateur → Boîte Mail → ouvrir un message →
+          badge non-lus diminue.
         </p>
       </section>
 

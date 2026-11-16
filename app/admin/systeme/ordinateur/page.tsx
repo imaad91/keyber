@@ -20,18 +20,19 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES.ordinateur} />
 
       <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-sm text-emerald-950">
-        <p className="font-semibold">Chrome desktop (Étapes 3–7)</p>
+        <p className="font-semibold">Chrome desktop (Étapes 3–8) — 6 apps</p>
         <p className="mt-1 text-emerald-900/80">
-          Chrome · ERP · Mail · Chat ·{" "}
+          ERP · Mail · Chat · Dashboard ·{" "}
+          <code className="rounded bg-white/80 px-1 text-xs">OsComputerDocs</code>{" "}
+          (liste + lecteur) ·{" "}
           <code className="rounded bg-white/80 px-1 text-xs">
-            OsComputerDashboard
+            OsComputerBrowser
           </code>{" "}
-          (cartes + graphiques prod/pannes, fog) ·{" "}
-          <code className="rounded bg-white/80 px-1 text-xs">OsAtelierLive</code>{" "}
-          (vue 2D machines, alarme). Docs/browser encore lite (Étape 8).
+          (recherche corpus) · Atelier Live (barre actions).
         </p>
         <p className="mt-2 text-xs text-emerald-800">
-          Vérif : Book → Ordinateur → Dashboard ; barre actions → Atelier Live.
+          Vérif : Ordinateur → Documents (ouvrir un doc) ; Navigateur (chercher
+          « maintenance »).
         </p>
       </section>
 

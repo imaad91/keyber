@@ -15,8 +15,10 @@ import {
 import { DAY_LABELS } from "@/lib/computerData";
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import { cn } from "@/lib/utils";
+import { OsComputerBrowser } from "@/components/osPlay/OsComputerBrowser";
 import { OsComputerChat } from "@/components/osPlay/OsComputerChat";
 import { OsComputerDashboard } from "@/components/osPlay/OsComputerDashboard";
+import { OsComputerDocs } from "@/components/osPlay/OsComputerDocs";
 import { OsComputerErp } from "@/components/osPlay/OsComputerErp";
 import { OsComputerMail } from "@/components/osPlay/OsComputerMail";
 import {
@@ -216,7 +218,9 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
               className={
                 computerApp === "erp" ||
                 computerApp === "mail" ||
-                computerApp === "chat"
+                computerApp === "chat" ||
+                computerApp === "documents" ||
+                computerApp === "browser"
                   ? "min-h-0 flex-1 overflow-hidden"
                   : computerApp === "dashboard"
                     ? "min-h-0 flex-1 overflow-auto"
@@ -233,31 +237,13 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
                 <OsComputerDashboard play={play} fog={fog} />
               ) : null}
               {computerApp === "documents" ? (
-                <ul className="space-y-2">
-                  {play.computer.documents.map((d) => (
-                    <li key={d.id} className="rounded-lg border p-3">
-                      <p className="font-semibold">{d.titre}</p>
-                      <p className="text-xs text-slate-500">{d.type}</p>
-                      <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700">
-                        {d.contenu}
-                      </pre>
-                    </li>
-                  ))}
-                </ul>
+                <OsComputerDocs play={play} />
               ) : null}
               {computerApp === "chat" ? (
                 <OsComputerChat play={play} setPlay={setPlay} />
               ) : null}
               {computerApp === "browser" ? (
-                <ul className="space-y-2">
-                  {play.computer.browser.map((b) => (
-                    <li key={b.id} className="rounded-lg border p-3">
-                      <p className="font-semibold">{b.title}</p>
-                      <p className="text-xs text-sky-700">{b.url}</p>
-                      <p className="mt-1 text-xs text-slate-600">{b.snippet}</p>
-                    </li>
-                  ))}
-                </ul>
+                <OsComputerBrowser play={play} />
               ) : null}
             </div>
           </div>

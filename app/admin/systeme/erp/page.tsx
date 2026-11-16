@@ -24,6 +24,16 @@ export default function Page() {
     <div>
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["erp"]} />
 
+      <section className="mt-6 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-950">
+        <p className="font-semibold">Tables Ordinateur ERP (Étape 4)</p>
+        <p className="mt-1 text-sky-900/80">
+          Dans le jeu Book → Accès Ordinateur → ERP : 10 modules (dashboard,
+          stock, commandes, production, employés, factures, machines, clients,
+          fournisseurs, maintenance). Fog colonnes via{" "}
+          <strong>Visibilité</strong>. Données = pack param / synthèse OS.
+        </p>
+      </section>
+
       <KeyberOsRuntimePanel
         title="ERP — paramètres runtime"
         description="Pilotent les jauges Front-End (Trésorerie affichée, équipe de base). Formule : tresorerie_affichee = tresorerie_brute × facteur."

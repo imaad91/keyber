@@ -16,6 +16,7 @@ import {
 import { DAY_LABELS } from "@/lib/computerData";
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import { cn } from "@/lib/utils";
+import { OsComputerErp } from "@/components/osPlay/OsComputerErp";
 import {
   Database,
   FileText,
@@ -209,9 +210,15 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
                 Fermer
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-auto p-3 text-sm">
+            <div
+              className={
+                computerApp === "erp"
+                  ? "min-h-0 flex-1 overflow-hidden"
+                  : "min-h-0 flex-1 overflow-auto p-3 text-sm"
+              }
+            >
               {computerApp === "erp" ? (
-                <OsErpLite play={play} fog={fog} />
+                <OsComputerErp play={play} fog={fog} />
               ) : null}
               {computerApp === "mail" ? (
                 <OsMailLite play={play} setPlay={setPlay} />
@@ -252,63 +259,7 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
   );
 }
 
-/** Contenu apps temporaire (Étapes 4–8 enrichiront ERP/mail/…). */
-function OsErpLite({ play, fog }: { play: OsPlayState; fog: boolean }) {
-  const v = (x: string | number) => (fog ? "???" : String(x));
-  return (
-    <div className="space-y-4">
-      <section>
-        <h3 className="mb-2 font-semibold">Stocks</h3>
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b text-slate-500">
-              <th className="py-1">Réf</th>
-              <th>Nom</th>
-              <th>Qté</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {play.computer.stock.map((r) => (
-              <tr key={r.ref} className="border-b border-slate-100">
-                <td className="py-1">{r.ref}</td>
-                <td>{r.nom}</td>
-                <td>{v(r.qte)}</td>
-                <td>{v(r.statut)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-      <p className="text-xs text-slate-500">
-        Modules ERP complets (10) → Étape 4. Pour l&apos;instant : aperçu stocks /
-        commandes / production.
-      </p>
-      <section>
-        <h3 className="mb-2 font-semibold">Commandes</h3>
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b text-slate-500">
-              <th className="py-1">N°</th>
-              <th>Client</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {play.computer.commandes.map((r) => (
-              <tr key={r.numero} className="border-b border-slate-100">
-                <td className="py-1">{r.numero}</td>
-                <td>{r.client}</td>
-                <td>{v(r.statut)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    </div>
-  );
-}
-
+/** Contenu apps temporaire (Étapes 5–8 enrichiront mail/chat/…). */
 function OsMailLite({
   play,
   setPlay,

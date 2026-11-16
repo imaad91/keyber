@@ -66,7 +66,8 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     id: "interface-joueur",
     href: "/admin/systeme/interface-joueur",
     label: "Interface Joueur",
-    blurb: "Shell play : jauges, décisions, Ordinateur, interviews, live prod.",
+    blurb:
+      "Shell chrome /play : sidebar, horloge, KPI, colonne objectifs, workspace.",
   },
   {
     id: "ordinateur",
@@ -341,8 +342,10 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       ],
       codeRefs: [
         "lib/keyberOs/interfaceJoueur.ts",
+        "lib/keyberOs/shellActions.ts",
         "components/osPlay/OsPlayShell.tsx",
         "app/jouer/book/[id]/page.tsx",
+        "app/admin/systeme/interface-joueur/page.tsx",
       ],
     },
     ordinateur: {

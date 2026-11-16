@@ -22,14 +22,16 @@ import {
   paramFileExists,
   setAdminPlaySession,
 } from "@/lib/playCatalog";
+import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 
 /**
- * Front-End play Book — shell Keyber OS (Ordinateur, décisions, interviews…).
+ * Front-End play Book — shell Keyber OS chrome /play (Étape 2).
  * Pas d'Atelier.
  */
 export default function JouerBookEntryPage() {
   const { id } = useParams<{ id: string }>();
   const { getEntry, syncPlayerCatalog } = useBookStore();
+  const { config: osConfig } = useKeyberOsRuntime();
   const bookEntry = getEntry(id);
   const catalogEntry = getPlayCatalogEntry(id);
 
@@ -153,12 +155,21 @@ export default function JouerBookEntryPage() {
       ? `Compétence : ${meta.competenceName || "—"}`
       : `Rôle : ${meta.roleName || "—"} · Secteur : ${meta.secteur || "—"}`;
 
+  const fullBleed =
+    Boolean(play) && osConfig.interfaceJoueur.fullBleedShell !== false;
+
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
+    <div
+      className={
+        fullBleed
+          ? "flex min-h-screen flex-col bg-background"
+          : "min-h-screen bg-slate-100 text-slate-900"
+      }
+    >
       <BookPlayStatusBanner status={status} />
 
       {adminSession ? (
-        <div className="border-b border-slate-200 bg-white px-4 py-2">
+        <div className="shrink-0 border-b border-slate-200 bg-white px-4 py-2">
           <Link href={returnHref}>
             <AdminButton
               type="button"
@@ -171,39 +182,78 @@ export default function JouerBookEntryPage() {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-5xl px-6 py-8">
-        {!adminSession ? (
-          <Link
-            href="/jouer/live"
-            className="mb-4 inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Catalogue Live
-          </Link>
-        ) : null}
-
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <ModeBadge mode={meta.mode} />
-          <span className="text-xs text-slate-500">
-            {meta.entrepriseNom} · V{meta.version}
-          </span>
+      {fullBleed ? (
+        <div className="flex min-h-0 flex-1 flex-col">
+          {!adminSession ? (
+            <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-panel px-3 py-1.5 text-xs text-muted">
+              <Link
+                href="/jouer/live"
+                className="inline-flex items-center gap-1 hover:text-foreground"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Catalogue
+              </Link>
+              <ModeBadge mode={meta.mode} />
+              <span>
+                {meta.entrepriseNom} · V{meta.version}
+              </span>
+            </div>
+          ) : (
+            <div className="flex shrink-0 items-center gap-2 border-b border-white/10 bg-panel px-3 py-1.5 text-xs text-muted">
+              <ModeBadge mode={meta.mode} />
+              <span>
+                {meta.entrepriseNom} · V{meta.version}
+              </span>
+            </div>
+          )}
+          {play ? (
+            <OsPlayShell
+              play={play}
+              setPlay={setPlay}
+              title={bookVersionLabel(meta)}
+              subtitle={subtitle}
+            />
+          ) : (
+            <p className="p-6 text-sm text-muted">
+              {fileMissing
+                ? "Fichier de paramétrage introuvable."
+                : "Chargement…"}
+            </p>
+          )}
         </div>
-
-        {!play ? (
-          <p className="text-sm text-slate-500">
-            {fileMissing
-              ? "Fichier de paramétrage introuvable (et aucun param embarqué)."
-              : "Chargement du paramétrage…"}
-          </p>
-        ) : (
-          <OsPlayShell
-            play={play}
-            setPlay={setPlay}
-            title={bookVersionLabel(meta)}
-            subtitle={subtitle}
-          />
-        )}
-      </div>
+      ) : (
+        <div className="mx-auto max-w-5xl px-6 py-8">
+          {!adminSession ? (
+            <Link
+              href="/jouer/live"
+              className="mb-4 inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Catalogue Live
+            </Link>
+          ) : null}
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <ModeBadge mode={meta.mode} />
+            <span className="text-xs text-slate-500">
+              {meta.entrepriseNom} · V{meta.version}
+            </span>
+          </div>
+          {!play ? (
+            <p className="text-sm text-slate-500">
+              {fileMissing
+                ? "Fichier de paramétrage introuvable."
+                : "Chargement…"}
+            </p>
+          ) : (
+            <OsPlayShell
+              play={play}
+              setPlay={setPlay}
+              title={bookVersionLabel(meta)}
+              subtitle={subtitle}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -20,8 +20,8 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["interface-joueur"]} />
 
       <KeyberOsRuntimePanel
-        title="Interface Joueur — shell & affichage"
-        description="Shell type POC (sidebar + Ordinateur) et éléments visibles."
+        title="Interface Joueur — shell chrome /play (Étape 2)"
+        description="Composition exacte : sidebar 232px, horloge, KPI, main + colonne droite. Toggles pour vérifier chaque zone."
         onReset={() =>
           setConfig({
             interfaceJoueur: { ...OS_RUNTIME_DEFAULTS.interfaceJoueur },
@@ -43,21 +43,42 @@ export default function Page() {
           }
         />
         <OsToggle
-          label="Horloge / jour"
+          label="Plein écran (full-bleed comme /play)"
+          checked={mod.fullBleedShell}
+          onChange={(fullBleedShell) =>
+            setConfig({ interfaceJoueur: { ...mod, fullBleedShell } })
+          }
+        />
+        <OsToggle
+          label="Liens sidebar (Livre / Journal / Profil)"
+          checked={mod.showSidebarLinks}
+          onChange={(showSidebarLinks) =>
+            setConfig({ interfaceJoueur: { ...mod, showSidebarLinks } })
+          }
+        />
+        <OsToggle
+          label="Colonne droite (objectifs + fil events)"
+          checked={mod.showRightAside}
+          onChange={(showRightAside) =>
+            setConfig({ interfaceJoueur: { ...mod, showRightAside } })
+          }
+        />
+        <OsToggle
+          label="Horloge / jour / barre temps"
           checked={mod.showClock}
           onChange={(showClock) =>
             setConfig({ interfaceJoueur: { ...mod, showClock } })
           }
         />
         <OsToggle
-          label="Objectifs sidebar"
+          label="Objectifs (colonne droite)"
           checked={mod.showObjectives}
           onChange={(showObjectives) =>
             setConfig({ interfaceJoueur: { ...mod, showObjectives } })
           }
         />
         <OsToggle
-          label="Afficher jauges ERP"
+          label="Afficher jauges KPI"
           checked={mod.showErpTiles}
           onChange={(showErpTiles) =>
             setConfig({ interfaceJoueur: { ...mod, showErpTiles } })

@@ -67,7 +67,7 @@ const STEPS: {
   {
     n: 5,
     title: "Ordinateur · Jours · Fins (param / Excel)",
-    body: "Pour le feeling POC, le param doit porter Ordinateur (apps ERP, mail, chat, docs, browser…), Jours (timeline), et Fins (conditions + écrans). Templates Excel satellites Ordinateur : Atelier → Création → télécharge KEYBER_Template_Ordinateur.xlsx, remplis (Lumière), import dry-run sur la fiche — l'OS n'invente pas. Checklist « parité feeling » sur la carte Book te montre ce qui est encore rouge.",
+    body: "Pour le feeling POC, le param doit porter Ordinateur (apps ERP, mail, chat, docs, browser…), Jours (timeline), Interviews / Objectifs / Kpis, Décisions et Fins (conditions + écrans). Templates Excel : KEYBER_Template_Ordinateur.xlsx (étape 32) + KEYBER_Template_Narration_Decisions.xlsx (étape 33) — download + import dry-run sur la fiche Création. Démo remplie Lumière sous data/scenarios/lumiere-co/. L'OS n'invente pas. Checklist « parité feeling » sur la carte Book te montre ce qui est encore rouge.",
     accent: "bg-indigo-50 border-indigo-200",
     ring: "bg-indigo-600",
     badge: "text-indigo-950",

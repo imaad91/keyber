@@ -12,6 +12,7 @@ import {
   type ContexteExcelFields,
 } from "@/lib/atelierCreationExcel";
 import type { OrdinateurExcelPack } from "@/lib/atelierOrdinateurExcel";
+import type { NarrationExcelPack } from "@/lib/atelierNarrationExcel";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import {
   useBookStore,
@@ -83,6 +84,11 @@ export type AtelierCreation = {
    * Rempli via import template ; pas d'invention OS.
    */
   ordinateurPack: OrdinateurExcelPack;
+  /**
+   * Étape 33 — staging Excel narration & décisions (PNJ, Objectifs, Kpis…).
+   * Rempli via import template ; pas d'invention OS (Lumière = exception seed).
+   */
+  narrationPack: NarrationExcelPack;
   roleNames: string[];
   competenceNames: string[];
   scenarios: CreationScenarioDraft[];
@@ -121,6 +127,10 @@ function normalizeCreation(
     ordinateurPack:
       c.ordinateurPack && typeof c.ordinateurPack === "object"
         ? c.ordinateurPack
+        : {},
+    narrationPack:
+      c.narrationPack && typeof c.narrationPack === "object"
+        ? c.narrationPack
         : {},
     roleNames: Array.isArray(c.roleNames) ? c.roleNames : [],
     competenceNames: Array.isArray(c.competenceNames)
@@ -310,6 +320,7 @@ export function useAtelierCreationStore() {
         secteur: fields["Secteur d'activité"]?.trim() ?? "",
         fields: { ...emptyContexteFields(), ...fields },
         ordinateurPack: {},
+        narrationPack: {},
         roleNames: [],
         competenceNames: [],
         scenarios: [],
@@ -394,6 +405,27 @@ export function useAtelierCreationStore() {
         ...state,
         creations: state.creations.map((x) => (x.id === id ? next : x)),
         toast: "Ordinateur Excel enregistré (staging)",
+      });
+      return {};
+    },
+    /** Étape 33 — applique le staging Excel narration / décisions. */
+    setNarrationPack(
+      id: string,
+      pack: NarrationExcelPack
+    ): { error?: string } {
+      ensure();
+      const c = state.creations.find((x) => x.id === id);
+      if (!c) return { error: "Création introuvable" };
+      if (c.dansBook) return { error: "Déjà dans le Book — lecture seule" };
+      const next = {
+        ...c,
+        narrationPack: { ...pack },
+        updatedAt: now(),
+      };
+      persist({
+        ...state,
+        creations: state.creations.map((x) => (x.id === id ? next : x)),
+        toast: "Narration / décisions Excel enregistré (staging)",
       });
       return {};
     },
@@ -541,6 +573,7 @@ export function useAtelierCreationStore() {
         secteur: entry.secteur,
         fields: { ...emptyContexteFields(), ...entry.fields },
         ordinateurPack: {},
+        narrationPack: {},
         roleNames: [...entry.roleNames],
         competenceNames: [...entry.competenceNames],
         scenarios: [

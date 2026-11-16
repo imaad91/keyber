@@ -10,3 +10,5 @@ Entreprise de démonstration Studio. **Ne pas confondre avec Novacier** (toujour
 Schéma étendu (Étape 21) : chaque JSON inclut les coquilles `Ordinateur`, `Jours`, `Interviews`, `Objectifs`, `Kpis`, `Conséquences`, `Intro` (vides autorisées).
 
 Événements OS (Étape 24) : `KEYBER_Events_Lumiere_Co.xlsx` — template rempli démo (Jour/Heure/Urgent/Conséquences). Les JSON param portent les events mappés (heure + conséquences).
+
+Narration / décisions (Étape 33) : `KEYBER_Narration_Lumiere_Co.xlsx` — PNJ, Objectifs, Kpis, Jours, Décisions, Options, Fins (rempli démo). Staging Création via seed `narrationPack` ; import dry-run aussi sur la fiche.

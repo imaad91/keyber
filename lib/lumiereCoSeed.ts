@@ -16,6 +16,7 @@ import {
   LUMIERE_NOM,
   LUMIERE_ROLE,
   LUMIERE_SECTEUR,
+  buildLumiereNarrationPack,
   lumiereCompetenceGraph,
   lumiereCompetenceParam,
   lumiereCompetenceText,
@@ -101,12 +102,13 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
   const creations = Array.isArray(creationState.creations)
     ? creationState.creations
     : [];
-  const alreadyCreation = creations.some(
+  const narrationPack = buildLumiereNarrationPack();
+  const alreadyCreationIdx = creations.findIndex(
     (c) =>
       String((c as { id?: string }).id) === LUMIERE_CREATION_ID ||
       String((c as { familyId?: string }).familyId) === LUMIERE_FAMILY_ID
   );
-  if (!alreadyCreation) {
+  if (alreadyCreationIdx < 0) {
     creations.unshift({
       id: LUMIERE_CREATION_ID,
       familyId: LUMIERE_FAMILY_ID,
@@ -114,6 +116,9 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
       nom: LUMIERE_NOM,
       secteur: LUMIERE_SECTEUR,
       fields,
+      ordinateurPack: {},
+      /** Étape 33 — staging narration rempli (exception démo Lumière). */
+      narrationPack,
       roleNames: [LUMIERE_ROLE],
       competenceNames: [LUMIERE_COMPETENCE],
       scenarios: [],
@@ -148,6 +153,15 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
       createdAt: at,
       updatedAt: at,
     });
+    writeJson(KEY_CREATION, { creations });
+  } else {
+    /** Rafraîchit le staging narration Lumière (exception étape 33). */
+    const existing = creations[alreadyCreationIdx] as Record<string, unknown>;
+    creations[alreadyCreationIdx] = {
+      ...existing,
+      narrationPack,
+      updatedAt: at,
+    };
     writeJson(KEY_CREATION, { creations });
   }
 
@@ -426,7 +440,7 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
   return {
     ok: true,
     created: {
-      creation: !alreadyCreation,
+      creation: alreadyCreationIdx < 0,
       events: newEvents.length,
       roles: rolesAdded,
       competences: competencesAdded,

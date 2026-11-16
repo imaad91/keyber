@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
+import { resolvePeutPublierLive } from "@/lib/equipeLiveRights";
 import {
   ROLE_LABELS,
   useEquipeStore,
@@ -25,6 +26,7 @@ export default function EquipeUserDetailPage() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<EquipeRole>("joueur");
   const [actif, setActif] = useState(true);
+  const [peutPublierLive, setPeutPublierLive] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -33,6 +35,7 @@ export default function EquipeUserDetailPage() {
     setEmail(user.email);
     setRole(user.role);
     setActif(user.actif);
+    setPeutPublierLive(resolvePeutPublierLive(user));
   }, [user]);
 
   if (!user) {
@@ -72,7 +75,14 @@ export default function EquipeUserDetailPage() {
       <div className="mb-4 flex gap-2">
         <AdminButton
           onClick={() =>
-            updateUser(id, { prenom, nom, email, role, actif })
+            updateUser(id, {
+              prenom,
+              nom,
+              email,
+              role,
+              actif,
+              peutPublierLive,
+            })
           }
         >
           Enregistrer les modifications
@@ -127,6 +137,21 @@ export default function EquipeUserDetailPage() {
             onChange={(e) => setActif(e.target.checked)}
           />
           Compte actif
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-slate-700 sm:col-span-2">
+          <span className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={peutPublierLive}
+              disabled={user.id === "user-admin-me"}
+              onChange={(e) => setPeutPublierLive(e.target.checked)}
+            />
+            Peut publier Live (Book)
+          </span>
+          <span className="text-xs font-normal text-slate-500">
+            Étape 26 — visible sur Book Live / En test. V1 : affichage seulement
+            (ne bloque pas le bouton Passer en Live).
+          </span>
         </label>
       </div>
 

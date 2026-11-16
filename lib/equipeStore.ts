@@ -19,6 +19,11 @@ export type EquipeUser = {
   email: string;
   role: EquipeRole;
   actif: boolean;
+  /**
+   * Étape 26 — droit « publier Live » (Book).
+   * Visible / noté ; V1 n'empêche pas setStatus Live.
+   */
+  peutPublierLive: boolean;
   createdAt: string;
   lastAccessAt: string | null;
   tempPassword?: string;
@@ -58,8 +63,29 @@ function seedOwner(): EquipeUser {
     email: "admin@keyber.local",
     role: "admin",
     actif: true,
+    peutPublierLive: true,
     createdAt: "2026-11-08T10:00:00.000Z",
     lastAccessAt: new Date().toISOString(),
+  };
+}
+
+function normalizeUser(raw: Partial<EquipeUser> & { id: string }): EquipeUser {
+  const role = (raw.role ?? "joueur") as EquipeRole;
+  const peut =
+    typeof raw.peutPublierLive === "boolean"
+      ? raw.peutPublierLive
+      : role === "admin" || raw.id === "user-admin-me";
+  return {
+    id: raw.id,
+    prenom: raw.prenom ?? "",
+    nom: raw.nom ?? "",
+    email: raw.email ?? "",
+    role,
+    actif: raw.actif !== false,
+    peutPublierLive: raw.id === "user-admin-me" ? true : peut,
+    createdAt: raw.createdAt ?? new Date().toISOString(),
+    lastAccessAt: raw.lastAccessAt ?? null,
+    tempPassword: raw.tempPassword,
   };
 }
 
@@ -73,9 +99,11 @@ function load(): EquipeState {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyState();
     const parsed = JSON.parse(raw) as Partial<EquipeState>;
-    const users = parsed.users?.length ? parsed.users : [seedOwner()];
+    let users = (parsed.users?.length ? parsed.users : [seedOwner()]).map(
+      (u) => normalizeUser(u as Partial<EquipeUser> & { id: string })
+    );
     if (!users.some((u) => u.id === "user-admin-me")) {
-      users.unshift(seedOwner());
+      users = [seedOwner(), ...users];
     }
     return {
       users,
@@ -146,6 +174,7 @@ export function useEquipeStore() {
         email: input.email.trim().toLowerCase(),
         role: input.role,
         actif: true,
+        peutPublierLive: input.role === "admin",
         createdAt: new Date().toISOString(),
         lastAccessAt: null,
         tempPassword: input.tempPassword,
@@ -157,16 +186,21 @@ export function useEquipeStore() {
       ensure();
       persist({
         ...state,
-        users: state.users.map((u) =>
-          u.id === id
-            ? {
-                ...u,
-                ...patch,
-                id: u.id,
-                createdAt: u.createdAt,
-              }
-            : u
-        ),
+        users: state.users.map((u) => {
+          if (u.id !== id) return u;
+          const next = {
+            ...u,
+            ...patch,
+            id: u.id,
+            createdAt: u.createdAt,
+          };
+          if (u.id === "user-admin-me") {
+            next.peutPublierLive = true;
+            next.role = "admin";
+            next.actif = true;
+          }
+          return next;
+        }),
         toast: "Utilisateur enregistré",
       });
     },

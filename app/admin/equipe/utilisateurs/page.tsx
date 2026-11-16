@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
+import { resolvePeutPublierLive } from "@/lib/equipeLiveRights";
 import {
   ROLE_LABELS,
   useEquipeStore,
@@ -131,6 +132,7 @@ export default function EquipeUtilisateursPage() {
               <th className="px-4 py-3">Nom</th>
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Rôle</th>
+              <th className="px-4 py-3">Live</th>
               <th className="px-4 py-3">Statut</th>
               <th className="px-4 py-3">Créé</th>
               <th className="px-4 py-3">Dernier accès</th>
@@ -150,6 +152,13 @@ export default function EquipeUtilisateursPage() {
                 </td>
                 <td className="px-4 py-3 text-slate-600">{u.email}</td>
                 <td className="px-4 py-3">{ROLE_LABELS[u.role]}</td>
+                <td className="px-4 py-3 text-xs">
+                  {resolvePeutPublierLive(u) ? (
+                    <span className="font-semibold text-violet-700">Oui</span>
+                  ) : (
+                    <span className="text-slate-400">Non</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   {u.actif ? (
                     <span className="text-emerald-700">Actif</span>

@@ -115,6 +115,14 @@ export type KeyberOsRuntimeConfig = {
   interviews: {
     enabled: boolean;
   };
+  /** Jauges de confiance PNJ (Étape 16). */
+  relations: {
+    enabled: boolean;
+    /** Confiance initiale si le param ne fournit pas relationConfiance. */
+    defaultTrust: number;
+    /** Afficher le panneau jauges dans le shell interview. */
+    showGauges: boolean;
+  };
   objectifs: {
     enabled: boolean;
   };
@@ -209,6 +217,11 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     onboardingEnabled: true,
   },
   interviews: { enabled: true },
+  relations: {
+    enabled: true,
+    defaultTrust: 55,
+    showGauges: true,
+  },
   objectifs: { enabled: true },
   visibilite: {
     enabled: true,
@@ -445,6 +458,15 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
     interviews: {
       enabled: raw.interviews?.enabled ?? d.interviews.enabled,
     },
+    relations: {
+      enabled: raw.relations?.enabled ?? d.relations.enabled,
+      defaultTrust: clamp(
+        Number(raw.relations?.defaultTrust ?? d.relations.defaultTrust),
+        0,
+        100
+      ),
+      showGauges: raw.relations?.showGauges ?? d.relations.showGauges,
+    },
     objectifs: {
       enabled: raw.objectifs?.enabled ?? d.objectifs.enabled,
     },
@@ -569,6 +591,7 @@ export function setOsRuntimeConfig(
     temps: { ...b.config.temps, ...patch.temps },
     cycleVie: { ...b.config.cycleVie, ...patch.cycleVie },
     interviews: { ...b.config.interviews, ...patch.interviews },
+    relations: { ...b.config.relations, ...patch.relations },
     objectifs: { ...b.config.objectifs, ...patch.objectifs },
     visibilite: { ...b.config.visibilite, ...patch.visibilite },
   };
@@ -620,6 +643,8 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.cycleVie.enabled;
     case "interviews":
       return c.interviews.enabled;
+    case "relations":
+      return c.relations.enabled;
     case "objectifs":
       return c.objectifs.enabled;
     case "visibilite":

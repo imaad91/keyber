@@ -332,6 +332,9 @@ export function buildComputerPackFromParam(
         id: "iv-1",
         nom: chatContacts[0]!.name,
         role: chatContacts[0]!.role,
+        phrase: "Le stock, c'est mon radar.",
+        bio: `Responsable ops chez ${entreprise}. Suit les seuils et les alertes.`,
+        relationConfiance: 58,
         lines: [
           {
             q: "Comment va le stock ?",
@@ -344,15 +347,84 @@ export function buildComputerPackFromParam(
               "Rien de critique, mais reste sur l'ERP et les mails.",
           },
         ],
+        questions: [
+          {
+            id: "iv1-q1",
+            texte: "Comment va le stock ?",
+            choices: [
+              {
+                id: "iv1-q1-a",
+                texte: "Donne-moi le chiffre exact et le seuil.",
+                reponse: `On est à ${stockQty} unités. Le seuil de sécurité, c'est autour de ${Math.max(40, Math.floor(stockQty * 0.4))}.`,
+                confianceDelta: 4,
+                xp: 5,
+              },
+              {
+                id: "iv1-q1-b",
+                texte: "On verra plus tard, j'ai autre chose.",
+                reponse: "OK… mais ne tarde pas trop, les seuils ne mentent pas.",
+                confianceDelta: -3,
+              },
+            ],
+          },
+          {
+            id: "iv1-q2",
+            texte: "Un risque aujourd'hui ?",
+            choices: [
+              {
+                id: "iv1-q2-a",
+                texte: "Dis-moi tout, même les rumeurs.",
+                reponse:
+                  events[0]?.description ||
+                  "Rien de critique, mais croise ERP et mails avant de décider.",
+                confianceDelta: 5,
+                unlockInfo: "RISQUE_PARTAGE",
+                xp: 8,
+              },
+              {
+                id: "iv1-q2-b",
+                texte: "Reste factuel, pas de panique.",
+                reponse: "Compris. Je te remonte seulement ce qui est dans l'ERP.",
+                confianceDelta: 2,
+              },
+            ],
+          },
+        ],
       },
       {
         id: "iv-2",
         nom: chatContacts[1]?.name || "Collègue",
         role: "Terrain",
+        phrase: "Une décision claire, et on avance.",
+        bio: "Équipier terrain — packing / picking.",
+        relationConfiance: 52,
         lines: [
           {
             q: "Tu as besoin de quelque chose ?",
             a: "Une décision claire sur le réappro suffirait.",
+          },
+        ],
+        questions: [
+          {
+            id: "iv2-q1",
+            texte: "Tu as besoin de quelque chose ?",
+            choices: [
+              {
+                id: "iv2-q1-a",
+                texte: "Je tranche le réappro aujourd'hui.",
+                reponse: "Parfait. L'équipe attendait ça.",
+                confianceDelta: 6,
+                xp: 5,
+                consequences: [{ cible: "moral", valeur: 2 }],
+              },
+              {
+                id: "iv2-q1-b",
+                texte: "Débrouillez-vous encore une journée.",
+                reponse: "…On fera avec. Mais le moral, ça descend.",
+                confianceDelta: -5,
+                consequences: [{ cible: "moral", valeur: -3 }],
+              },
+            ],
           },
         ],
       },

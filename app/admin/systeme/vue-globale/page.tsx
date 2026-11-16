@@ -25,6 +25,7 @@ function moduleEnabled(
     "cycle-vie": config.cycleVie.enabled,
     notifications: config.notifications.enabled,
     interviews: config.interviews.enabled,
+    relations: config.relations.enabled,
     objectifs: config.objectifs.enabled,
     visibilite: config.visibilite.enabled,
   };

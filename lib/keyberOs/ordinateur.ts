@@ -47,7 +47,9 @@ export function osOrdinateurSetAction(
     activeAction: action,
     computerApp: action === "computer" ? state.computerApp : null,
     selectedInterviewId:
-      action === "interview" ? state.selectedInterviewId : null,
+      action === "interview"
+        ? state.selectedInterviewId ?? state.interviews[0]?.id ?? null
+        : null,
     feedback: action === state.activeAction ? state.feedback : null,
   };
   if (action && action !== state.activeAction) {

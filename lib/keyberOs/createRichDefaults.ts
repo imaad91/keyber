@@ -21,7 +21,8 @@ export function createEmptyOsMeta(partial?: Partial<OsMeta>): OsMeta {
     heureActuelle: "08:00",
     tempsRestantMinutes: 600,
     week: 1,
-    minutesSinceStart: 8 * 60,
+    /** 0 = début journée (08:00) — même sémantique POC. */
+    minutesSinceStart: 0,
     dayLengthMinutes: 600,
     ...partial,
   };
@@ -157,9 +158,3 @@ export function createDefaultOsKpis(): OsKpiDef[] {
   ];
 }
 
-export function formatOsHeure(minutesSinceStart: number): string {
-  const m = ((minutesSinceStart % (24 * 60)) + 24 * 60) % (24 * 60);
-  const h = Math.floor(m / 60);
-  const min = m % 60;
-  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-}

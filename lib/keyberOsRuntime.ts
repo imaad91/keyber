@@ -159,7 +159,8 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     enabled: true,
     dayLengthMinutes: 600,
     startDay: 1,
-    startMinutes: 8 * 60,
+    /** Minutes déjà écoulées au boot (0 = 08:00). */
+    startMinutes: 0,
   },
   interviews: { enabled: true },
   objectifs: { enabled: true },

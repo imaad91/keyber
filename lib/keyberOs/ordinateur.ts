@@ -3,7 +3,11 @@
  */
 
 import { isOsModuleEnabled } from "@/lib/keyberOsRuntime";
-import { osTempsAdvance, OS_ACTION_TIME_COST } from "@/lib/keyberOs/temps";
+import {
+  OS_ACTION_TIME_COST,
+  osTempsAdvance,
+  osTempsCanSpend,
+} from "@/lib/keyberOs/temps";
 import { syncDashboardCards } from "@/lib/keyberOs/ordinateurPack";
 import type {
   OsComputerAppId,
@@ -28,10 +32,28 @@ export function osOrdinateurSetAction(
     computerApp: action === "computer" ? state.computerApp : null,
     selectedInterviewId:
       action === "interview" ? state.selectedInterviewId : null,
+    feedback: action === state.activeAction ? state.feedback : null,
   };
   if (action && action !== state.activeAction) {
-    const cost = OS_ACTION_TIME_COST[action] ?? 5;
-    next = osTempsAdvance(next, cost);
+    // « decide » : coût appliqué à la validation du choix (pipeline).
+    // « computer » : 0 — le temps part à l'ouverture d'une app.
+    const cost =
+      action === "decide" || action === "computer"
+        ? 0
+        : (OS_ACTION_TIME_COST[action] ?? 5);
+    if (cost > 0) {
+      if (!osTempsCanSpend(next, cost)) {
+        return {
+          ...state,
+          feedback: "Pas assez de temps restant aujourd'hui.",
+          log: [
+            ...state.log,
+            `Temps → action « ${action} » refusée (reste insuffisant)`,
+          ],
+        };
+      }
+      next = osTempsAdvance(next, cost);
+    }
   }
   return next;
 }
@@ -52,7 +74,18 @@ export function osOrdinateurOpenApp(
     computerApp: app,
   };
   if (app) {
-    next = osTempsAdvance(next, OS_ACTION_TIME_COST[app] ?? 5);
+    const cost = OS_ACTION_TIME_COST[app] ?? 5;
+    if (!osTempsCanSpend(next, cost)) {
+      return {
+        ...state,
+        feedback: "Pas assez de temps restant aujourd'hui.",
+        log: [
+          ...state.log,
+          `Temps → app « ${app} » refusée (reste insuffisant)`,
+        ],
+      };
+    }
+    next = osTempsAdvance(next, cost);
     next = {
       ...next,
       log: [...next.log, `Ordinateur → app « ${app} »`],

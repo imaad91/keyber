@@ -15,7 +15,11 @@ import {
 } from "@/lib/keyberOs/interfaceJoueur";
 import { osOrdinateurSyncAfterErp } from "@/lib/keyberOs/ordinateur";
 import { osObjectifsAfterChoice } from "@/lib/keyberOs/objectifs";
-import { osTempsAdvance, OS_ACTION_TIME_COST } from "@/lib/keyberOs/temps";
+import {
+  OS_ACTION_TIME_COST,
+  osTempsAdvance,
+  osTempsCanSpend,
+} from "@/lib/keyberOs/temps";
 import type { OsPlayState } from "@/lib/keyberOs/types";
 
 export function osPipelineBoot(
@@ -33,12 +37,24 @@ export function osPipelineApplyChoice(
 ): OsPlayState {
   if (state.finished) return state;
 
+  const decideCost = OS_ACTION_TIME_COST.decide ?? 20;
+  if (!osTempsCanSpend(state, decideCost)) {
+    return {
+      ...state,
+      feedback: "Pas assez de temps restant aujourd'hui.",
+      log: [
+        ...state.log,
+        "Temps → décision refusée (reste insuffisant)",
+      ],
+    };
+  }
+
   let next = osDecisionsApplyChoice(state, choiceId);
   if (!next) {
     return { ...state, finished: true };
   }
 
-  next = osTempsAdvance(next, OS_ACTION_TIME_COST.decide);
+  next = osTempsAdvance(next, decideCost);
   next = osEvenementsTrigger(next);
   next = osErpLogUpdate(next);
   next = osOrdinateurSyncAfterErp(next);

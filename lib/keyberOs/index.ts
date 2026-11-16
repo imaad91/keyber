@@ -49,7 +49,17 @@ export {
 } from "@/lib/keyberOs/ordinateur";
 
 export { osInterviewSelect } from "@/lib/keyberOs/interviews";
-export { formatOsClock } from "@/lib/keyberOs/temps";
+export {
+  formatOsClock,
+  OS_ACTION_TIME_COST,
+  OS_WORK_DAY_START_HOUR,
+  osTempsAdvance,
+  osTempsCanSpend,
+  osTempsDayLength,
+  osTempsDayProgressPct,
+  osTempsElapsed,
+  osTempsRemaining,
+} from "@/lib/keyberOs/temps";
 export { osVisibiliteFog, osVisibiliteInstallSensor } from "@/lib/keyberOs/visibilite";
 export {
   osKpiBarItems,

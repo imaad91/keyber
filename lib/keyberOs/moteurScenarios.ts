@@ -15,8 +15,8 @@ import {
   createEmptyOsProgression,
   createEmptyOsVisibilite,
   createEmptyOsWorld,
-  formatOsHeure,
 } from "@/lib/keyberOs/createRichDefaults";
+import { formatOsClock } from "@/lib/keyberOs/temps";
 import type { OsDecision, OsPlayState } from "@/lib/keyberOs/types";
 
 function parseTresorerie(param: ScenarioParamFile): number {
@@ -95,7 +95,7 @@ export function osScenariosBoot(
     scenarioId: sessionId,
     roleId: param.Rôle || null,
     jourActuel: day,
-    heureActuelle: formatOsHeure(minutesSinceStart),
+    heureActuelle: formatOsClock(minutesSinceStart),
     tempsRestantMinutes: tempsRestant,
     week: 1,
     minutesSinceStart,

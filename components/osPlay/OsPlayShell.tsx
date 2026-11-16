@@ -5,6 +5,9 @@ import {
   formatOsClock,
   osInterviewSelect,
   osOrdinateurSetAction,
+  osTempsDayProgressPct,
+  osTempsElapsed,
+  osTempsRemaining,
   osVisibiliteFog,
   osVisibiliteInstallSensor,
   type OsPlayState,
@@ -19,6 +22,7 @@ import { formatRemainingLabel } from "@/lib/evenements";
 import { cn } from "@/lib/utils";
 import { OsAtelierLive } from "@/components/osPlay/OsAtelierLive";
 import { OsComputerDesktop } from "@/components/osPlay/OsComputerDesktop";
+import { OsGameClockBar } from "@/components/osPlay/OsGameClockBar";
 import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
 import {
   BookMarked,
@@ -55,24 +59,16 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
     );
   }
 
-  const minutes =
-    play.meta?.minutesSinceStart ?? play.minutesSinceStart ?? 0;
-  const dayLen =
-    play.meta?.dayLengthMinutes ?? play.dayLengthMinutes ?? 600;
-  const remaining =
-    play.meta?.tempsRestantMinutes ?? Math.max(0, dayLen - minutes);
+  const minutes = osTempsElapsed(play);
+  const remaining = osTempsRemaining(play);
   const day = play.meta?.jourActuel ?? play.day;
   const week = play.meta?.week ?? play.week;
-  const heure =
-    play.meta?.heureActuelle ?? formatOsClock(minutes);
+  const heure = play.meta?.heureActuelle ?? formatOsClock(minutes);
   const chapter = play.world?.chapters?.find(
     (c) => c.id === play.world.chapterId
   );
   const entreprise = play.param.Entreprise || play.param.Nom || "Scénario";
-  const progressPct = Math.min(
-    100,
-    Math.max(0, (minutes / Math.max(1, dayLen)) * 100)
-  );
+  const progressPct = osTempsDayProgressPct(play);
   const showAside =
     ui.showRightAside && !computerOpen && (ui.showObjectives || true);
   const unlocked = play.world?.unlockedActions ?? [
@@ -222,24 +218,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {ui.showClock ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-panel/90 px-4 py-2 text-sm backdrop-blur">
-            <p className="font-display font-semibold tabular-nums text-foreground">
-              Jour {day} — {heure} — Il te reste{" "}
-              {formatRemainingLabel(remaining)}
-            </p>
-            {play.world?.dayDecisionId ||
-            (play.stepIndex > 0 && !play.finished) ? (
-              <span className="rounded-md bg-ok/15 px-2 py-0.5 text-[11px] font-semibold text-ok">
-                Décision en cours
-              </span>
-            ) : (
-              <span className="rounded-md bg-accent-warm/15 px-2 py-0.5 text-[11px] font-semibold text-accent-warm">
-                Décision en attente
-              </span>
-            )}
-          </div>
-        ) : null}
+        {ui.showClock ? <OsGameClockBar play={play} /> : null}
 
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2 text-xs text-muted">
           <span>
@@ -273,6 +252,12 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
                 : "min-h-0 overflow-auto p-4 md:p-6"
             }
           >
+            {play.feedback && !computerOpen ? (
+              <p className="mb-3 rounded-xl border border-accent-warm/30 bg-accent-warm/10 px-3 py-2 text-sm text-accent-warm">
+                {play.feedback}
+              </p>
+            ) : null}
+
             {!computerOpen ? (
               <>
                 <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent">

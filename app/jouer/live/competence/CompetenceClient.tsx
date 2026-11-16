@@ -166,7 +166,7 @@ export default function JouerLiveCompetenceFunnelPage() {
                   {s.competenceName} · {s.entrepriseNom || "—"}
                 </p>
                 <Link
-                  href={`/jouer/book/${s.id}`}
+                  href={`/jouer/book/${s.id}?new=1`}
                   className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-accent underline"
                   onClick={() => setAdminPlaySession(null)}
                 >

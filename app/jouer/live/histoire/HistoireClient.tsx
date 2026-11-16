@@ -265,7 +265,7 @@ export default function JouerLiveHistoireFunnelPage() {
                   {h.roleName} · {h.secteur} · {h.entrepriseNom}
                 </p>
                 <Link
-                  href={`/jouer/book/${h.id}`}
+                  href={`/jouer/book/${h.id}?new=1`}
                   className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-accent underline"
                   onClick={() => setAdminPlaySession(null)}
                 >

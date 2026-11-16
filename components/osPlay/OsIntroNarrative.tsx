@@ -20,7 +20,7 @@ export function OsIntroNarrative({ play, setPlay }: Props) {
   const lines = osIntroLines(play.param);
 
   return (
-    <div className="absolute inset-0 z-[60] flex items-center justify-center overflow-hidden atmosphere-landing px-6 py-12 text-foreground">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center overflow-hidden atmosphere-landing px-6 py-12 text-foreground">
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{

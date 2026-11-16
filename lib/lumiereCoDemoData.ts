@@ -14,6 +14,13 @@ import {
 import { applyOsPlayToEventFields } from "@/lib/atelierEventsToParam";
 import type { BookGraphView } from "@/lib/bookStore";
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
+import {
+  lumiereConsequences,
+  lumiereIntro,
+  lumiereJoursFeeling,
+  lumiereLivre,
+  lumiereOrdinateurFeeling,
+} from "@/lib/lumiereCoFeeling";
 
 export const LUMIERE_NOM = "Lumière & Co";
 export const LUMIERE_SECTEUR = "E-commerce / Éclairage";
@@ -573,24 +580,7 @@ export function lumiereKpis() {
 
 /** Étape 33 — timeline jours (Lumière). */
 export function lumiereJours() {
-  return [
-    {
-      id: "jour-1",
-      jour: 1,
-      label: "J1 — Feu au quai",
-      phase: "urgence",
-      decisionIds: ["h1", "d1"],
-      eventIds: ["lumiere-ev-1", "lumiere-ev-2", "lumiere-ev-4"],
-    },
-    {
-      id: "jour-2",
-      jour: 2,
-      label: "J2 — Pic Noël",
-      phase: "pic",
-      decisionIds: ["h2"],
-      eventIds: ["lumiere-ev-3"],
-    },
-  ];
+  return lumiereJoursFeeling();
 }
 
 export function lumiereFinsHistoire() {
@@ -816,14 +806,12 @@ function withLumiereOrdinateur(
   const objectifs = lumiereObjectifs();
   const kpis = lumiereKpis();
   const jours = lumiereJours();
+  const feeling = lumiereOrdinateurFeeling();
   return {
     ...param,
     Ordinateur: {
+      ...feeling,
       interviews,
-      chatContacts: [
-        { id: "iv-samir", name: "Samir", role: "Logisticien" },
-        { id: "iv-lea", name: "Léa", role: "E-commerce" },
-      ],
       objectifs,
       sensors: lumiereSensors(),
     },
@@ -832,8 +820,9 @@ function withLumiereOrdinateur(
     Objectifs: objectifs,
     Jours: jours,
     Kpis: kpis,
-    Conséquences: [],
-    Intro: [],
+    Conséquences: lumiereConsequences(),
+    Intro: lumiereIntro(),
+    Livre: lumiereLivre(),
   } as ScenarioParamFile;
 }
 

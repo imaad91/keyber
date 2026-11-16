@@ -254,6 +254,8 @@ export type OsComputerPack = {
   documents: DocItem[];
   browser: BrowserResult[];
   dashboardCards: { label: string; value: string }[];
+  /** Séries graphiques Dashboard (prod / pannes), génériques. */
+  dashboardSeries: { name: string; prod: number; panne: number }[];
 };
 
 /**

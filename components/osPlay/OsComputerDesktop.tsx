@@ -16,6 +16,7 @@ import { DAY_LABELS } from "@/lib/computerData";
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import { cn } from "@/lib/utils";
 import { OsComputerChat } from "@/components/osPlay/OsComputerChat";
+import { OsComputerDashboard } from "@/components/osPlay/OsComputerDashboard";
 import { OsComputerErp } from "@/components/osPlay/OsComputerErp";
 import { OsComputerMail } from "@/components/osPlay/OsComputerMail";
 import {
@@ -217,7 +218,9 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
                 computerApp === "mail" ||
                 computerApp === "chat"
                   ? "min-h-0 flex-1 overflow-hidden"
-                  : "min-h-0 flex-1 overflow-auto p-3 text-sm"
+                  : computerApp === "dashboard"
+                    ? "min-h-0 flex-1 overflow-auto"
+                    : "min-h-0 flex-1 overflow-auto p-3 text-sm"
               }
             >
               {computerApp === "erp" ? (
@@ -227,7 +230,7 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
                 <OsComputerMail play={play} setPlay={setPlay} />
               ) : null}
               {computerApp === "dashboard" ? (
-                <OsDashLite play={play} fog={fog} />
+                <OsComputerDashboard play={play} fog={fog} />
               ) : null}
               {computerApp === "documents" ? (
                 <ul className="space-y-2">
@@ -261,19 +264,5 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
         )}
       </div>
     </section>
-  );
-}
-
-/** Contenu apps temporaire (Étapes 7–8 : dashboard / docs / browser). */
-function OsDashLite({ play, fog }: { play: OsPlayState; fog: boolean }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {play.computer.dashboardCards.map((c) => (
-        <div key={c.label} className="rounded-xl border bg-slate-50 p-4">
-          <p className="text-[10px] uppercase text-slate-500">{c.label}</p>
-          <p className="text-lg font-semibold">{fog ? "???" : c.value}</p>
-        </div>
-      ))}
-    </div>
   );
 }

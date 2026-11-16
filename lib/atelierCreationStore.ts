@@ -505,6 +505,12 @@ export function useAtelierCreationStore() {
       const c = state.creations.find((x) => x.id === id);
       if (!c) return { error: "Création introuvable" };
       if (c.dansBook) return { error: "Déjà envoyée dans le Book" };
+      if (!c.secteur.trim()) {
+        return {
+          error:
+            "Secteur d'activité obligatoire — renseigne-le dans l'Excel Contexte (colonne « Secteur d'activité ») avant d'envoyer au Book.",
+        };
+      }
 
       let next = c;
       if (next.roleNames.length) {

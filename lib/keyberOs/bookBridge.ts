@@ -16,6 +16,9 @@ export const OS_LEGACY_PLAY_PATH = "/play";
 
 /** Catalogue Live Front-End. */
 export const OS_LIVE_CATALOG_PATH = "/jouer/live";
+/** Portes séparées Mode Compétence / Mode Histoire (entonnoir). */
+export const OS_LIVE_COMPETENCE_PATH = "/jouer/live/competence";
+export const OS_LIVE_HISTOIRE_PATH = "/jouer/live/histoire";
 
 export function osBookPlayHref(bookEntryId: string): string {
   return `${OS_BOOK_PLAY_PATH}/${encodeURIComponent(bookEntryId)}`;
@@ -43,6 +46,6 @@ export function osBookBridgeInfo(): OsBookBridgeInfo {
     runtimeStorage: "keyber-os-runtime-v1",
     catalogStorage: "keyber-play-catalog-v1 (Live)",
     note:
-      "Tester / Live Admin ouvr/jouer/book/[id] avec OsPlayShell. /play reste le POC Novacier (useGameStore), non branché sur le Book.",
+      "Tester / Live Admin → `/jouer/book/[id]`. Catalogue joueur : `/jouer/live` → histoire|compétence. /play = POC Novacier.",
   };
 }

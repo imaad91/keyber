@@ -1,43 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
-import { ModeBadge } from "@/components/admin/BookEntryCard";
-import {
-  listVisibleLivePlayCatalog,
-  setAdminPlaySession,
-  type PlayCatalogEntry,
-} from "@/lib/playCatalog";
+import { useEffect } from "react";
+import { ArrowLeft, ArrowRight, BookOpen, Brain } from "lucide-react";
+import { setAdminPlaySession } from "@/lib/playCatalog";
 import { useBookStore } from "@/lib/bookStore";
-import { cn } from "@/lib/utils";
 
 /**
- * Catalogue joueur Book Live — lit keyber-play-catalog-v1 + fichiers param.
- * Pas d'Atelier. Scénarios / Histoires séparés.
+ * Hub Live Book — deux portes distinctes (Compétence ≠ Histoire).
+ * Plus de liste plate commune.
  */
-export default function JouerLiveBookPage() {
+export default function JouerLiveHubPage() {
   const { syncPlayerCatalog } = useBookStore();
-  const [entries, setEntries] = useState<PlayCatalogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     syncPlayerCatalog();
     setAdminPlaySession(null);
-    void listVisibleLivePlayCatalog().then((list) => {
-      setEntries(list);
-      setLoading(false);
-    });
-    // syncPlayerCatalog n'est pas stable (nouveau fn à chaque render)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const scenarios = entries.filter((e) => e.mode === "competence");
-  const histoires = entries.filter((e) => e.mode === "histoire");
-
   return (
     <div className="min-h-screen atmosphere-play text-foreground">
-      <div className="mx-auto max-w-3xl px-6 py-8">
+      <div className="mx-auto max-w-4xl px-6 py-8">
         <Link
           href="/"
           className="mb-3 inline-flex items-center gap-1 text-sm text-muted hover:text-accent"
@@ -48,107 +32,56 @@ export default function JouerLiveBookPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
           Book Live
         </p>
-        <h1 className="font-display text-3xl font-semibold">
-          Créations disponibles
+        <h1 className="font-display text-3xl font-semibold md:text-4xl">
+          Choisis ton mode
         </h1>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 max-w-xl text-sm text-muted">
           Uniquement les versions Live avec fichier de paramétrage. Piloté par
           Keyber OS — pas d&apos;Atelier.
         </p>
 
-        {loading ? (
-          <p className="mt-8 text-sm text-muted">Chargement…</p>
-        ) : (
-          <>
-            <section className="mt-8">
-              <h2 className="font-display text-xl font-semibold text-sky-700">
-                S&apos;entraîner — Mode Compétence
-              </h2>
-              <p className="mt-1 text-sm text-muted">
-                Catégorie → Compétence → Cours + Scénario.
-              </p>
-              {scenarios.length === 0 ? (
-                <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted">
-                  Aucun scénario Live.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {scenarios.map((e) => (
-                    <CatalogCard key={e.id} entry={e} />
-                  ))}
-                </div>
-              )}
-            </section>
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          <Link
+            href="/jouer/live/competence"
+            className="group flex flex-col rounded-3xl border border-sky-400/35 bg-sky-500/10 p-6 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-300/60 hover:bg-sky-500/15"
+          >
+            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-400/20 text-sky-200">
+              <Brain className="h-6 w-6" />
+            </span>
+            <h2 className="font-display text-2xl font-semibold text-sky-100">
+              Mode Compétence
+            </h2>
+            <p className="mt-2 flex-1 text-sm leading-relaxed text-sky-100/70">
+              S&apos;entraîner sur une compétence. Parcours : compétence →
+              scénario Live.
+            </p>
+            <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sky-200 group-hover:underline">
+              Entrer
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
 
-            <section className="mt-10">
-              <h2 className="font-display text-xl font-semibold text-violet-700">
-                Jouer une histoire — Mode Histoire
-              </h2>
-              <p className="mt-1 text-sm text-muted">
-                Rôle → Secteur → Entreprise → Histoire.
-              </p>
-              {histoires.length === 0 ? (
-                <p className="mt-4 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted">
-                  Aucune histoire Live.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {histoires.map((e) => (
-                    <CatalogCard key={e.id} entry={e} />
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
+          <Link
+            href="/jouer/live/histoire"
+            className="group flex flex-col rounded-3xl border border-violet-400/35 bg-violet-500/10 p-6 shadow-soft transition hover:-translate-y-0.5 hover:border-violet-300/60 hover:bg-violet-500/15"
+          >
+            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-400/20 text-violet-200">
+              <BookOpen className="h-6 w-6" />
+            </span>
+            <h2 className="font-display text-2xl font-semibold text-violet-100">
+              Mode Histoire
+            </h2>
+            <p className="mt-2 flex-1 text-sm leading-relaxed text-violet-100/70">
+              Jouer une histoire. Parcours : rôle (Admin) → secteur (Création)
+              → entreprise → histoire.
+            </p>
+            <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-violet-200 group-hover:underline">
+              Entrer
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function CatalogCard({ entry }: { entry: PlayCatalogEntry }) {
-  return (
-    <div
-      className={cn(
-        "rounded-2xl border bg-card/40 p-5",
-        entry.mode === "competence"
-          ? "border-sky-500/30"
-          : "border-violet-500/30"
-      )}
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="font-semibold">
-          {entry.nom} V{entry.version}
-        </p>
-        <ModeBadge mode={entry.mode} />
-        <span className="inline-flex rounded-md bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-          LIVE
-        </span>
-      </div>
-      {entry.mode === "competence" ? (
-        <p className="mt-2 text-sm text-muted">
-          Compétence : {entry.competenceName || "—"}
-        </p>
-      ) : (
-        <>
-          <p className="mt-2 text-sm text-muted">
-            Rôle : {entry.roleName || "—"}
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            Secteur : {entry.secteur || "—"}
-          </p>
-        </>
-      )}
-      <p className="mt-1 text-sm text-muted">
-        Entreprise : {entry.entrepriseNom || "—"}
-      </p>
-      <Link
-        href={`/jouer/book/${entry.id}`}
-        className="mt-3 inline-block text-accent underline"
-        onClick={() => setAdminPlaySession(null)}
-      >
-        Jouer
-      </Link>
     </div>
   );
 }

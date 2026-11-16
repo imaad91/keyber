@@ -163,13 +163,16 @@ export function HomeProgression() {
           </Link>
         </Button>
         <Button asChild variant="outline" size="lg">
-          <Link href="/jouer/live" onClick={() => ensureActiveSlot()}>
+          <Link
+            href="/jouer/live/competence"
+            onClick={() => ensureActiveSlot()}
+          >
             <Brain className="h-4 w-4" />
             S&apos;entraîner — Mode Compétence
           </Link>
         </Button>
         <Button asChild variant="accent" size="lg">
-          <Link href="/jouer/live" onClick={() => ensureActiveSlot()}>
+          <Link href="/jouer/live/histoire" onClick={() => ensureActiveSlot()}>
             <BookOpen className="h-4 w-4" />
             Jouer une histoire — Mode Histoire
           </Link>

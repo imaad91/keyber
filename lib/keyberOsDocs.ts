@@ -780,6 +780,7 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Affiche le journal de bord joueur (même feeling que le POC).",
         "Source = world.journal de la session Book OS active.",
         "Rempli par décisions, événements, interviews, onboarding, day-end.",
+        "Étape 38 — portraits Journal OS via chatContacts session (pas registry Novacier).",
       ],
       deQuoiCompose: [
         "OsJournalEntry dans world.journal.",

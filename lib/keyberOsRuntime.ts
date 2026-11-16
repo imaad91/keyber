@@ -161,6 +161,10 @@ export type KeyberOsRuntimeConfig = {
   livre: {
     enabled: boolean;
   };
+  /** Profil & badges (Étape 29) — lit Progression OS. */
+  profil: {
+    enabled: boolean;
+  };
 };
 
 const DEFAULT_DELTAS: [DecisionOptionDeltas, DecisionOptionDeltas, DecisionOptionDeltas] =
@@ -272,6 +276,9 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     enabled: true,
   },
   livre: {
+    enabled: true,
+  },
+  profil: {
     enabled: true,
   },
 };
@@ -573,6 +580,9 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
     livre: {
       enabled: raw.livre?.enabled ?? d.livre.enabled,
     },
+    profil: {
+      enabled: raw.profil?.enabled ?? d.profil.enabled,
+    },
   };
 }
 
@@ -744,6 +754,8 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.journal.enabled;
     case "livre":
       return c.livre.enabled;
+    case "profil":
+      return c.profil.enabled;
     default:
       return true;
   }

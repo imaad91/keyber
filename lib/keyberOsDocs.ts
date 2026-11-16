@@ -20,7 +20,8 @@ export type KeyberOsComposanteId =
   | "objectifs"
   | "visibilite"
   | "journal"
-  | "livre";
+  | "livre"
+  | "profil";
 
 export type KeyberOsNavItem = {
   id: KeyberOsComposanteId | "vue-globale";
@@ -134,6 +135,12 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/livre",
     label: "Livre",
     blurb: "Livre de l'entreprise = param.Livre (structure, lore Phase E).",
+  },
+  {
+    id: "profil",
+    href: "/admin/systeme/profil",
+    label: "Profil",
+    blurb: "Profil joueur = XP, skills, badges (Progression OS).",
   },
   {
     id: "donnees-sauvegarde",
@@ -652,6 +659,41 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "lib/keyberOs/visibilite.ts",
         "components/osPlay/OsVisibilityPanel.tsx",
         "app/admin/systeme/visibilite/page.tsx",
+      ],
+    },
+    profil: {
+      id: "profil",
+      title: "Profil & Badges",
+      ceQueCaFait: [
+        "Affiche le profil joueur (XP, compétences, relations, badges).",
+        "Source = Progression OS + world.badges + historique session Book.",
+      ],
+      deQuoiCompose: [
+        "OsProgressionBlock + catalog compétences param.",
+        "Page /profil (OS si session Book active, sinon POC).",
+        "Lien sidebar OsPlayShell « Mon profil ».",
+      ],
+      commentCaMarche: [
+        "Décisions / objectifs mettent à jour progression via module Progression.",
+        "osActivePlayStore conserve la session pour /profil.",
+        "Module OFF → message Admin sur /profil (OS).",
+      ],
+      workflowSteps: [
+        "Session Book",
+        "Gagner XP / skills",
+        "Sidebar Profil",
+        "Voir jauges + badges",
+        "Retour shell",
+      ],
+      ceQueCaNeFaitPas: [
+        "N'invente pas de catalogue compétences Novacier en mode OS.",
+        "Ne remplace pas Admin → Progression (seuils XP).",
+      ],
+      codeRefs: [
+        "components/OsProfilView.tsx",
+        "app/profil/page.tsx",
+        "lib/keyberOs/progression.ts",
+        "app/admin/systeme/profil/page.tsx",
       ],
     },
     livre: {

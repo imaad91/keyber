@@ -31,9 +31,24 @@ export default function Page() {
     <div>
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["moteur-decisions"]} />
 
+      <section className="mt-6 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-950">
+        <p className="font-semibold">Conséquences param (Étape 14)</p>
+        <p className="mt-1 text-sky-900/80">
+          Priorité : <code className="text-xs">options[].consequences</code> +{" "}
+          <code className="text-xs">feedbackTexte</code> dans le fichier de
+          paramétrage (multi-cibles : trésorerie, stock, moral, xp, temps…). Les
+          deltas Admin ci-dessous = fallback si le choix n&apos;a pas de
+          conséquences structurées.
+        </p>
+        <p className="mt-2 text-xs text-sky-800">
+          Vérif : Book Histoire Lumière → Décider → un choix change plusieurs
+          jauges + feedback texte.
+        </p>
+      </section>
+
       <KeyberOsRuntimePanel
-        title="Moteur de Décisions — deltas runtime"
-        description="Quand le joueur choisit l'option 0 / 1 / 2, ces deltas génériques mettent à jour Trésorerie brute, Stock et Production avant l'ERP."
+        title="Moteur de Décisions — deltas fallback (test)"
+        description="Utilisés seulement si le choix param n'a pas de conséquences[]. Option 0 / 1 / 2 → Trésorerie, Stock, Production."
         onReset={() =>
           setConfig({
             moteurDecisions: {

@@ -18,7 +18,12 @@ import {
 } from "@/lib/keyberOs/createRichDefaults";
 import { osOnboardingBootWorld } from "@/lib/keyberOs/onboarding";
 import { formatOsClock } from "@/lib/keyberOs/temps";
-import type { OsDecision, OsPlayState } from "@/lib/keyberOs/types";
+import type {
+  OsChoice,
+  OsConsequence,
+  OsDecision,
+  OsPlayState,
+} from "@/lib/keyberOs/types";
 
 function parseTresorerie(param: ScenarioParamFile): number {
   const raw =
@@ -38,6 +43,46 @@ function parseStock(param: ScenarioParamFile): number {
   return m ? Number(m[1]) : 100;
 }
 
+type RawChoice =
+  | string
+  | {
+      id?: string;
+      label?: string;
+      description?: string;
+      feedbackTexte?: string;
+      consequences?: OsConsequence[];
+      impacts?: OsChoice["impacts"];
+    };
+
+function parseChoice(
+  raw: RawChoice,
+  decisionId: string,
+  index: number
+): OsChoice {
+  if (typeof raw === "string") {
+    return {
+      id: `${decisionId}-opt${index}`,
+      label: raw,
+    };
+  }
+  return {
+    id: raw.id || `${decisionId}-opt${index}`,
+    label: String(raw.label || `Option ${index + 1}`),
+    description: raw.description,
+    feedbackTexte: raw.feedbackTexte,
+    consequences: Array.isArray(raw.consequences)
+      ? raw.consequences.filter(
+          (c) => c && typeof c.cible === "string" && typeof c.valeur === "number"
+        )
+      : undefined,
+    impacts: raw.impacts,
+  };
+}
+
+/**
+ * Parse Décisions du param.
+ * Options = string[] (legacy) OU objets riches { label, consequences, feedbackTexte }.
+ */
 export function osScenariosParseDecisions(
   param: ScenarioParamFile
 ): OsDecision[] {
@@ -45,16 +90,25 @@ export function osScenariosParseDecisions(
     const row = d as {
       id?: string;
       titre?: string;
-      options?: string[];
+      dilemme?: string;
+      jour?: number;
+      xpGagne?: number;
+      options?: RawChoice[];
+      choix?: RawChoice[];
     };
-    const opts = Array.isArray(row.options) ? row.options : [];
+    const decisionId = row.id || `d${i + 1}`;
+    const rawOpts = Array.isArray(row.options)
+      ? row.options
+      : Array.isArray(row.choix)
+        ? row.choix
+        : [];
     return {
-      id: row.id || `d${i + 1}`,
+      id: decisionId,
       titre: row.titre || `Décision ${i + 1}`,
-      options: opts.map((label, j) => ({
-        id: `${row.id || `d${i + 1}`}-opt${j}`,
-        label: String(label),
-      })),
+      dilemme: row.dilemme,
+      jour: row.jour,
+      xpGagne: row.xpGagne,
+      options: rawOpts.map((opt, j) => parseChoice(opt, decisionId, j)),
     };
   });
 }

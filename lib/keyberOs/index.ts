@@ -4,8 +4,10 @@
 
 export type {
   OsChoice,
+  OsChoiceImpact,
   OsComputerAppId,
   OsComputerPack,
+  OsConsequence,
   OsDecision,
   OsEmail,
   OsErpSnapshot,
@@ -83,6 +85,10 @@ export {
   osOpenDebrief,
   osPiecesQualite,
 } from "@/lib/keyberOs/debrief";
+export {
+  osApplyConsequence,
+  osApplyConsequences,
+} from "@/lib/keyberOs/consequences";
 export { osVisibiliteFog, osVisibiliteInstallSensor } from "@/lib/keyberOs/visibilite";
 export {
   osKpiBarItems,

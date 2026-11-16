@@ -32,6 +32,12 @@ export default function Page() {
           fournisseurs, maintenance). Fog colonnes via{" "}
           <strong>Visibilité</strong>. Données = pack param / synthèse OS.
         </p>
+        <p className="mt-2 text-xs text-sky-800">
+          KPI bar (Étape 9) — définitions génériques dans{" "}
+          <code className="rounded bg-white/80 px-1">play.kpis</code> : Trésorerie,
+          Stock, Production, Rebut, Moral, Éthique, Confiance client. Affichage
+          : Interface Joueur → barre KPI.
+        </p>
       </section>
 
       <KeyberOsRuntimePanel

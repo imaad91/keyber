@@ -14,10 +14,20 @@ export function osVisibiliteFog(state: OsPlayState): boolean {
 
 export function osVisibiliteInstallSensor(state: OsPlayState): OsPlayState {
   if (!isOsModuleEnabled("visibilite")) return state;
+  const nextLevel = Math.max(state.visibilityLevel, 2);
   return {
     ...state,
     sensorInstalled: true,
-    visibilityLevel: Math.max(state.visibilityLevel, 2),
+    visibilityLevel: nextLevel,
+    visibilite: {
+      ...(state.visibilite ?? {
+        level: nextLevel,
+        sensorInstalled: true,
+        parModule: {},
+      }),
+      sensorInstalled: true,
+      level: Math.max(state.visibilite?.level ?? 0, nextLevel),
+    },
     log: [
       ...state.log,
       "Visibilité → capteur installé (brouillard ERP levé)",

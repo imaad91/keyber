@@ -19,9 +19,18 @@ export default function Page() {
   return (
     <div>
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES.visibilite} />
+      <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-950">
+        <p className="font-semibold">KPI bar — pastilles (Étape 9)</p>
+        <p className="mt-1 text-amber-900/80">
+          Tiers : INCONNU (fog) · ESTIMÉ (~) · PRÉCIS · TEMPS_REEL (LIVE).
+          Override possible via <code className="text-xs">visibilite.parModule</code>{" "}
+          par id KPI. Capteur : bouton Visibilité dans la barre joueur.
+        </p>
+      </section>
+
       <KeyberOsRuntimePanel
-        title="Visibilité — brouillard ERP"
-        description="Si fog ON et niveau &lt; seuil sans capteur, les chiffres affichent ???."
+        title="Visibilité — brouillard ERP / KPI"
+        description="Si fog ON et niveau &lt; seuil sans capteur, les KPI finance affichent ???."
         onReset={() =>
           setConfig({ visibilite: { ...OS_RUNTIME_DEFAULTS.visibilite } })
         }

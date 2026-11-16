@@ -13,13 +13,13 @@ import {
 import { OS_SHELL_ACTIONS } from "@/lib/keyberOs/shellActions";
 import {
   applyOsBookChoice,
-  osBookErpSnapshot,
   osBookInterfaceView,
 } from "@/lib/osBookPlay";
 import { formatRemainingLabel } from "@/lib/evenements";
 import { cn } from "@/lib/utils";
 import { OsAtelierLive } from "@/components/osPlay/OsAtelierLive";
 import { OsComputerDesktop } from "@/components/osPlay/OsComputerDesktop";
+import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
 import {
   BookMarked,
   BookOpen,
@@ -41,7 +41,6 @@ type Props = {
  */
 export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
   const ui = osBookInterfaceView(play);
-  const erp = osBookErpSnapshot(play);
   const fog = osVisibiliteFog(play);
   const computerOpen = play.activeAction === "computer";
 
@@ -257,41 +256,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
         </div>
 
         {!computerOpen && ui.showErpTiles ? (
-          <div className="flex flex-wrap items-stretch gap-2 border-b border-white/10 bg-panel/80 px-4 py-3 backdrop-blur-md">
-            {(play.kpis?.length
-              ? play.kpis.slice(0, 4)
-              : [
-                  { id: "t", label: "Trésorerie", path: "" },
-                  { id: "s", label: "Stock", path: "" },
-                  { id: "p", label: "Production", path: "" },
-                  { id: "c", label: "Commandes", path: "" },
-                ]
-            ).map((kpi, i) => {
-              const values = [
-                fog
-                  ? "???"
-                  : `${erp.tresorerie.toLocaleString("fr-FR")} €`,
-                fog ? "???" : String(erp.stock),
-                fog ? "???" : String(erp.production),
-                fog ? "???" : String(erp.commandes),
-              ];
-              return (
-                <div
-                  key={kpi.id}
-                  className="flex min-w-[110px] flex-1 items-center gap-2 rounded-xl border border-white/10 bg-panel-2 px-3 py-2 shadow-soft"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                      {kpi.label}
-                    </p>
-                    <p className="font-display text-lg font-semibold tabular-nums leading-tight text-foreground">
-                      {values[i] ?? "—"}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <OsKpiBar play={play} setPlay={setPlay} />
         ) : null}
 
         <div

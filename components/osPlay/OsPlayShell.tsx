@@ -458,24 +458,58 @@ function OsDecide({
     <div className="mt-4 rounded-xl border border-white/10 bg-panel-2 p-4">
       <p className="text-xs uppercase tracking-wide text-muted">
         Décision {play.stepIndex + 1}/{play.decisions.length}
+        {decision.jour != null ? ` · Jour ${decision.jour}` : ""}
       </p>
       <h2 className="mt-2 font-display text-lg font-semibold">
         {decision.titre}
       </h2>
+      {decision.dilemme ? (
+        <p className="mt-2 text-sm text-muted">{decision.dilemme}</p>
+      ) : null}
       <div className="mt-4 space-y-2">
         {decision.options.map((o) => (
           <button
             key={o.id}
             type="button"
-            className="block w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm hover:bg-white/10"
+            className="block w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm transition hover:bg-white/10"
             onClick={() => setPlay(applyOsBookChoice(play, o.id))}
           >
-            {o.label}
+            <span className="block font-semibold text-foreground">
+              {o.label}
+            </span>
+            {o.description ? (
+              <span className="mt-1 block text-[11px] text-muted">
+                {o.description}
+              </span>
+            ) : null}
+            {o.impacts?.length ? (
+              <span className="mt-2 flex flex-wrap gap-1.5">
+                {o.impacts.map((imp) => (
+                  <span
+                    key={`${o.id}-${imp.label}`}
+                    className={cn(
+                      "rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
+                      imp.tone === "pos" && "bg-ok/15 text-ok",
+                      imp.tone === "neg" && "bg-danger/15 text-danger",
+                      imp.tone === "neu" && "bg-white/10 text-muted"
+                    )}
+                  >
+                    {imp.label} {imp.value}
+                  </span>
+                ))}
+              </span>
+            ) : o.consequences?.length ? (
+              <span className="mt-1 block text-[10px] text-accent">
+                {o.consequences.length} effet(s) param
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
       {play.feedback ? (
-        <p className="mt-3 text-sm text-ok">{play.feedback}</p>
+        <p className="mt-3 rounded-lg border border-ok/30 bg-ok/10 px-3 py-2 text-sm text-ok">
+          {play.feedback}
+        </p>
       ) : null}
     </div>
   );

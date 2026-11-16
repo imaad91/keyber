@@ -48,14 +48,36 @@ export type OsComputerAppId =
   | "chat"
   | "browser";
 
+/** Conséquence déclarative (fichier de paramétrage) — Étape 14. */
+export type OsConsequence = {
+  /** Chemin cible : tresorerie, stock, moral, ethique, xp, flags.x, relations.id… */
+  cible: string;
+  valeur: number;
+  mode?: "add" | "set";
+  setValeur?: string;
+};
+
+export type OsChoiceImpact = {
+  label: string;
+  value: string;
+  tone: "pos" | "neg" | "neu";
+};
+
 export type OsChoice = {
   id: string;
   label: string;
+  description?: string;
+  feedbackTexte?: string;
+  consequences?: OsConsequence[];
+  impacts?: OsChoiceImpact[];
 };
 
 export type OsDecision = {
   id: string;
   titre: string;
+  dilemme?: string;
+  jour?: number;
+  xpGagne?: number;
   options: OsChoice[];
 };
 

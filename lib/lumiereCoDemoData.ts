@@ -325,10 +325,50 @@ export function lumiereCompetenceParam(
       {
         id: "d1",
         titre: "Réappro Halo",
+        dilemme: "Le stock Halo fond — quelle manœuvre ?",
+        xpGagne: 20,
         options: [
-          "Commander MingLight maintenant",
-          "Partager MingLight + VietGlow",
-          "Couper la promo Halo",
+          {
+            id: "d1-opt0",
+            label: "Commander MingLight maintenant",
+            feedbackTexte: "Commande passée. Stock remonte, cash en baisse.",
+            consequences: [
+              { cible: "stock", valeur: 40 },
+              { cible: "tresorerie", valeur: -3000 },
+            ],
+            impacts: [
+              { label: "Stock", value: "+40", tone: "pos" },
+              { label: "Cash", value: "−3 k€", tone: "neg" },
+            ],
+          },
+          {
+            id: "d1-opt1",
+            label: "Partager MingLight + VietGlow",
+            feedbackTexte: "Tu diversifies. Moins de risque, prod un peu plus complexe.",
+            consequences: [
+              { cible: "stock", valeur: 20 },
+              { cible: "production", valeur: -3 },
+              { cible: "moral", valeur: 3 },
+            ],
+            impacts: [
+              { label: "Stock", value: "+20", tone: "pos" },
+              { label: "Prod", value: "−3", tone: "neg" },
+            ],
+          },
+          {
+            id: "d1-opt2",
+            label: "Couper la promo Halo",
+            feedbackTexte: "Pression allégée. Commandes baissent, trésorerie préservée.",
+            consequences: [
+              { cible: "tresorerie", valeur: 1500 },
+              { cible: "commandes", valeur: -2 },
+              { cible: "confianceClient", valeur: -5 },
+            ],
+            impacts: [
+              { label: "Cash", value: "+1,5 k€", tone: "pos" },
+              { label: "Confiance", value: "−5", tone: "neg" },
+            ],
+          },
         ],
       },
     ],
@@ -364,12 +404,109 @@ export function lumiereHistoireParam(
       {
         id: "h1",
         titre: "Priorité du jour",
-        options: ["Traiter le retard fournisseur", "Sauver le colis perdu", "Sécuriser le rack"],
+        dilemme: "Trois urgences en même temps — que traites-tu d'abord ?",
+        xpGagne: 25,
+        options: [
+          {
+            id: "h1-opt0",
+            label: "Traiter le retard fournisseur",
+            feedbackTexte:
+              "Tu sécurises le réappro. Stock remonte, trésorerie un peu sous tension.",
+            consequences: [
+              { cible: "stock", valeur: 25 },
+              { cible: "tresorerie", valeur: -1500 },
+              { cible: "moral", valeur: 2 },
+            ],
+            impacts: [
+              { label: "Stock", value: "+25", tone: "pos" },
+              { label: "Trésorerie", value: "−1,5 k€", tone: "neg" },
+            ],
+          },
+          {
+            id: "h1-opt1",
+            label: "Sauver le colis perdu",
+            feedbackTexte:
+              "Le client respire. Confiance en hausse, production un peu ralentie.",
+            consequences: [
+              { cible: "confianceClient", valeur: 8 },
+              { cible: "production", valeur: -5 },
+              { cible: "xp", valeur: 15 },
+            ],
+            impacts: [
+              { label: "Confiance", value: "+8", tone: "pos" },
+              { label: "Prod", value: "−5", tone: "neg" },
+            ],
+          },
+          {
+            id: "h1-opt2",
+            label: "Sécuriser le rack",
+            feedbackTexte:
+              "Sécurité d'abord. Éthique et moral montent ; le temps file.",
+            consequences: [
+              { cible: "ethique", valeur: 5 },
+              { cible: "moral", valeur: 4 },
+              { cible: "temps", valeur: 30 },
+            ],
+            impacts: [
+              { label: "Éthique", value: "+5", tone: "pos" },
+              { label: "Temps", value: "+30 min", tone: "neu" },
+            ],
+          },
+        ],
       },
       {
         id: "h2",
         titre: "Pic Noël",
-        options: ["Heures sup packing", "Couper pubs", "Prioriser top SKU"],
+        dilemme: "Le volume explose — comment tiens-tu la semaine ?",
+        xpGagne: 30,
+        options: [
+          {
+            id: "h2-opt0",
+            label: "Heures sup packing",
+            feedbackTexte:
+              "Les colis sortent. Production et pièces montent ; le moral fatigue.",
+            consequences: [
+              { cible: "production", valeur: 15 },
+              { cible: "pieces", valeur: 40 },
+              { cible: "moral", valeur: -6 },
+              { cible: "tresorerie", valeur: -800 },
+            ],
+            impacts: [
+              { label: "Prod", value: "+15", tone: "pos" },
+              { label: "Moral", value: "−6", tone: "neg" },
+            ],
+          },
+          {
+            id: "h2-opt1",
+            label: "Couper pubs",
+            feedbackTexte:
+              "Tu réduis la pression commerciale. Trésorerie préservée, commandes en baisse.",
+            consequences: [
+              { cible: "tresorerie", valeur: 2000 },
+              { cible: "commandes", valeur: -3 },
+              { cible: "confianceClient", valeur: -4 },
+            ],
+            impacts: [
+              { label: "Cash", value: "+2 k€", tone: "pos" },
+              { label: "Commandes", value: "−3", tone: "neg" },
+            ],
+          },
+          {
+            id: "h2-opt2",
+            label: "Prioriser top SKU",
+            feedbackTexte:
+              "Focus SKU rentables. Qualité semaine et score progressent.",
+            consequences: [
+              { cible: "piecesBrutesSemaine", valeur: 60 },
+              { cible: "score", valeur: 20 },
+              { cible: "stock", valeur: -10 },
+            ],
+            impacts: [
+              { label: "Qualité", value: "+60", tone: "pos" },
+              { label: "Stock", value: "−10", tone: "neg" },
+            ],
+          },
+        ],
       },
     ],
     Fins: [

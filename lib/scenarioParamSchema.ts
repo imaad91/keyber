@@ -12,6 +12,11 @@ import type {
   OsKpiDef,
   OsObjective,
 } from "@/lib/keyberOs/types";
+import {
+  emptyLivreStructure,
+  normalizeParamLivre,
+  type ScenarioParamLivre,
+} from "@/lib/osLivre";
 
 /** Jour / phase déclaratif (timeline Book + futurs moteurs). */
 export type ScenarioParamJour = {
@@ -62,6 +67,7 @@ export const SCENARIO_PARAM_EXTENDED_KEYS = [
   "Kpis",
   "Conséquences",
   "Intro",
+  "Livre",
 ] as const;
 
 export type ScenarioParamExtendedKey =
@@ -76,6 +82,7 @@ export type ScenarioParamFileExtended = ScenarioParamFile & {
   Kpis?: OsKpiDef[];
   Conséquences?: ScenarioParamConsequencePack[];
   Intro?: string[];
+  Livre?: ScenarioParamLivre;
 };
 
 export type ScenarioParamBlockKind =
@@ -175,6 +182,13 @@ export const SCENARIO_PARAM_BLOCKS: ScenarioParamBlockDef[] = [
     extended: true,
     emptyValue: [],
   },
+  {
+    key: "Livre",
+    label: "Livre",
+    kind: "object",
+    extended: true,
+    emptyValue: {},
+  },
 ];
 
 export type ScenarioParamBlockStatus = {
@@ -271,6 +285,7 @@ export function emptyExtendedParamShells(): Pick<
     Kpis: [],
     Conséquences: [],
     Intro: [],
+    Livre: emptyLivreStructure(),
   };
 }
 
@@ -322,6 +337,9 @@ export function normalizeScenarioParamFile(
   if (!Array.isArray(base.Intro)) base.Intro = [];
   if (!Array.isArray(base.Décisions)) base.Décisions = [];
   if (!Array.isArray(base.Fins)) base.Fins = [];
+  const entreprise =
+    typeof base.Entreprise === "string" ? base.Entreprise : "";
+  base.Livre = normalizeParamLivre(base.Livre, entreprise);
 
   return base as ScenarioParamFileExtended;
 }

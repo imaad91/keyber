@@ -9,6 +9,7 @@ import type { AtelierBibliothequeCours } from "@/lib/atelierCompetencesStore";
 import type { AtelierEntrepriseEvent } from "@/lib/atelierEventsStore";
 import { eventsFileLabel } from "@/lib/atelierEventsStore";
 import { mapAtelierEventToParamEventRich } from "@/lib/atelierEventsToParam";
+import { emptyLivreStructure } from "@/lib/osLivre";
 import {
   emptyOrdinateurStructure,
   normalizeScenarioParamFile,
@@ -171,6 +172,7 @@ export const BOOK_PARAM_STRUCTURE_BLOCKS = [
   "Kpis",
   "Conséquences",
   "Intro",
+  "Livre",
   "fichier",
 ] as const;
 
@@ -286,6 +288,8 @@ export type ScenarioParamFile = {
   Kpis?: unknown[];
   Conséquences?: unknown[];
   Intro?: string[];
+  /** Étape 28 — Livre de l'entreprise (structure, contenu Phase E). */
+  Livre?: unknown;
 };
 
 /** Mappe un event Atelier → entrée param OS (Étape 24 — colonnes riches). */
@@ -337,6 +341,7 @@ export function buildSkeletonParamFile(args: {
     Kpis: [],
     Conséquences: [],
     Intro: [],
+    Livre: emptyLivreStructure(args.entrepriseNom),
   };
 
   return normalizeScenarioParamFile(raw) as ScenarioParamFile;

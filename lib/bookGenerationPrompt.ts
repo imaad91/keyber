@@ -8,6 +8,7 @@ import type { AtelierBibliothequeCompetence } from "@/lib/atelierCompetencesStor
 import type { AtelierBibliothequeCours } from "@/lib/atelierCompetencesStore";
 import type { AtelierEntrepriseEvent } from "@/lib/atelierEventsStore";
 import { eventsFileLabel } from "@/lib/atelierEventsStore";
+import { mapAtelierEventToParamEventRich } from "@/lib/atelierEventsToParam";
 import {
   emptyOrdinateurStructure,
   normalizeScenarioParamFile,
@@ -287,44 +288,9 @@ export type ScenarioParamFile = {
   Intro?: string[];
 };
 
-/** Mappe un event Atelier → entrée param (données fournies uniquement). */
-export function mapAtelierEventToParamEvent(e: AtelierEntrepriseEvent): {
-  nom: string;
-  type: string;
-  description: string;
-  id: string;
-  jour?: number;
-  heure?: string;
-  urgent?: boolean;
-  deadlineHeure?: string;
-} {
-  const fields = (e.fields || {}) as Record<string, string>;
-  const jourRaw = fields["jour"] || fields["Jour"] || "";
-  const jourN = Number.parseInt(String(jourRaw).trim(), 10);
-  const heure = (fields["heure"] || fields["Heure"] || "").trim();
-  const deadline = (
-    fields["deadlineHeure"] ||
-    fields["Deadline"] ||
-    fields["deadline"] ||
-    ""
-  ).trim();
-  const urgentRaw = (fields["urgent"] || fields["Urgent"] || "").trim().toLowerCase();
-  const urgent =
-    urgentRaw === "1" ||
-    urgentRaw === "true" ||
-    urgentRaw === "oui" ||
-    urgentRaw === "yes";
-
-  return {
-    id: e.id,
-    nom: e.nom,
-    type: e.type,
-    description: e.description,
-    ...(Number.isFinite(jourN) ? { jour: jourN } : {}),
-    ...(heure ? { heure } : {}),
-    ...(urgent ? { urgent: true } : {}),
-    ...(deadline ? { deadlineHeure: deadline } : {}),
-  };
+/** Mappe un event Atelier → entrée param OS (Étape 24 — colonnes riches). */
+export function mapAtelierEventToParamEvent(e: AtelierEntrepriseEvent) {
+  return mapAtelierEventToParamEventRich(e);
 }
 
 /**

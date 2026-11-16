@@ -6,6 +6,7 @@
 import { uid } from "@/lib/adminTypes";
 import { emptyCompetenceFields, emptyCoursFields } from "@/lib/atelierCompetencesExcel";
 import { emptyRoleFields } from "@/lib/atelierRolesExcel";
+import { mapAtelierEventFieldsToParamEvent } from "@/lib/atelierEventsToParam";
 import { buildParamFileName } from "@/lib/bookGenerationPrompt";
 import {
   LUMIERE_COMPETENCE,
@@ -77,24 +78,16 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
   const at = now();
   const fields = lumiereContexteFields();
   const eventSeeds = lumiereEvents();
-  const eventSummaries = eventSeeds.map((e) => ({
-    nom: e.nom,
-    type: e.type,
-    description: e.description,
-    ...(e.play?.jour != null ? { jour: e.play.jour } : {}),
-    ...(e.play?.heure ? { heure: e.play.heure } : {}),
-    ...(e.play?.urgent ? { urgent: true } : {}),
-    ...(e.play?.deadlineHeure
-      ? { deadlineHeure: e.play.deadlineHeure }
-      : {}),
-    ...(e.play?.condition ? { condition: e.play.condition } : {}),
-    ...(e.play?.consequences
-      ? { consequences: e.play.consequences }
-      : {}),
-    ...(e.play?.consequencesDeadline
-      ? { consequencesDeadline: e.play.consequencesDeadline }
-      : {}),
-  }));
+  /** Étape 24 : param events dérivés des colonnes Excel (play → fields). */
+  const eventSummaries = eventSeeds.map((e, i) =>
+    mapAtelierEventFieldsToParamEvent({
+      id: `lumiere-ev-${i + 1}`,
+      nom: e.nom,
+      type: e.type,
+      description: e.description,
+      fields: e.fields as Record<string, string>,
+    })
+  );
   const contexteRecord: Record<string, string> = {};
   for (const [k, v] of Object.entries(fields)) {
     if (String(v).trim()) contexteRecord[k] = String(v);

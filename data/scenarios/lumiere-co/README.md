@@ -8,3 +8,5 @@ Entreprise de démonstration Studio. **Ne pas confondre avec Novacier** (toujour
 1 scénario = 1 fichier. Contenu aussi injecté en localStorage Book (`keyber-studio-book-v1`).
 
 Schéma étendu (Étape 21) : chaque JSON inclut les coquilles `Ordinateur`, `Jours`, `Interviews`, `Objectifs`, `Kpis`, `Conséquences`, `Intro` (vides autorisées).
+
+Événements OS (Étape 24) : `KEYBER_Events_Lumiere_Co.xlsx` — template rempli démo (Jour/Heure/Urgent/Conséquences). Les JSON param portent les events mappés (heure + conséquences).

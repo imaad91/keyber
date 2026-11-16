@@ -22,11 +22,18 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["moteur-evenements"]} />
 
       <section className="mt-6 rounded-2xl border border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-950">
-        <p className="font-semibold">Heure + conditions → toast / bannière</p>
+        <p className="font-semibold">
+          Pont Atelier Excel → param → OS (Étape 24)
+        </p>
         <p className="mt-1 text-violet-900/80">
-          Catalogue = fichier de paramétrage (« Événements entreprise »). Champs
-          optionnels : heure, jour, urgent, deadlineHeure, condition,
-          consequences. UI toast / bannière → sous-onglet{" "}
+          Catalogue = « Événements entreprise » du fichier de paramétrage, rempli
+          depuis Atelier → Événements (colonnes Jour / Heure / Urgent /
+          Condition / Conséquence…). Mapping :{" "}
+          <code className="rounded bg-violet-100 px-1 text-xs">
+            lib/atelierEventsToParam.ts
+          </code>
+          . Champs OS : heure, jour, urgent, deadlineHeure, condition,
+          consequences. UI toast / bannière →{" "}
           <Link
             href="/admin/systeme/notifications"
             className="font-semibold underline-offset-2 hover:underline"

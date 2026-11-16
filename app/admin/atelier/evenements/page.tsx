@@ -163,6 +163,16 @@ export default function AtelierEvenementsPage() {
         title="Atelier — Événements"
       />
 
+      <p className="mb-4 max-w-3xl rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2 text-xs text-violet-950">
+        Étape 24 — le Template Excel inclut les colonnes OS (Jour, Heure,
+        Urgent, Condition, Conséquence…). Book → Générer les mappe vers le
+        param → Moteur d&apos;Événements. Démo :{" "}
+        <code className="rounded bg-violet-100 px-1">
+          data/scenarios/lumiere-co/KEYBER_Events_Lumiere_Co.xlsx
+        </code>
+        .
+      </p>
+
       <p className="mb-4 max-w-2xl text-sm text-slate-600">
         Un fichier événements = <strong>une seule entreprise</strong>. Pas de
         bibliothèque partagée : AgriBio ≠ Novacier. Source de vérité ici —

@@ -41,6 +41,7 @@ Chaque carte scénario/histoire a 3 vues (Texte · Graphique · Code / fichier d
 Schéma param étendu (Étape 21) : `lib/scenarioParamSchema.ts` — blocs `Ordinateur`, `Jours`, `Interviews`, `Objectifs`, `Kpis`, `Conséquences`, `Intro` (vides OK). Vue Texte = résumé blocs ; Vue Graphique = nœuds blocs ; Vue Code = JSON normalisé.
 Checklist parité feeling (Étape 22) : `lib/bookParityChecklist.ts` — cases rouge/vert sur fiche Book + pastilles cartes (mail, chat, ERP10, dayend, intro…).
 Génération Book (Étape 23) : `buildSkeletonParamFile` + prompt imposent tous les blocs (Ordinateur structuré, Jours, Interviews…) — données Atelier seulement, pas d'invention.
+Pont Événements (Étape 24) : Excel Atelier → `atelierEventsToParam` → « Événements entreprise » (jour/heure/urgent/condition/conséquences) → Moteur d'Événements OS.
 Jouer une carte Book : **`/jouer/book/[id]`** — **chemin officiel Keyber OS** (Étape 20).
 Bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
 Shell : `components/osPlay/OsPlayShell.tsx` ← pipeline `lib/keyberOs/pipeline.ts`.

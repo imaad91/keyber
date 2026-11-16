@@ -4,6 +4,7 @@
  */
 
 import * as XLSX from "xlsx";
+import { EVENTS_OS_EXCEL_COLUMNS } from "@/lib/atelierEventsToParam";
 
 export const EVENTS_EXCEL_COLUMNS = [
   "Nom",
@@ -17,6 +18,8 @@ export const EVENTS_EXCEL_COLUMNS = [
   "Durée de l'impact",
   "Ce que le joueur peut faire",
   "Cet événement influence quelle décision plus tard",
+  /** Étape 24 — colonnes consommées par le Moteur d'Événements OS. */
+  ...EVENTS_OS_EXCEL_COLUMNS,
 ] as const;
 
 export type EventExcelColumn = (typeof EVENTS_EXCEL_COLUMNS)[number];
@@ -49,6 +52,30 @@ const COLUMN_ALIASES: Record<string, EventExcelColumn> = {
   "ce que le joueur peut faire": "Ce que le joueur peut faire",
   "cet événement influence quelle décision plus tard":
     "Cet événement influence quelle décision plus tard",
+  jour: "Jour (1, 2…)",
+  "jour (1, 2…)": "Jour (1, 2…)",
+  heure: "Heure (HH:MM)",
+  "heure (hh:mm)": "Heure (HH:MM)",
+  urgent: "Urgent (oui/non)",
+  "urgent (oui/non)": "Urgent (oui/non)",
+  "deadline heure": "Deadline heure (HH:MM)",
+  "deadline heure (hh:mm)": "Deadline heure (HH:MM)",
+  "condition métrique": "Condition métrique (stock/tresorerie/moral/…)",
+  "condition metrique": "Condition métrique (stock/tresorerie/moral/…)",
+  "condition métrique (stock/tresorerie/moral/…)":
+    "Condition métrique (stock/tresorerie/moral/…)",
+  "condition opérateur": "Condition opérateur (>/</=)",
+  "condition operateur": "Condition opérateur (>/</=)",
+  "condition opérateur (>/</=)": "Condition opérateur (>/</=)",
+  "condition seuil": "Condition seuil",
+  "conséquence cible": "Conséquence cible",
+  "consequence cible": "Conséquence cible",
+  "conséquence valeur": "Conséquence valeur",
+  "consequence valeur": "Conséquence valeur",
+  "conséquence deadline cible": "Conséquence deadline cible",
+  "consequence deadline cible": "Conséquence deadline cible",
+  "conséquence deadline valeur": "Conséquence deadline valeur",
+  "consequence deadline valeur": "Conséquence deadline valeur",
 };
 
 export function emptyEventFields(): EventExcelFields {

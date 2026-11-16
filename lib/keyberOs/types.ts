@@ -449,4 +449,5 @@ export type OsModuleId =
   | "interviews"
   | "relations"
   | "objectifs"
-  | "visibilite";
+  | "visibilite"
+  | "journal";

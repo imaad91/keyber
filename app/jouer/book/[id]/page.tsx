@@ -14,11 +14,17 @@ import {
   type BookStatus,
 } from "@/lib/bookStore";
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
-import { createOsBookPlayState, type OsBookPlayState } from "@/lib/osBookPlay";
+import { osDonneesLoadProgress } from "@/lib/keyberOs/donneesSauvegarde";
 import {
   OS_LEGACY_PLAY_PATH,
   OS_LIVE_CATALOG_PATH,
+  osBookPlayHref,
 } from "@/lib/keyberOs/bookBridge";
+import { createOsBookPlayState, type OsBookPlayState } from "@/lib/osBookPlay";
+import {
+  clearOsActivePlay,
+  publishOsActivePlay,
+} from "@/lib/osActivePlayStore";
 import {
   fetchParamFile,
   getAdminPlaySession,
@@ -86,7 +92,9 @@ export default function JouerBookEntryPage() {
       const apply = (resolved: ScenarioParamFile, missing: boolean) => {
         if (cancelled) return;
         setFileMissing(missing);
-        setPlay(createOsBookPlayState(resolved, String(id)));
+        const sessionId = String(id);
+        const resumed = osDonneesLoadProgress(sessionId);
+        setPlay(resumed ?? createOsBookPlayState(resolved, sessionId));
       };
       const fail = () => {
         if (cancelled) return;
@@ -124,6 +132,22 @@ export default function JouerBookEntryPage() {
   const returnHref =
     adminSession?.returnHref ||
     (status === "live" ? "/admin/book/live" : "/admin/book/en-cours-de-test");
+
+  useEffect(() => {
+    if (!play || !meta) return;
+    publishOsActivePlay(
+      {
+        bookEntryId: String(id),
+        title: bookVersionLabel(meta),
+        subtitle:
+          meta.mode === "competence"
+            ? `Compétence : ${meta.competenceName || "—"}`
+            : `Rôle : ${meta.roleName || "—"} · Secteur : ${meta.secteur || "—"}`,
+        returnHref: osBookPlayHref(String(id)),
+      },
+      play
+    );
+  }, [play, meta, id]);
 
   if (!meta && fileMissing) {
     return (
@@ -180,7 +204,10 @@ export default function JouerBookEntryPage() {
             <AdminButton
               type="button"
               variant="secondary"
-              onClick={() => setAdminPlaySession(null)}
+              onClick={() => {
+                clearOsActivePlay();
+                setAdminPlaySession(null);
+              }}
             >
               ← Retour à l&apos;Admin
             </AdminButton>

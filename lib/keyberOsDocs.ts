@@ -539,11 +539,13 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       ceQueCaFait: [
         "Affiche l'InterviewView OS (portrait, questions, choix).",
         "Applique confianceDelta / XP / conséquences sur un choix.",
+        "Admin → aperçu PNJ (session Book + param Book), portraits SVG.",
       ],
       deQuoiCompose: [
         "lib/keyberOs/interviews.ts — osInterviewSelect, osApplyDialogueChoice.",
         "components/osPlay/OsInterviewView.tsx",
         "Pack param Ordinateur.interviews (questions[].choices).",
+        "app/admin/systeme/interviews/page.tsx — liste PNJ + avatars.",
       ],
       commentCaMarche: [
         "Action Interview → PNJ → question → choix → relation + journal.",
@@ -780,6 +782,8 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Affiche le journal de bord joueur (même feeling que le POC).",
         "Source = world.journal de la session Book OS active.",
         "Rempli par décisions, événements, interviews, onboarding, day-end.",
+        "Étape 38 — portraits Journal OS via chatContacts session (pas registry Novacier).",
+        "Étape 38 — slots SVG Samir / Léa / Claire (feeling Novacier, pas de PNG).",
       ],
       deQuoiCompose: [
         "OsJournalEntry dans world.journal.",

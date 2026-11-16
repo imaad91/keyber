@@ -10,6 +10,7 @@ import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import {
   expressionFromTrust,
   expressionLabel,
+  resolveCharacterId,
 } from "@/lib/characterStyle";
 import {
   osApplyDialogueChoice,
@@ -81,7 +82,12 @@ export function OsInterviewView({ play, setPlay }: Props) {
               )}
               aria-label={p.nom}
             >
-              <CharacterAvatar name={p.nom} trust={t} size={32} />
+              <CharacterAvatar
+                id={resolveCharacterId(p.id) ?? undefined}
+                name={p.nom}
+                trust={t}
+                size={32}
+              />
               <span className="pr-1 text-xs font-semibold text-foreground">
                 {p.nom.split(" ")[0]}
               </span>
@@ -97,7 +103,12 @@ export function OsInterviewView({ play, setPlay }: Props) {
       <div className="grid min-h-0 flex-1 gap-6 rounded-3xl border border-white/10 bg-[#F5F1E8] p-5 text-[#0C3B38] shadow-soft md:grid-cols-[minmax(220px,320px)_1fr] md:p-8">
         <div className="flex flex-col items-center gap-3">
           <div className="rounded-2xl border-[3px] border-[#0C3B38] bg-white p-3 shadow-sm">
-            <CharacterAvatar name={current.nom} trust={trust} size={160} />
+            <CharacterAvatar
+              id={resolveCharacterId(current.id) ?? undefined}
+              name={current.nom}
+              trust={trust}
+              size={160}
+            />
           </div>
           <div className="w-full text-center">
             <h2 className="font-display text-xl font-semibold">

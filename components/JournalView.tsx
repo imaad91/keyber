@@ -11,16 +11,26 @@ import { useOsActivePlay } from "@/lib/osActivePlayStore";
 import { useGameStore } from "@/lib/store";
 import type { OsJournalEntry } from "@/lib/keyberOs/types";
 
-function portraitForEntry(titre: string, narration: string) {
+function portraitForEntry(
+  titre: string,
+  narration: string,
+  /** Contacts session OS — évite fallback Novacier (Étape 38). */
+  contactNames?: string[]
+) {
   const blob = `${titre} ${narration}`.toLowerCase();
-  const hit = getContexteActif().computer.chatContacts.find((c) => {
-    const first = c.name.split(" ")[0]?.toLowerCase() ?? "";
+  // contactNames fourni (même vide) = session OS → jamais registry Novacier.
+  const names =
+    contactNames !== undefined
+      ? contactNames
+      : getContexteActif().computer.chatContacts.map((c) => c.name);
+  const hit = names.find((n) => {
+    const first = n.split(" ")[0]?.toLowerCase() ?? "";
     return first && blob.includes(first);
   });
   return (
     resolveCharacterId(titre) ??
     resolveCharacterId(narration) ??
-    (hit ? resolveCharacterId(hit.name) : null)
+    (hit ? resolveCharacterId(hit) : null)
   );
 }
 
@@ -39,10 +49,12 @@ function OsJournalList({
   entries,
   returnHref,
   title,
+  contactNames,
 }: {
   entries: OsJournalEntry[];
   returnHref: string;
   title: string;
+  contactNames: string[];
 }) {
   return (
     <div className="min-h-screen atmosphere-play text-foreground">
@@ -81,7 +93,11 @@ function OsJournalList({
         ) : (
           <ol className="relative space-y-4 border-l border-accent/30 pl-6">
             {entries.map((entry) => {
-              const who = portraitForEntry(entry.titre, entry.narration);
+              const who = portraitForEntry(
+                entry.titre,
+                entry.narration,
+                contactNames
+              );
               return (
                 <li key={entry.id} className="view-enter relative">
                   <span className="absolute -left-[1.7rem] top-2 h-3 w-3 rounded-full bg-accent shadow-glow" />
@@ -218,11 +234,15 @@ export function JournalView() {
     const returnHref =
       active.meta.returnHref ||
       `/jouer/book/${encodeURIComponent(active.meta.bookEntryId)}`;
+    const contactNames = (active.play.computer?.chatContacts || []).map(
+      (c) => c.name
+    );
     return (
       <OsJournalList
         entries={active.play.world?.journal ?? []}
         returnHref={returnHref}
         title={active.meta.title || "Journal de session"}
+        contactNames={contactNames}
       />
     );
   }

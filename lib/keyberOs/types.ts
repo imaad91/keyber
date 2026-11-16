@@ -340,6 +340,7 @@ export type OsModuleId =
   | "interface-joueur"
   | "ordinateur"
   | "temps"
+  | "cycle-vie"
   | "interviews"
   | "objectifs"
   | "visibilite";

@@ -22,6 +22,7 @@ function moduleEnabled(
     "interface-joueur": config.interfaceJoueur.enabled,
     ordinateur: config.ordinateur.enabled,
     temps: config.temps.enabled,
+    "cycle-vie": config.cycleVie.enabled,
     interviews: config.interviews.enabled,
     objectifs: config.objectifs.enabled,
     visibilite: config.visibilite.enabled,

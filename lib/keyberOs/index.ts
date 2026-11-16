@@ -60,6 +60,10 @@ export {
   osTempsElapsed,
   osTempsRemaining,
 } from "@/lib/keyberOs/temps";
+export {
+  osCycleVieCloseAndAdvance,
+  osCycleVieForceDayEnd,
+} from "@/lib/keyberOs/cycleVie";
 export { osVisibiliteFog, osVisibiliteInstallSensor } from "@/lib/keyberOs/visibilite";
 export {
   osKpiBarItems,

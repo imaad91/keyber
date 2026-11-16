@@ -3,6 +3,7 @@
  */
 
 import { isOsModuleEnabled } from "@/lib/keyberOsRuntime";
+import { osEvenementsTrigger } from "@/lib/keyberOs/moteurEvenements";
 import { osOnboardingAdvance } from "@/lib/keyberOs/onboarding";
 import {
   OS_ACTION_TIME_COST,
@@ -68,6 +69,7 @@ export function osOrdinateurSetAction(
         };
       }
       next = osTempsAdvance(next, cost);
+      next = osEvenementsTrigger(next);
     }
     next = osOnboardingAdvance(next, action);
   }
@@ -102,6 +104,7 @@ export function osOrdinateurOpenApp(
       };
     }
     next = osTempsAdvance(next, cost);
+    next = osEvenementsTrigger(next);
     next = {
       ...next,
       log: [...next.log, `Ordinateur → app « ${app} »`],

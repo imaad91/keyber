@@ -208,7 +208,35 @@ export type ScenarioParamFile = {
   Secteur: string;
   Entreprise: string;
   Contexte: Record<string, string>;
-  "Événements entreprise": { nom: string; type: string; description: string }[];
+  "Événements entreprise": {
+    nom: string;
+    type: string;
+    description: string;
+    /** Planification jouable (optionnel — Étape 15). */
+    id?: string;
+    jour?: number;
+    heure?: string;
+    urgent?: boolean;
+    deadlineHeure?: string;
+    condition?: {
+      si: string;
+      superieurA?: number;
+      inferieurA?: number;
+      egalA?: number;
+    };
+    consequences?: {
+      cible: string;
+      valeur: number;
+      mode?: "add" | "set";
+      setValeur?: string;
+    }[];
+    consequencesDeadline?: {
+      cible: string;
+      valeur: number;
+      mode?: "add" | "set";
+      setValeur?: string;
+    }[];
+  }[];
   "Rôles sélectionnés": string[];
   "Compétences sélectionnées": {
     nom: string;
@@ -247,6 +275,20 @@ export function buildSkeletonParamFile(args: {
       nom: e.nom,
       type: e.type,
       description: e.description,
+      ...((e as { jour?: number }).jour != null
+        ? { jour: (e as { jour?: number }).jour }
+        : {}),
+      ...((e as { heure?: string }).heure
+        ? { heure: (e as { heure?: string }).heure }
+        : {}),
+      ...((e as { urgent?: boolean }).urgent
+        ? { urgent: true }
+        : {}),
+      ...((e as { deadlineHeure?: string }).deadlineHeure
+        ? {
+            deadlineHeure: (e as { deadlineHeure?: string }).deadlineHeure,
+          }
+        : {}),
     })),
     "Rôles sélectionnés": [...args.roleNames],
     "Compétences sélectionnées": args.competences.map((c) => ({

@@ -81,6 +81,19 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
     nom: e.nom,
     type: e.type,
     description: e.description,
+    ...(e.play?.jour != null ? { jour: e.play.jour } : {}),
+    ...(e.play?.heure ? { heure: e.play.heure } : {}),
+    ...(e.play?.urgent ? { urgent: true } : {}),
+    ...(e.play?.deadlineHeure
+      ? { deadlineHeure: e.play.deadlineHeure }
+      : {}),
+    ...(e.play?.condition ? { condition: e.play.condition } : {}),
+    ...(e.play?.consequences
+      ? { consequences: e.play.consequences }
+      : {}),
+    ...(e.play?.consequencesDeadline
+      ? { consequencesDeadline: e.play.consequencesDeadline }
+      : {}),
   }));
   const contexteRecord: Record<string, string> = {};
   for (const [k, v] of Object.entries(fields)) {

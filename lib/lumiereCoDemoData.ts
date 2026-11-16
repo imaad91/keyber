@@ -88,18 +88,36 @@ export function lumiereContexteFields(): ContexteExcelFields {
   return f;
 }
 
+export type LumiereEventPlay = {
+  jour?: number;
+  heure?: string;
+  urgent?: boolean;
+  deadlineHeure?: string;
+  condition?: {
+    si: string;
+    superieurA?: number;
+    inferieurA?: number;
+    egalA?: number;
+  };
+  consequences?: { cible: string; valeur: number }[];
+  consequencesDeadline?: { cible: string; valeur: number }[];
+};
+
 export type LumiereEventSeed = {
   nom: string;
   type: string;
   description: string;
   fields: EventExcelFields;
+  /** Planification jouable Book OS (Étape 15). */
+  play?: LumiereEventPlay;
 };
 
 function ev(
   nom: string,
   type: string,
   description: string,
-  extra: Partial<EventExcelFields> = {}
+  extra: Partial<EventExcelFields> = {},
+  play?: LumiereEventPlay
 ): LumiereEventSeed {
   const fields = emptyEventFields();
   fields["Nom"] = nom;
@@ -108,7 +126,7 @@ function ev(
   ] = type;
   fields["Description complète"] = description;
   Object.assign(fields, extra);
-  return { nom, type, description, fields };
+  return { nom, type, description, fields, play };
 }
 
 export function lumiereEvents(): LumiereEventSeed[] {
@@ -129,6 +147,14 @@ export function lumiereEvents(): LumiereEventSeed[] {
           "Rouvrir un litige transporteur, renvoyer le produit, proposer un avoir",
         "Cet événement influence quelle décision plus tard":
           "Choix du transporteur pour le Black Friday / Noël",
+      },
+      {
+        jour: 1,
+        heure: "11:00",
+        consequences: [
+          { cible: "confianceClient", valeur: -8 },
+          { cible: "tresorerie", valeur: -400 },
+        ],
       }
     ),
     ev(
@@ -147,6 +173,11 @@ export function lumiereEvents(): LumiereEventSeed[] {
           "Air freight, basculer promo sur Luna, précommander VietGlow",
         "Cet événement influence quelle décision plus tard":
           "Négociation contrat MingLight et buffer saisonnier",
+      },
+      {
+        jour: 1,
+        heure: "09:00",
+        consequences: [{ cible: "stock", valeur: -15 }],
       }
     ),
     ev(
@@ -165,6 +196,14 @@ export function lumiereEvents(): LumiereEventSeed[] {
           "Heures sup, intérim packing, prioriser SKU top, couper pubs",
         "Cet événement influence quelle décision plus tard":
           "Dimensionnement entrepôt et calendrier promo N+1",
+      },
+      {
+        jour: 2,
+        heure: "08:30",
+        consequences: [
+          { cible: "commandes", valeur: 3 },
+          { cible: "moral", valeur: -5 },
+        ],
       }
     ),
     ev(
@@ -183,6 +222,20 @@ export function lumiereEvents(): LumiereEventSeed[] {
           "Sécuriser zone, inventaire, former picking hauteur, commander rechange",
         "Cet événement influence quelle décision plus tard":
           "Investissement gerbeur / règles rack haut",
+      },
+      {
+        jour: 1,
+        heure: "10:00",
+        urgent: true,
+        deadlineHeure: "16:00",
+        consequences: [
+          { cible: "stock", valeur: -18 },
+          { cible: "moral", valeur: -4 },
+        ],
+        consequencesDeadline: [
+          { cible: "qualite", valeur: -20 },
+          { cible: "confianceClient", valeur: -10 },
+        ],
       }
     ),
   ];
@@ -301,8 +354,21 @@ export function lumiereHistoireText(): string {
   ].join("\n");
 }
 
+export type LumiereParamEvent = {
+  nom: string;
+  type: string;
+  description: string;
+  jour?: number;
+  heure?: string;
+  urgent?: boolean;
+  deadlineHeure?: string;
+  condition?: LumiereEventPlay["condition"];
+  consequences?: LumiereEventPlay["consequences"];
+  consequencesDeadline?: LumiereEventPlay["consequencesDeadline"];
+};
+
 export function lumiereCompetenceParam(
-  events: { nom: string; type: string; description: string }[],
+  events: LumiereParamEvent[],
   contexte: Record<string, string>,
   fichier: string
 ): ScenarioParamFile {
@@ -381,7 +447,7 @@ export function lumiereCompetenceParam(
 }
 
 export function lumiereHistoireParam(
-  events: { nom: string; type: string; description: string }[],
+  events: LumiereParamEvent[],
   contexte: Record<string, string>,
   fichier: string
 ): ScenarioParamFile {

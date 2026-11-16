@@ -89,6 +89,13 @@ export {
   osApplyConsequence,
   osApplyConsequences,
 } from "@/lib/keyberOs/consequences";
+export {
+  osClearUrgentBanner,
+  osDismissEventNotification,
+  osEvenementsForceNext,
+  osEvenementsTrigger,
+  osMapEventUiType,
+} from "@/lib/keyberOs/moteurEvenements";
 export { osVisibiliteFog, osVisibiliteInstallSensor } from "@/lib/keyberOs/visibilite";
 export {
   osKpiBarItems,

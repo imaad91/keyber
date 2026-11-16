@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import {
   formatOsClock,
   osCycleVieForceDayEnd,
+  osEvenementsForceNext,
   osInterviewSelect,
   osOpenDebrief,
   osOrdinateurSetAction,
@@ -29,10 +30,12 @@ import { OsAtelierLive } from "@/components/osPlay/OsAtelierLive";
 import { OsComputerDesktop } from "@/components/osPlay/OsComputerDesktop";
 import { OsDayEndScreen } from "@/components/osPlay/OsDayEndScreen";
 import { OsDebriefView } from "@/components/osPlay/OsDebriefView";
+import { OsEventNotificationToast } from "@/components/osPlay/OsEventNotificationToast";
 import { OsGameClockBar } from "@/components/osPlay/OsGameClockBar";
 import { OsIntroNarrative } from "@/components/osPlay/OsIntroNarrative";
 import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
 import { OsOnboardingCoach } from "@/components/osPlay/OsOnboardingCoach";
+import { OsUrgentEventBanner } from "@/components/osPlay/OsUrgentEventBanner";
 import {
   BookMarked,
   BookOpen,
@@ -59,6 +62,14 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
   const { config, setConfig } = useKeyberOsRuntime();
 
   useEffect(() => {
+    const notif = config.notifications;
+    if (notif?.pendingForceEvent) {
+      setConfig({
+        notifications: { ...notif, pendingForceEvent: false },
+      });
+      setPlay(osEvenementsForceNext(play));
+      return;
+    }
     const cfg = config.cycleVie;
     if (cfg?.pendingForceDebrief && !play.world?.showDebrief) {
       setConfig({ cycleVie: { ...cfg, pendingForceDebrief: false } });
@@ -70,6 +81,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
     setPlay(osCycleVieForceDayEnd(play));
   }, [
     config.cycleVie,
+    config.notifications,
     play,
     play.world?.showDayEnd,
     play.world?.showDebrief,
@@ -271,6 +283,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {ui.showClock ? <OsGameClockBar play={play} /> : null}
+        <OsUrgentEventBanner play={play} setPlay={setPlay} />
 
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2 text-xs text-muted">
           <span>
@@ -428,6 +441,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
           ) : null}
         </div>
       </div>
+      <OsEventNotificationToast play={play} setPlay={setPlay} />
     </div>
   );
 }

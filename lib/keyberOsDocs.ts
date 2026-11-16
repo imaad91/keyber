@@ -14,6 +14,7 @@ export type KeyberOsComposanteId =
   | "ordinateur"
   | "temps"
   | "cycle-vie"
+  | "notifications"
   | "interviews"
   | "objectifs"
   | "visibilite";
@@ -87,6 +88,12 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/cycle-vie",
     label: "Cycle de vie",
     blurb: "Intro, onboarding, DayEnd, passage de jour, débrief.",
+  },
+  {
+    id: "notifications",
+    href: "/admin/systeme/notifications",
+    label: "Notifications",
+    blurb: "Toasts événements et bannière urgente.",
   },
   {
     id: "interviews",
@@ -244,37 +251,71 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       id: "moteur-evenements",
       title: "Moteur d'Événements",
       ceQueCaFait: [
-        "Définit le type Evenement / EvenementType et vérifie lesquels se déclenchent (checkEvenements).",
-        "Peut appliquer un effet si une décision a été manquée (applyMissedDecision).",
-        "Notifie l’interface (toasts, bannières, fil d’événements).",
+        "Lit le catalogue « Événements entreprise » du param.",
+        "Déclenche selon heure (horloge 08:00+) et conditions numériques.",
+        "Applique impact stock + consequences param ; injecte mail / alarme.",
+        "Pousse toast + bannière urgente (via module Notifications).",
       ],
       deQuoiCompose: [
-        "lib/evenements.ts — Evenement, checkEvenements, applyMissedDecision.",
-        "Catalogues sous data/contextes/*/evenements.ts (paramétrage, pas le moteur).",
-        "UI : EventNotificationToast, UrgentEventBanner, EventFeed.",
+        "lib/keyberOs/moteurEvenements.ts — osEvenementsTrigger.",
+        "Param : heure, jour, urgent, deadlineHeure, condition, consequences.",
+        "UI : OsEventNotificationToast, OsUrgentEventBanner (sous-onglet Notifications).",
       ],
       commentCaMarche: [
-        "À l’avancée du temps, engine appelle checkEvenements.",
-        "Un événement se déclenche selon heure + conditions du paramétrage (pas un tirage inventé dans l’OS).",
-        "L’effet met à jour le GameState ; l’ERP / les jauges se relisent.",
-        "L’Interface affiche la notification.",
+        "Après chaque avancée de temps (apps, décision, DayEnd) → osEvenementsTrigger.",
+        "Heure absente → fallbackHeures Admin (index catalogue).",
+        "Urgent + deadlineHeure → bannière ; dépassement → consequencesDeadline.",
       ],
       workflowSteps: [
-        "advanceTime",
-        "checkEvenements (heure + conditions)",
+        "Avance temps",
+        "osEvenementsTrigger (heure + conditions)",
         "Événement déclenché",
-        "Effet sur GameState / ERP",
-        "Notification Interface Joueur",
+        "Effet ERP / flags / mail",
+        "Toast + bannière (Notifications)",
       ],
       ceQueCaNeFaitPas: [
-        "N’invente aucun événement métier : la liste vient du paramétrage du contexte.",
+        "N’invente aucun événement métier : la liste vient du paramétrage.",
         "Ne partage pas d’événements « globaux OS » entre entreprises.",
         "Ne remplace pas le Moteur de Décisions.",
       ],
       codeRefs: [
         "lib/keyberOs/moteurEvenements.ts",
         "lib/keyberOs/pipeline.ts",
+        "lib/keyberOs/ordinateur.ts",
         "app/admin/systeme/moteur-evenements/page.tsx",
+      ],
+    },
+    notifications: {
+      id: "notifications",
+      title: "Notifications",
+      ceQueCaFait: [
+        "Affiche le toast « Nouvel évènement » (auto-dismiss).",
+        "Affiche la bannière urgente avec deadline.",
+        "Permet de forcer le prochain événement catalogue (debug).",
+      ],
+      deQuoiCompose: [
+        "components/osPlay/OsEventNotificationToast.tsx",
+        "components/osPlay/OsUrgentEventBanner.tsx",
+        "world.eventNotifications / world.urgentBanner",
+      ],
+      commentCaMarche: [
+        "Le moteur pousse dans world.* ; ce module pilote durée toast et show banner.",
+        "Admin → Forcer prochain événement → prochain rendu Book.",
+      ],
+      workflowSteps: [
+        "Événement déclenché",
+        "Push notification / banner",
+        "Toast visible",
+        "OK / Voir / Masquer",
+      ],
+      ceQueCaNeFaitPas: [
+        "Ne décide pas quels événements existent (param + Moteur).",
+        "Ne hardcode aucun titre d'entreprise.",
+      ],
+      codeRefs: [
+        "app/admin/systeme/notifications/page.tsx",
+        "components/osPlay/OsEventNotificationToast.tsx",
+        "components/osPlay/OsUrgentEventBanner.tsx",
       ],
     },
     progression: {

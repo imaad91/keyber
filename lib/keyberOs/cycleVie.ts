@@ -6,6 +6,7 @@
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 import { osDonneesSaveProgress } from "@/lib/keyberOs/donneesSauvegarde";
 import { osOpenDebrief } from "@/lib/keyberOs/debrief";
+import { osEvenementsTrigger } from "@/lib/keyberOs/moteurEvenements";
 import {
   formatOsClock,
   osTempsAdvance,
@@ -60,6 +61,7 @@ export function osCycleVieForceDayEnd(state: OsPlayState): OsPlayState {
   const remaining = osTempsRemaining(state);
   let next =
     remaining > 0 ? osTempsAdvance(state, remaining) : { ...state };
+  next = osEvenementsTrigger(next);
   if (!next.world?.showDayEnd) {
     next = {
       ...next,

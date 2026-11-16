@@ -5,6 +5,7 @@
 
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
+import { validateScenarioFileContract } from "@/lib/scenarioFileContract";
 import {
   createDefaultOsKpis,
   createEmptyOsFinance,
@@ -101,9 +102,22 @@ export function osDonneesLoadParam(param: ScenarioParamFile): {
       log: "Données & Sauvegarde → module désactivé (Admin)",
     };
   }
+  /** Étape 35 — refuse si blocs / pointeurs hors fichier unique. */
+  const contract = validateScenarioFileContract(param);
+  if (!contract.ok) {
+    const first = contract.issues.find((i) => i.level === "error");
+    return {
+      ok: false,
+      log: `Données & Sauvegarde → contrat fichier unique ROUGE — ${
+        first?.message || "blocs manquants ou hors fichier"
+      }`,
+    };
+  }
   return {
     ok: true,
-    log: `Données & Sauvegarde → fichier ${param.fichier || param.Nom}`,
+    log: `Données & Sauvegarde → fichier ${param.fichier || param.Nom}${
+      contract.diskRelativePath ? ` (${contract.diskRelativePath})` : ""
+    }`,
   };
 }
 

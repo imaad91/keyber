@@ -9,6 +9,7 @@ import { ModeBadge } from "@/components/admin/BookEntryCard";
 import { BookLiveGovernanceNote } from "@/components/admin/BookLiveGovernanceNote";
 import { BookParityChecklist } from "@/components/admin/BookParityChecklist";
 import { BookScenarioGraph } from "@/components/admin/BookScenarioGraph";
+import { ScenarioFileContractPanel } from "@/components/admin/ScenarioFileContractPanel";
 import {
   assembleParamFromAtelier,
   formatAssemblageLog,
@@ -35,6 +36,7 @@ import {
   livreFromParam,
   summarizeLivreLore,
 } from "@/lib/osLivre";
+import { ensureContractKeysInParam } from "@/lib/scenarioFileContract";
 import {
   buildScenarioParamBlocksGraph,
   formatScenarioParamBlocksSummary,
@@ -178,7 +180,7 @@ export default function BookDetailPage() {
   }
 
   function ensureSchemaInCode() {
-    const normalized = normalizeScenarioParamFile(
+    const ensured = ensureContractKeysInParam(
       (() => {
         try {
           return JSON.parse(codeJson);
@@ -187,7 +189,7 @@ export default function BookDetailPage() {
         }
       })()
     );
-    setCodeJson(JSON.stringify(normalized, null, 2));
+    setCodeJson(JSON.stringify(ensured, null, 2));
     setDirty(true);
   }
 
@@ -610,11 +612,11 @@ export default function BookDetailPage() {
       ) : null}
 
       {tab === "code" ? (
-        <div className="mb-4">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
+        <div className="mb-4 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
             <p className="text-xs text-slate-500">
               Fichier de paramétrage JSON complet — schéma étendu (blocs vides
-              OK)
+              OK) · contrat Étape 35 (1 scénario = 1 fichier)
               {entry.paramFileName ? (
                 <>
                   {" "}
@@ -630,6 +632,16 @@ export default function BookDetailPage() {
               Compléter les blocs manquants
             </AdminButton>
           </div>
+          <ScenarioFileContractPanel
+            rawParam={(() => {
+              try {
+                return JSON.parse(codeJson);
+              } catch {
+                return { _parseError: true };
+              }
+            })()}
+            allowWrite
+          />
           <textarea
             className="min-h-[420px] w-full rounded-2xl border border-slate-200 bg-slate-950 p-4 font-mono text-xs text-emerald-100 shadow-sm"
             value={codeJson}

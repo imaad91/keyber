@@ -559,17 +559,26 @@ function lumiereSensors() {
 function withLumiereOrdinateur(
   param: ScenarioParamFile
 ): ScenarioParamFile {
+  const interviews = lumiereInterviews();
+  const objectifs = lumiereObjectifs();
   return {
     ...param,
     Ordinateur: {
-      interviews: lumiereInterviews(),
+      interviews,
       chatContacts: [
         { id: "iv-samir", name: "Samir", role: "Logisticien" },
         { id: "iv-lea", name: "Léa", role: "E-commerce" },
       ],
-      objectifs: lumiereObjectifs(),
+      objectifs,
       sensors: lumiereSensors(),
     },
+    /** Étape 21 — blocs top-level visibles (miroir + coquilles). */
+    Interviews: interviews,
+    Objectifs: objectifs,
+    Jours: [],
+    Kpis: [],
+    Conséquences: [],
+    Intro: [],
   } as ScenarioParamFile;
 }
 

@@ -245,6 +245,14 @@ export type ScenarioParamFile = {
   Décisions: unknown[];
   Fins: unknown[];
   fichier: string;
+  /** Étape 21 — blocs étendus (vides autorisés). Voir scenarioParamSchema. */
+  Ordinateur?: Record<string, unknown>;
+  Jours?: unknown[];
+  Interviews?: unknown[];
+  Objectifs?: unknown[];
+  Kpis?: unknown[];
+  Conséquences?: unknown[];
+  Intro?: string[];
 };
 
 export function buildSkeletonParamFile(args: {
@@ -298,6 +306,14 @@ export function buildSkeletonParamFile(args: {
     Décisions: [],
     Fins: [],
     fichier: args.fichier,
+    /** Étape 21 — coquilles blocs POC (vides OK). */
+    Ordinateur: {},
+    Jours: [],
+    Interviews: [],
+    Objectifs: [],
+    Kpis: [],
+    Conséquences: [],
+    Intro: [],
   };
 }
 

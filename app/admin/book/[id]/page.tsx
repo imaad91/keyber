@@ -18,6 +18,13 @@ import {
   type BookGraphView,
 } from "@/lib/bookStore";
 import { setAdminPlaySession } from "@/lib/playCatalog";
+import {
+  buildScenarioParamBlocksGraph,
+  normalizeScenarioParamFile,
+  summarizeScenarioParamBlocks,
+  validateScenarioParamFile,
+  type ScenarioParamFileExtended,
+} from "@/lib/scenarioParamSchema";
 import { cn } from "@/lib/utils";
 
 type ViewTab = "texte" | "graphique" | "code";
@@ -62,8 +69,8 @@ export default function BookDetailPage() {
     setGraphJson(JSON.stringify(entry.graph || emptyBookGraph(), null, 2));
     setCodeJson(
       entry.paramFile
-        ? JSON.stringify(entry.paramFile, null, 2)
-        : JSON.stringify({ note: "Fichier de paramétrage vide" }, null, 2)
+        ? JSON.stringify(normalizeScenarioParamFile(entry.paramFile), null, 2)
+        : JSON.stringify(normalizeScenarioParamFile({}), null, 2)
     );
     setDirty(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- remount editors when entry id changes
@@ -72,6 +79,21 @@ export default function BookDetailPage() {
   const history = useMemo(
     () => (entry ? familyHistory(entry.familyId) : []),
     [entry, familyHistory]
+  );
+
+  const liveParam = useMemo(() => {
+    try {
+      return normalizeScenarioParamFile(JSON.parse(codeJson));
+    } catch {
+      return entry?.paramFile
+        ? normalizeScenarioParamFile(entry.paramFile)
+        : null;
+    }
+  }, [codeJson, entry?.paramFile]);
+
+  const blockStatuses = useMemo(
+    () => summarizeScenarioParamBlocks(liveParam),
+    [liveParam]
   );
 
   if (!entry) {
@@ -109,12 +131,43 @@ export default function BookDetailPage() {
     }
   }
 
-  function parseParam(): ScenarioParamFile | null {
+  function parseParam():
+    | { ok: true; param: ScenarioParamFileExtended }
+    | { ok: false; error: string } {
     try {
-      return JSON.parse(codeJson) as ScenarioParamFile;
+      const raw = JSON.parse(codeJson) as unknown;
+      const result = validateScenarioParamFile(raw);
+      if (!result.ok || !result.param) {
+        return {
+          ok: false,
+          error:
+            result.errors.join("\n") || "Schéma de paramétrage invalide",
+        };
+      }
+      return { ok: true, param: result.param };
     } catch {
-      return null;
+      return { ok: false, error: "JSON invalide" };
     }
+  }
+
+  function applyBlocksGraph() {
+    const g = buildScenarioParamBlocksGraph(liveParam);
+    setGraphJson(JSON.stringify(g, null, 2));
+    setDirty(true);
+  }
+
+  function ensureSchemaInCode() {
+    const normalized = normalizeScenarioParamFile(
+      (() => {
+        try {
+          return JSON.parse(codeJson);
+        } catch {
+          return entry?.paramFile || {};
+        }
+      })()
+    );
+    setCodeJson(JSON.stringify(normalized, null, 2));
+    setDirty(true);
   }
 
   function saveVersion() {
@@ -123,15 +176,16 @@ export default function BookDetailPage() {
       window.alert("Vue Graphique : JSON invalide");
       return;
     }
-    const paramFile = parseParam();
-    if (!paramFile) {
-      window.alert("Vue Code : JSON invalide");
+    const parsed = parseParam();
+    if (!parsed.ok) {
+      window.alert(`Vue Code : ${parsed.error}`);
       return;
     }
+    const paramFile = parsed.param;
     const res = saveAsNewVersion(entry!.id, {
       textContent,
       graph,
-      paramFile,
+      paramFile: paramFile as ScenarioParamFile,
       paramFileName:
         entry!.paramFileName ||
         (typeof paramFile.fichier === "string" ? paramFile.fichier : ""),
@@ -320,7 +374,42 @@ export default function BookDetailPage() {
       </div>
 
       {tab === "texte" ? (
-        <div className="mb-4">
+        <div className="mb-4 space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                Schéma param — résumé des blocs (Étape 21)
+              </p>
+              <span className="text-[10px] text-slate-400">
+                ● rempli · ◌ vide · synchro Vue Code
+              </span>
+            </div>
+            <ul className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+              {blockStatuses.map((b) => (
+                <li
+                  key={b.key}
+                  className={cn(
+                    "rounded-lg border px-2.5 py-1.5 text-xs",
+                    b.filled
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                      : b.present
+                        ? "border-amber-200 bg-amber-50 text-amber-900"
+                        : "border-slate-200 bg-white text-slate-500"
+                  )}
+                >
+                  <span className="font-medium">{b.label}</span>
+                  <span className="ml-1 text-[10px] opacity-70">
+                    {b.detail}
+                  </span>
+                  {b.extended ? (
+                    <span className="ml-1 rounded bg-violet-100 px-1 text-[9px] font-bold uppercase tracking-wide text-violet-700">
+                      POC
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
           <textarea
             className="min-h-[360px] w-full rounded-2xl border border-slate-200 bg-white p-4 font-mono text-sm text-slate-900 shadow-sm"
             value={textContent}
@@ -334,6 +423,18 @@ export default function BookDetailPage() {
 
       {tab === "graphique" ? (
         <div className="mb-4 space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <AdminButton
+              type="button"
+              variant="secondary"
+              onClick={applyBlocksGraph}
+            >
+              Générer graphe des blocs param
+            </AdminButton>
+            <span className="text-xs text-slate-500">
+              Nœuds = blocs schéma (Ordinateur, Jours, Interviews…)
+            </span>
+          </div>
           <BookScenarioGraph
             graph={parseGraph() || entry.graph || emptyBookGraph()}
             title={`Graphique — ${entry.nom} V${entry.version}`}
@@ -356,15 +457,25 @@ export default function BookDetailPage() {
 
       {tab === "code" ? (
         <div className="mb-4">
-          <p className="mb-2 text-xs text-slate-500">
-            Fichier de paramétrage JSON complet
-            {entry.paramFileName ? (
-              <>
-                {" "}
-                — <code>{entry.paramFileName}</code>
-              </>
-            ) : null}
-          </p>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <p className="text-xs text-slate-500">
+              Fichier de paramétrage JSON complet — schéma étendu (blocs vides
+              OK)
+              {entry.paramFileName ? (
+                <>
+                  {" "}
+                  — <code>{entry.paramFileName}</code>
+                </>
+              ) : null}
+            </p>
+            <AdminButton
+              type="button"
+              variant="ghost"
+              onClick={ensureSchemaInCode}
+            >
+              Compléter les blocs manquants
+            </AdminButton>
+          </div>
           <textarea
             className="min-h-[420px] w-full rounded-2xl border border-slate-200 bg-slate-950 p-4 font-mono text-xs text-emerald-100 shadow-sm"
             value={codeJson}

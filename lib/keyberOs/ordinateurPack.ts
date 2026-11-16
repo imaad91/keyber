@@ -11,6 +11,10 @@ import type {
   OsObjective,
   OsSensor,
 } from "@/lib/keyberOs/types";
+import {
+  readParamInterviews,
+  readParamObjectifs,
+} from "@/lib/scenarioParamSchema";
 import { osDefaultSensors } from "@/lib/keyberOs/visibilite";
 
 type ParamOrdinateur = {
@@ -330,7 +334,7 @@ export function buildComputerPackFromParam(
     ];
 
   const interviews: OsInterview[] =
-    o?.interviews ??
+    readParamInterviews(param) ??
     [
       {
         id: "iv-1",
@@ -436,7 +440,7 @@ export function buildComputerPackFromParam(
 
   const stockCible = Math.max(80, Math.floor(stockQty * 0.9) + 10);
   const objectives: OsObjective[] =
-    o?.objectifs ??
+    readParamObjectifs(param) ??
     [
       {
         id: "obj-stock",

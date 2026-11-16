@@ -1,6 +1,6 @@
 /**
  * Session OS Book active (mémoire + miroir localStorage).
- * Permet /journal (et plus tard /livre, /profil) de lire l'historique
+ * Permet /journal, /livre, /profil de lire la session
  * sans perdre l'état en quittant `/jouer/book/[id]`.
  */
 

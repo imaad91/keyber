@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ArrowLeft, Award, Check, History, X } from "lucide-react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { CharacterPortrait } from "@/components/characters/CharacterPortrait";
+import { OsProfilView } from "@/components/OsProfilView";
 import { ProgressionChart } from "@/components/ProgressionChart";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import {
   COMPETENCES_GENERALES,
 } from "@/lib/competences";
 import { roles } from "@/lib/mock";
+import { useOsActivePlay } from "@/lib/osActivePlayStore";
 import { XP_PER_SKILL_LEVEL } from "@/lib/progression";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -27,7 +29,7 @@ const CAST: CharacterVisualId[] = [
   "pers-henri",
 ];
 
-export default function ProfilPage() {
+function PocProfilPage() {
   const { gameState } = useGameStore();
   const role = roles.find((r) => r.id === gameState.roleId);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -209,11 +211,7 @@ export default function ProfilPage() {
                             ) : (
                               <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-danger" />
                             )}
-                            <span
-                              className={cn(
-                                flags[i] && "text-foreground"
-                              )}
-                            >
+                            <span className={cn(flags[i] && "text-foreground")}>
                               {ind}
                             </span>
                           </li>
@@ -252,9 +250,7 @@ export default function ProfilPage() {
               </h2>
             </div>
             {gameState.trainingsCompleted.length === 0 ? (
-              <p className="text-sm text-muted">
-                Aucun entraînement terminé.
-              </p>
+              <p className="text-sm text-muted">Aucun entraînement terminé.</p>
             ) : (
               <ul className="space-y-2">
                 {gameState.trainingsCompleted.slice(0, 8).map((t, i) => (
@@ -340,4 +336,27 @@ export default function ProfilPage() {
       </div>
     </div>
   );
+}
+
+/**
+ * Étape 29 — `/profil` : session Book OS → Progression OS ; sinon POC.
+ */
+export default function ProfilPage() {
+  const active = useOsActivePlay();
+
+  if (active.play && active.meta) {
+    const returnHref =
+      active.meta.returnHref ||
+      `/jouer/book/${encodeURIComponent(active.meta.bookEntryId)}`;
+    return (
+      <OsProfilView
+        play={active.play}
+        returnHref={returnHref}
+        title={active.meta.title}
+        subtitle={active.meta.subtitle}
+      />
+    );
+  }
+
+  return <PocProfilPage />;
 }

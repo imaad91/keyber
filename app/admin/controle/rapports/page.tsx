@@ -42,6 +42,20 @@ export default function ControleRapportsPage() {
         seule après enregistrement.
       </p>
 
+      <div className="mb-4 rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2 text-sm text-violet-950">
+        <Link
+          href="/admin/controle/rapports/parite"
+          className="font-semibold underline-offset-2 hover:underline"
+        >
+          Lancer le rapport parité feeling
+        </Link>
+        <span className="text-xs text-violet-800/80">
+          {" "}
+          — Étape 25 · checklist Book + OS OFF + double moteur (propose, ne
+          patche pas)
+        </span>
+      </div>
+
       {toast ? (
         <p className="mb-3 text-sm">
           {toast}{" "}

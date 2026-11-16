@@ -16,6 +16,7 @@ import {
   createEmptyOsVisibilite,
   createEmptyOsWorld,
 } from "@/lib/keyberOs/createRichDefaults";
+import { osOnboardingBootWorld } from "@/lib/keyberOs/onboarding";
 import { formatOsClock } from "@/lib/keyberOs/temps";
 import type { OsDecision, OsPlayState } from "@/lib/keyberOs/types";
 
@@ -152,8 +153,7 @@ export function osScenariosBoot(
     historique: createEmptyOsHistorique(),
     flags: {},
     world: createEmptyOsWorld({
-      phase: "JOUR",
-      onboardingDone: true,
+      ...osOnboardingBootWorld(param),
     }),
     kpis: createDefaultOsKpis(),
   };

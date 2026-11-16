@@ -8,6 +8,7 @@ import {
 } from "@/components/admin/KeyberOsRuntimePanel";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { KEYBER_OS_COMPOSANTES } from "@/lib/keyberOsDocs";
+import { OS_ONBOARDING_STEPS } from "@/lib/keyberOs/onboarding";
 import {
   OS_RUNTIME_DEFAULTS,
   useKeyberOsRuntime,
@@ -22,21 +23,21 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["cycle-vie"]} />
 
       <section className="mt-6 rounded-2xl border border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-950">
-        <p className="font-semibold">DayEnd (Étape 11)</p>
+        <p className="font-semibold">DayEnd + Intro / Onboarding (Étapes 11–12)</p>
         <p className="mt-1 text-violet-900/80">
-          Overlay fin de journée (18:00) → résumé → passage jour suivant ou
-          débrief. Déclenché automatiquement quand l&apos;horloge est pleine, ou
-          via le bouton test ci-dessous.
+          Overlay fin de journée · Intro Jour 0 · coach 4 étapes (actions
+          verrouillées puis unlock). Textes génériques / param — pas de contenu
+          Novacier. Textes Lumière = Phase E.
         </p>
         <p className="mt-2 text-xs text-violet-800">
-          Vérif : Book ouvert → Admin → Forcer DayEnd → revenir au Book (overlay).
-          Ou épuiser le temps de la journée.
+          Vérif Histoire : Book Mode Histoire → intro → coach 1–4 → Terminer la
+          visite. DayEnd : bouton forcer ci-dessous.
         </p>
       </section>
 
       <KeyberOsRuntimePanel
         title="Cycle de vie — runtime"
-        description="Règles de fin de journée et longueur de semaine jouable."
+        description="DayEnd, longueur de semaine, intro & onboarding Mode Histoire."
         onReset={() =>
           setConfig({ cycleVie: { ...OS_RUNTIME_DEFAULTS.cycleVie } })
         }
@@ -51,6 +52,13 @@ export default function Page() {
           checked={mod.autoEndOnTimeFull}
           onChange={(autoEndOnTimeFull) =>
             setConfig({ cycleVie: { ...mod, autoEndOnTimeFull } })
+          }
+        />
+        <OsToggle
+          label="Intro + onboarding (Mode Histoire)"
+          checked={mod.onboardingEnabled}
+          onChange={(onboardingEnabled) =>
+            setConfig({ cycleVie: { ...mod, onboardingEnabled } })
           }
         />
         <OsNumberField
@@ -78,6 +86,26 @@ export default function Page() {
           ) : null}
         </div>
       </KeyberOsRuntimePanel>
+
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-800">
+        <p className="font-semibold text-slate-900">
+          Coach Jour 0 — étapes (référence)
+        </p>
+        <ol className="mt-3 space-y-2">
+          {OS_ONBOARDING_STEPS.map((s) => (
+            <li
+              key={s.step}
+              className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
+            >
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                Étape {s.step} · {s.actionHint}
+              </p>
+              <p className="font-semibold text-slate-900">{s.titre}</p>
+              <p className="mt-0.5 text-xs text-slate-600">{s.mentorLine}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
     </div>
   );
 }

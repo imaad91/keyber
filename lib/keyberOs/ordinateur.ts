@@ -3,6 +3,7 @@
  */
 
 import { isOsModuleEnabled } from "@/lib/keyberOsRuntime";
+import { osOnboardingAdvance } from "@/lib/keyberOs/onboarding";
 import {
   OS_ACTION_TIME_COST,
   osTempsAdvance,
@@ -26,6 +27,20 @@ export function osOrdinateurSetAction(
       log: [...state.log, "Ordinateur → module désactivé (Admin)"],
     };
   }
+
+  if (
+    action &&
+    !state.world?.onboardingDone &&
+    state.world?.unlockedActions &&
+    !state.world.unlockedActions.includes(action)
+  ) {
+    return {
+      ...state,
+      feedback: "Pas encore débloqué — suis le mentor.",
+      log: [...state.log, `Onboarding → action « ${action} » verrouillée`],
+    };
+  }
+
   let next: OsPlayState = {
     ...state,
     activeAction: action,
@@ -54,6 +69,7 @@ export function osOrdinateurSetAction(
       }
       next = osTempsAdvance(next, cost);
     }
+    next = osOnboardingAdvance(next, action);
   }
   return next;
 }

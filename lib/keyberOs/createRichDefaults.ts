@@ -138,18 +138,21 @@ export function createDefaultOsKpis(): OsKpiDef[] {
       label: "Moral",
       format: "number",
       path: "humain.moralEquipe",
+      unit: "/100",
     },
     {
       id: "ethique",
       label: "Éthique",
       format: "number",
       path: "humain.ethique",
+      unit: "/100",
     },
     {
       id: "confiance",
       label: "Confiance client",
       format: "number",
       path: "humain.confianceClient",
+      unit: "/100",
     },
   ];
 }

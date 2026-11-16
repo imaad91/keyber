@@ -78,12 +78,16 @@ export default function Page() {
           }
         />
         <OsToggle
-          label="Afficher jauges KPI"
+          label="Barre KPI (jauges + pastilles visibilité)"
           checked={mod.showErpTiles}
           onChange={(showErpTiles) =>
             setConfig({ interfaceJoueur: { ...mod, showErpTiles } })
           }
         />
+        <p className="text-xs text-emerald-800">
+          Étape 9 — labels génériques : Trésorerie, Stock, Production, Rebut,
+          Moral, Éthique, Confiance client. Bouton Visibilité = panneau capteur.
+        </p>
         <OsToggle
           label="Afficher XP / score / niveau"
           checked={mod.showProgressionLine}

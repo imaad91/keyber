@@ -51,3 +51,10 @@ export {
 export { osInterviewSelect } from "@/lib/keyberOs/interviews";
 export { formatOsClock } from "@/lib/keyberOs/temps";
 export { osVisibiliteFog, osVisibiliteInstallSensor } from "@/lib/keyberOs/visibilite";
+export {
+  osKpiBarItems,
+  osKpiRawValue,
+  osKpiVisibility,
+} from "@/lib/keyberOs/kpiBar";
+export type { OsKpiFormatted } from "@/lib/keyberOs/kpiBar";
+export { createDefaultOsKpis } from "@/lib/keyberOs/createRichDefaults";

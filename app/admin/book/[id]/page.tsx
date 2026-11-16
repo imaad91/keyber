@@ -9,8 +9,19 @@ import { ModeBadge } from "@/components/admin/BookEntryCard";
 import { BookLiveGovernanceNote } from "@/components/admin/BookLiveGovernanceNote";
 import { BookParityChecklist } from "@/components/admin/BookParityChecklist";
 import { BookScenarioGraph } from "@/components/admin/BookScenarioGraph";
+import {
+  assembleParamFromAtelier,
+  formatAssemblageLog,
+  summarizeAssemblageStats,
+} from "@/lib/atelierAssemblage";
+import { useAtelierCompetencesStore } from "@/lib/atelierCompetencesStore";
 import { useAtelierCreationStore } from "@/lib/atelierCreationStore";
-import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
+import { useAtelierEventsStore } from "@/lib/atelierEventsStore";
+import {
+  buildParamFileName,
+  coursTitlesForCompetences,
+  type ScenarioParamFile,
+} from "@/lib/bookGenerationPrompt";
 import {
   bookStatusLabel,
   bookVersionLabel,
@@ -26,6 +37,7 @@ import {
 } from "@/lib/osLivre";
 import {
   buildScenarioParamBlocksGraph,
+  formatScenarioParamBlocksSummary,
   normalizeScenarioParamFile,
   summarizeScenarioParamBlocks,
   validateScenarioParamFile,
@@ -59,7 +71,9 @@ export default function BookDetailPage() {
     toast,
     clearToast,
   } = useBookStore();
-  const { returnFromBookToCreation } = useAtelierCreationStore();
+  const { getCreation, returnFromBookToCreation } = useAtelierCreationStore();
+  const { getEventsForFamily, events: allEvents } = useAtelierEventsStore();
+  const { competences, cours } = useAtelierCompetencesStore();
   const entry = getEntry(id);
 
   const [tab, setTab] = useState<ViewTab>("texte");
@@ -68,6 +82,7 @@ export default function BookDetailPage() {
   const [graphJson, setGraphJson] = useState("");
   const [codeJson, setCodeJson] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [assemblageNote, setAssemblageNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!entry) return;
@@ -176,6 +191,106 @@ export default function BookDetailPage() {
     setDirty(true);
   }
 
+  /** Étape 34 — ré-assemble depuis staging Création (nouvelle version). */
+  function reassembleFromCreation() {
+    if (!entry) return;
+    const creation = entry.sourceCreationId
+      ? getCreation(entry.sourceCreationId)
+      : null;
+    if (!creation) {
+      setAssemblageNote(
+        "Création source introuvable — ouvre Book → Générer ou Retourner en Création."
+      );
+      return;
+    }
+    let events = getEventsForFamily(creation.familyId);
+    if (!events.length) {
+      const nom = creation.nom.trim().toLowerCase();
+      events = allEvents.filter(
+        (e) => e.entrepriseNom.trim().toLowerCase() === nom
+      );
+    }
+    const roleNames =
+      entry.roleNames.length > 0
+        ? entry.roleNames
+        : entry.roleName
+          ? [entry.roleName]
+          : [];
+    const competenceNames =
+      entry.competenceNames.length > 0
+        ? entry.competenceNames
+        : entry.competenceName
+          ? [entry.competenceName]
+          : [];
+    const coursBy = coursTitlesForCompetences(
+      competences,
+      cours,
+      competenceNames
+    );
+    const compsPayload = competenceNames.map((nom) => ({
+      nom,
+      cours: coursBy[nom] ?? [],
+    }));
+    const mode = entry.mode;
+    const roleOrComp =
+      mode === "histoire"
+        ? entry.roleName || roleNames[0] || "role"
+        : entry.competenceName || competenceNames[0] || "competence";
+    const fichier = buildParamFileName({
+      entrepriseNom: creation.nom,
+      mode,
+      roleOrCompetence: roleOrComp,
+      version: entry.version + 1,
+    });
+    const nom =
+      entry.nom ||
+      (mode === "histoire"
+        ? `Histoire — ${roleOrComp}`
+        : `Entraînement — ${roleOrComp}`);
+    const assembled = assembleParamFromAtelier({
+      creation,
+      events,
+      mode,
+      roleName: mode === "histoire" ? roleOrComp : "",
+      competenceName: mode === "competence" ? roleOrComp : "",
+      roleNames,
+      competences: compsPayload,
+      fichier,
+      nom,
+      version: entry.version + 1,
+    });
+    const paramFile = assembled.paramFile as ScenarioParamFile;
+    const nextText = [
+      `# ${nom}`,
+      ``,
+      `Ré-assemblage Atelier → Book (Étape 34)`,
+      summarizeAssemblageStats(assembled.stats),
+      ``,
+      formatAssemblageLog(assembled.log),
+      ``,
+      formatScenarioParamBlocksSummary(
+        paramFile as ScenarioParamFileExtended
+      ),
+    ].join("\n");
+    const nextGraph = buildScenarioParamBlocksGraph(
+      paramFile as ScenarioParamFileExtended
+    );
+    const res = saveAsNewVersion(entry.id, {
+      textContent: nextText,
+      graph: nextGraph,
+      paramFile,
+      paramFileName: fichier,
+    });
+    if ("error" in res) {
+      setAssemblageNote(res.error);
+      return;
+    }
+    setAssemblageNote(
+      `Assemblage OK → ${bookVersionLabel(res.entry)}. ${summarizeAssemblageStats(assembled.stats)}`
+    );
+    router.push(`/admin/book/${res.entry.id}`);
+  }
+
   function saveVersion() {
     const graph = parseGraph();
     if (!graph) {
@@ -225,6 +340,18 @@ export default function BookDetailPage() {
         <p className="mb-3 text-sm">
           {toast}{" "}
           <button type="button" className="underline" onClick={clearToast}>
+            OK
+          </button>
+        </p>
+      ) : null}
+      {assemblageNote ? (
+        <p className="mb-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-950">
+          {assemblageNote}{" "}
+          <button
+            type="button"
+            className="underline"
+            onClick={() => setAssemblageNote(null)}
+          >
             OK
           </button>
         </p>
@@ -291,6 +418,11 @@ export default function BookDetailPage() {
             {entry.status === "live" ? "Jouer" : "Tester"}
           </AdminButton>
         </Link>
+        {entry.sourceCreationId ? (
+          <AdminButton type="button" variant="secondary" onClick={reassembleFromCreation}>
+            Ré-assembler depuis Création
+          </AdminButton>
+        ) : null}
         {entry.status === "en_test" ? (
           <AdminButton
             type="button"

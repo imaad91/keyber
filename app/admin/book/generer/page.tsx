@@ -4,6 +4,12 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
+import {
+  assembleParamFromAtelier,
+  formatAssemblageLog,
+  summarizeAssemblageStats,
+  type AssemblageLogLine,
+} from "@/lib/atelierAssemblage";
 import { useAtelierCompetencesStore } from "@/lib/atelierCompetencesStore";
 import {
   creationVersionLabel,
@@ -13,14 +19,14 @@ import {
   eventsFileLabel,
   useAtelierEventsStore,
 } from "@/lib/atelierEventsStore";
+import { countNarrationPackRows } from "@/lib/atelierNarrationExcel";
+import { countOrdinateurPackRows } from "@/lib/atelierOrdinateurExcel";
 import { useAtelierRolesStore } from "@/lib/atelierRolesStore";
 import {
   buildBookGenerationPrompt,
   buildParamFileName,
-  buildSkeletonParamFile,
   coursTitlesForCompetences,
   evaluateBookGeneration,
-  filledContexteRecord,
 } from "@/lib/bookGenerationPrompt";
 import { useBookStore } from "@/lib/bookStore";
 import {
@@ -92,6 +98,9 @@ export default function BookGenererPage() {
   const [compChecks, setCompChecks] = useState<string[]>([]);
   const [prompt, setPrompt] = useState<string | null>(null);
   const [shellNote, setShellNote] = useState<string | null>(null);
+  const [assemblageLog, setAssemblageLog] = useState<AssemblageLogLine[]>(
+    []
+  );
 
   const creation =
     creations.find(
@@ -165,14 +174,12 @@ export default function BookGenererPage() {
     });
     setPrompt(text);
 
-    const contexte = filledContexteRecord(
-      creation.fields as unknown as Record<string, string>
-    );
     const compsPayload = compChecks.map((nom) => ({
       nom,
       cours: coursByCompetence[nom] ?? [],
     }));
     const rolePrincipal = roleChecks[0]!;
+    const mergedLog: AssemblageLogLine[] = [];
 
     const items = [
       ...compChecks.map((compNom) => {
@@ -183,20 +190,20 @@ export default function BookGenererPage() {
           version: 1,
         });
         const nom = `Entraînement — ${compNom}`;
-        const paramFile = buildSkeletonParamFile({
-          nom,
-          version: 1,
+        const assembled = assembleParamFromAtelier({
+          creation,
+          events,
           mode: "competence",
           roleName: "",
           competenceName: compNom,
-          secteur: creation.secteur,
-          entrepriseNom: creation.nom,
-          contexte,
-          events,
           roleNames: roleChecks,
           competences: compsPayload,
           fichier,
+          nom,
+          version: 1,
         });
+        mergedLog.push(...assembled.log);
+        const paramFile = assembled.paramFile;
         return {
           mode: "competence" as const,
           nom,
@@ -212,7 +219,10 @@ export default function BookGenererPage() {
             `Cours : ${(coursByCompetence[compNom] ?? []).join(", ") || "(aucun)"}`,
             `Événements : ${events.map((e) => e.nom).join(", ") || "(aucun)"}`,
             ``,
-            `Structure complète (Étape 23) — blocs schéma présents ; contenu métier uniquement depuis Atelier (pas d'invention Studio).`,
+            `Assemblage Atelier → Book (Étape 34) — déterministe, pas d'invention.`,
+            summarizeAssemblageStats(assembled.stats),
+            ``,
+            formatAssemblageLog(assembled.log),
             ``,
             formatScenarioParamBlocksSummary(
               paramFile as ScenarioParamFileExtended
@@ -232,20 +242,20 @@ export default function BookGenererPage() {
           roleOrCompetence: rolePrincipal,
           version: 1,
         });
-        const paramFile = buildSkeletonParamFile({
-          nom: `Histoire — ${rolePrincipal}`,
-          version: 1,
+        const assembled = assembleParamFromAtelier({
+          creation,
+          events,
           mode: "histoire",
           roleName: rolePrincipal,
           competenceName: "",
-          secteur: creation.secteur,
-          entrepriseNom: creation.nom,
-          contexte,
-          events,
           roleNames: roleChecks,
           competences: compsPayload,
           fichier: fichierHist,
+          nom: `Histoire — ${rolePrincipal}`,
+          version: 1,
         });
+        mergedLog.push(...assembled.log);
+        const paramFile = assembled.paramFile;
         return {
           mode: "histoire" as const,
           nom: `Histoire — ${rolePrincipal}`,
@@ -260,7 +270,10 @@ export default function BookGenererPage() {
             `Rôle : ${rolePrincipal}`,
             `Événements : ${events.map((e) => e.nom).join(", ")}`,
             ``,
-            `Structure complète (Étape 23) — blocs schéma présents ; contenu métier uniquement depuis Atelier (pas d'invention Studio).`,
+            `Assemblage Atelier → Book (Étape 34) — déterministe, pas d'invention.`,
+            summarizeAssemblageStats(assembled.stats),
+            ``,
+            formatAssemblageLog(assembled.log),
             ``,
             formatScenarioParamBlocksSummary(
               paramFile as ScenarioParamFileExtended
@@ -274,6 +287,8 @@ export default function BookGenererPage() {
         };
       })(),
     ];
+
+    setAssemblageLog(mergedLog);
 
     const res = createProvisionalFromGeneration({
       creationFamilyId: creation.familyId,
@@ -289,7 +304,7 @@ export default function BookGenererPage() {
       setShellNote(res.error);
     } else {
       setShellNote(
-        `${res.entries.length} coquille(s) V1 — structure param complète (Ordinateur, Jours, Interviews…) dans le Book (En cours de test).`
+        `${res.entries.length} carte(s) V1 assemblée(s) — Vue Code peuplée uniquement depuis Atelier (Excel + events + coches).`
       );
     }
   }
@@ -309,9 +324,9 @@ export default function BookGenererPage() {
 
       <p className="mb-6 max-w-2xl text-sm text-slate-600">
         Formulaire Book : contexte → rôles → compétences → événements auto.
-        Générer crée la <strong>structure complète</strong> du fichier de
-        paramétrage (blocs vides OK). Le Prompt se copie dans Cursor. Aucun
-        contenu métier inventé ici.
+        <strong> Assembler</strong> (Étape 34) fusionne Excel Ordinateur /
+        Narration staging + events + coches → param Book (déterministe). Blocs
+        vides OK si rien importé. Prompt Cursor en option. Aucune invention.
       </p>
 
       {/* Récap permanent */}
@@ -360,6 +375,7 @@ export default function BookGenererPage() {
               setFamilyId(e.target.value);
               setPrompt(null);
               setShellNote(null);
+              setAssemblageLog([]);
             }}
           >
             <option value="">— Choisir —</option>
@@ -497,6 +513,21 @@ export default function BookGenererPage() {
         </p>
       ) : null}
 
+      {creation ? (
+        <div className="mb-4 rounded-xl border border-violet-200 bg-violet-50/70 px-4 py-3 text-xs text-violet-950">
+          Staging Création — Ordinateur :{" "}
+          {countOrdinateurPackRows(creation.ordinateurPack ?? {})} ligne(s) ·
+          Narration : {countNarrationPackRows(creation.narrationPack ?? {})}{" "}
+          ligne(s).{" "}
+          <Link
+            href={`/admin/atelier/creation/${creation.id}`}
+            className="underline"
+          >
+            Voir la fiche
+          </Link>
+        </div>
+      ) : null}
+
       {toast ? (
         <p className="mb-3 text-sm">
           {toast}{" "}
@@ -520,7 +551,7 @@ export default function BookGenererPage() {
           }
           onClick={generate}
         >
-          Générer le Prompt à copier dans Cursor
+          Assembler Atelier → Book
         </AdminButton>
         {prompt ? (
           <AdminButton
@@ -535,7 +566,7 @@ export default function BookGenererPage() {
               }
             }}
           >
-            Copier le Prompt
+            Copier le Prompt Cursor
           </AdminButton>
         ) : null}
         <Link href="/admin/book/en-cours-de-test">
@@ -544,6 +575,35 @@ export default function BookGenererPage() {
           </AdminButton>
         </Link>
       </div>
+
+      {assemblageLog.length > 0 ? (
+        <section className="mb-6 rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-slate-900">
+            Journal d&apos;assemblage (Admin)
+          </h2>
+          <ul className="mt-3 max-h-56 space-y-1 overflow-y-auto font-mono text-xs text-slate-700">
+            {assemblageLog.map((line, i) => (
+              <li
+                key={`${i}-${line.message.slice(0, 24)}`}
+                className={
+                  line.level === "warn"
+                    ? "text-amber-800"
+                    : line.level === "ok"
+                      ? "text-emerald-800"
+                      : "text-slate-600"
+                }
+              >
+                {line.level === "ok"
+                  ? "✓"
+                  : line.level === "warn"
+                    ? "!"
+                    : "·"}{" "}
+                {line.message}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {prompt ? (
         <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap rounded-2xl border border-slate-200 bg-white p-5 text-xs leading-relaxed text-slate-800 shadow-sm">

@@ -123,6 +123,14 @@ export {
   osSkillsFromParam,
 } from "@/lib/keyberOs/progression";
 export {
+  OS_BOOK_PLAY_PATH,
+  OS_LEGACY_PLAY_PATH,
+  OS_LIVE_CATALOG_PATH,
+  osBookBridgeInfo,
+  osBookPlayHref,
+} from "@/lib/keyberOs/bookBridge";
+export type { OsBookBridgeInfo } from "@/lib/keyberOs/bookBridge";
+export {
   osClearUrgentBanner,
   osDismissEventNotification,
   osEvenementsForceNext,

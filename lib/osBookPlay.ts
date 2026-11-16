@@ -1,5 +1,7 @@
 /**
  * Session de jeu Book → Keyber OS (Front-End).
+ * Pont officiel Étape 20 : `/jouer/book/[id]` → OsPlayShell.
+ * `/play` reste le POC Novacier (hors de ce module).
  * Délègue aux modules runtime lib/keyberOs/*
  */
 

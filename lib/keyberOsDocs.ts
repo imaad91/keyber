@@ -33,7 +33,8 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     id: "vue-globale",
     href: "/admin/systeme/vue-globale",
     label: "Vue Globale",
-    blurb: "L’image entière du moteur et du flux entre les composantes.",
+    blurb:
+      "Flux moteur + pont Book → /jouer/book/[id] (officiel) ; /play = POC legacy.",
   },
   {
     id: "erp",
@@ -70,7 +71,7 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/interface-joueur",
     label: "Interface Joueur",
     blurb:
-      "Shell chrome /play : sidebar, horloge, KPI, colonne objectifs, workspace.",
+      "OsPlayShell sur /jouer/book/[id] : sidebar, horloge, KPI, objectifs, workspace.",
   },
   {
     id: "ordinateur",
@@ -365,35 +366,36 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       id: "interface-joueur",
       title: "Interface Joueur",
       ceQueCaFait: [
-        "Compose l’écran de play : horloge, KPI / jauges, carte de décision, Ordinateur, actions.",
-        "Affiche les notifications d’événements et le parcours Jouer (slots).",
+        "Compose le shell Book OS : horloge, KPI, décisions, Ordinateur, toasts (Étape 20).",
+        "Chemin officiel : `/jouer/book/[id]` via OsPlayShell + pipeline.",
         "Relie le joueur au cycle décision → ERP → progression.",
       ],
       deQuoiCompose: [
-        "app/play/page.tsx — shell principal.",
-        "components/KpiBar.tsx + kpiDefinitions — jauges (trésorerie, prod, rebut, qualité, moral, éthique…).",
-        "DecisionCard, ComputerDesktop, toasts / bannières d’événements.",
-        "app/jouer/page.tsx — choix de slot avant partie.",
+        "app/jouer/book/[id]/page.tsx — pont Book officiel (OsPlayShell).",
+        "components/osPlay/OsPlayShell.tsx — chrome joueur générique.",
+        "lib/keyberOs/bookBridge.ts — href / chemins Book vs /play legacy.",
+        "app/play/page.tsx — POC Novacier (hors Book, intact).",
       ],
       commentCaMarche: [
-        "Le joueur voit l’état (jauges) et la décision en cours.",
-        "Il choisit une action (Décider, Ordinateur…).",
+        "Admin Tester / Live → `/jouer/book/[id]` charge le param Book.",
+        "OsPlayShell affiche l’état (jauges) et la décision en cours.",
         "Après applyDecision / événement, l’UI se rafraîchit.",
-        "Un nouveau choix peut s’ouvrir → boucle avec le Moteur de Décisions.",
+        "/play reste séparé (useGameStore) — non branché sur le Book.",
       ],
       workflowSteps: [
-        "Affichage jauges + décision",
-        "Choix joueur",
-        "Moteur de Décisions / Événements",
+        "Carte Book → /jouer/book/[id]",
+        "OsPlayShell + pipeline",
+        "Choix joueur → moteurs",
         "Mise à jour jauges / cartes / toasts",
         "Nouveau choix ou suite de journée",
       ],
       ceQueCaNeFaitPas: [
-        "N’embarque pas le bandeau Studio dans Décider / play.",
+        "Ne remplace pas `/play` (POC Novacier).",
         "N’écrit pas dans keyber-studio-*.",
         "N’invente pas le contenu des cartes : il l’affiche.",
       ],
       codeRefs: [
+        "lib/keyberOs/bookBridge.ts",
         "lib/keyberOs/interfaceJoueur.ts",
         "lib/keyberOs/shellActions.ts",
         "components/osPlay/OsPlayShell.tsx",
@@ -827,6 +829,23 @@ export const OS_FLUX_NODES: {
     w: 200,
     h: 48,
   },
+  {
+    id: "book-pont",
+    label: "Pont Book → /jouer/book/[id]",
+    href: "/admin/book/en-cours-de-test",
+    x: 40,
+    y: 840,
+    w: 260,
+    h: 56,
+  },
+  {
+    id: "legacy-play",
+    label: "/play (POC Novacier — hors Book)",
+    x: 340,
+    y: 840,
+    w: 260,
+    h: 48,
+  },
 ];
 
 /** Arêtes du flux (fromId → toId) avec libellé. */
@@ -848,4 +867,6 @@ export const OS_FLUX_EDGES: { from: string; to: string; label: string }[] = [
   { from: "jauges", to: "moteur-decisions", label: "nouveau choix (boucle)" },
   { from: "donnees-sauvegarde", to: "save-loop", label: "" },
   { from: "save-loop", to: "etape", label: "sauvegarde" },
+  { from: "interface-joueur", to: "book-pont", label: "shell Book" },
+  { from: "book-pont", to: "legacy-play", label: "séparé" },
 ];

@@ -10,6 +10,7 @@ import {
   type BookEntry,
 } from "@/lib/bookStore";
 import { setAdminPlaySession } from "@/lib/playCatalog";
+import { osBookPlayHref } from "@/lib/keyberOs/bookBridge";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +58,7 @@ export function BookEntryCard({
   onRetournerEnCreation: () => void;
   onSupprimer?: () => void;
 }) {
-  const playHref = `/jouer/book/${entry.id}`;
+  const playHref = osBookPlayHref(entry.id);
   const isCompetence = entry.mode === "competence";
 
   function markAdminPlay() {

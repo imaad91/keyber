@@ -10,6 +10,7 @@ npm run dev
 ```
 
 - Landing : [http://localhost:3000](http://localhost:3000)
-- Démo play : [http://localhost:3000/play](http://localhost:3000/play)
+- **Book / Keyber OS** : `/jouer/book/[id]` (chemin officiel)
+- Démo POC Novacier : [http://localhost:3000/play](http://localhost:3000/play) (legacy, hors Book)
 
 Données mockées locales uniquement. Placeholders « Exemple » pour démontrer les cinq types d'action.

@@ -16,6 +16,10 @@ import {
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 import { createOsBookPlayState, type OsBookPlayState } from "@/lib/osBookPlay";
 import {
+  OS_LEGACY_PLAY_PATH,
+  OS_LIVE_CATALOG_PATH,
+} from "@/lib/keyberOs/bookBridge";
+import {
   fetchParamFile,
   getAdminPlaySession,
   getPlayCatalogEntry,
@@ -25,7 +29,9 @@ import {
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 
 /**
- * Front-End play Book — shell Keyber OS chrome /play (Étape 2).
+ * Entrée joueur officielle Keyber OS (Étape 20).
+ * Route : `/jouer/book/[id]` → OsPlayShell (pipeline lib/keyberOs).
+ * Bandeaux Test / Live inchangés. `/play` = POC Novacier, hors de cette page.
  * Pas d'Atelier.
  */
 export default function JouerBookEntryPage() {
@@ -123,7 +129,7 @@ export default function JouerBookEntryPage() {
     return (
       <div className="min-h-screen bg-slate-50 p-8 text-sm text-slate-600">
         Scénario indisponible (fichier de paramétrage manquant).{" "}
-        <Link href="/jouer/live" className="underline">
+        <Link href={OS_LIVE_CATALOG_PATH} className="underline">
           Catalogue Live
         </Link>
       </div>
@@ -134,7 +140,7 @@ export default function JouerBookEntryPage() {
     return (
       <div className="min-h-screen bg-slate-50 p-8 text-sm text-slate-600">
         Scénario Book introuvable.{" "}
-        <Link href="/jouer/live" className="underline">
+        <Link href={OS_LIVE_CATALOG_PATH} className="underline">
           Retour
         </Link>
       </div>
@@ -187,7 +193,7 @@ export default function JouerBookEntryPage() {
           {!adminSession ? (
             <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-panel px-3 py-1.5 text-xs text-muted">
               <Link
-                href="/jouer/live"
+                href={OS_LIVE_CATALOG_PATH}
                 className="inline-flex items-center gap-1 hover:text-foreground"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
@@ -197,12 +203,18 @@ export default function JouerBookEntryPage() {
               <span>
                 {meta.entrepriseNom} · V{meta.version}
               </span>
+              <span className="ml-auto hidden text-[10px] uppercase tracking-wider text-muted sm:inline">
+                Keyber OS · hors {OS_LEGACY_PLAY_PATH}
+              </span>
             </div>
           ) : (
             <div className="flex shrink-0 items-center gap-2 border-b border-white/10 bg-panel px-3 py-1.5 text-xs text-muted">
               <ModeBadge mode={meta.mode} />
               <span>
                 {meta.entrepriseNom} · V{meta.version}
+              </span>
+              <span className="ml-auto text-[10px] uppercase tracking-wider">
+                Keyber OS
               </span>
             </div>
           )}
@@ -225,7 +237,7 @@ export default function JouerBookEntryPage() {
         <div className="mx-auto max-w-5xl px-6 py-8">
           {!adminSession ? (
             <Link
-              href="/jouer/live"
+              href={OS_LIVE_CATALOG_PATH}
               className="mb-4 inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
             >
               <ArrowLeft className="h-3.5 w-3.5" />

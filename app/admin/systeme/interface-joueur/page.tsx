@@ -20,8 +20,8 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["interface-joueur"]} />
 
       <KeyberOsRuntimePanel
-        title="Interface Joueur — shell chrome /play (Étape 2)"
-        description="Composition exacte : sidebar 232px, horloge, KPI, main + colonne droite. Toggles pour vérifier chaque zone."
+        title="Interface Joueur — shell chrome Book OS (Étape 2 → 20)"
+        description="Shell OsPlayShell sur /jouer/book/[id]. /play = POC Novacier séparé. Toggles pour vérifier chaque zone."
         onReset={() =>
           setConfig({
             interfaceJoueur: { ...OS_RUNTIME_DEFAULTS.interfaceJoueur },

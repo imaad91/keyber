@@ -38,16 +38,18 @@ Sous-onglets Atelier (ordre fixe) :
 **Book** = espace Studio séparé (même niveau que Atelier / Keyber OS / Contrôle / Équipe), hors Atelier.
 Génération des scénarios : bouton « Générer des scénarios » dans le Book (pas dans Création).
 Chaque carte scénario/histoire a 3 vues (Texte · Graphique · Code / fichier de paramétrage) et un versionning V1, V2… (Live = une version précise).
-Jouer une carte Book : `/jouer/book/[id]` — bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
+Jouer une carte Book : **`/jouer/book/[id]`** — **chemin officiel Keyber OS** (Étape 20).
+Bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
+Shell : `components/osPlay/OsPlayShell.tsx` ← pipeline `lib/keyberOs/pipeline.ts`.
+**`/play`** = POC Novacier legacy (`useGameStore`) — **intact, non branché sur le Book**.
 Démo optionnelle seed Studio localStorage uniquement (données sous `data/scenarios/<id>/`, jamais dans le code OS).
 
 **Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
-Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Interviews** · **Objectifs** · **Visibilité** · Données & Sauvegarde.
-Pipeline Front : `lib/keyberOs/pipeline.ts` + shell `components/osPlay/OsPlayShell.tsx` (parité POC : mail, chat, ERP tables, dashboard live, interviews…).
+Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Cycle de vie** · **Notifications** · **Interviews** · **Relations** · **Objectifs** · **Visibilité** · Données & Sauvegarde.
 Pack Ordinateur synthétisé depuis le param (`Ordinateur` optionnel) via `ordinateurPack.ts` — aucun nom d'entreprise dans le moteur.
 Aucun contenu métier inventé — le moteur lit les fichiers de paramétrage.
 Config runtime OS : `keyber-os-runtime-v1` (une section par composante) — Admin et Front-End partagent la même source. Progression jeu : `keyber-os-play-saves-v1`.
-Pont Book → Front-End : `keyber-play-catalog-v1` (Live uniquement). Le jeu ne lit pas `keyber-studio-*` (Atelier).
+Pont Book → Front-End : `keyber-play-catalog-v1` (Live) + cartes Admin Tester → `/jouer/book/[id]`. Doc : Vue Globale « Pont Book ». Le jeu ne lit pas `keyber-studio-*` (Atelier).
 Sans fichier sous `data/scenarios/`, le scénario disparaît du catalogue joueur.
 
 ## Agent Nettoyage

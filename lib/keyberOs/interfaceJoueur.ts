@@ -13,6 +13,9 @@ export type OsInterfaceViewModel = {
   showShell: boolean;
   showClock: boolean;
   showObjectives: boolean;
+  showRightAside: boolean;
+  showSidebarLinks: boolean;
+  fullBleedShell: boolean;
   stepLabel: string | null;
 };
 
@@ -27,6 +30,9 @@ export function osInterfaceViewModel(state: OsPlayState): OsInterfaceViewModel {
     showShell: enabled && cfg.showShell,
     showClock: enabled && cfg.showClock,
     showObjectives: enabled && cfg.showObjectives,
+    showRightAside: enabled && cfg.showRightAside,
+    showSidebarLinks: enabled && cfg.showSidebarLinks,
+    fullBleedShell: enabled && cfg.fullBleedShell,
     stepLabel:
       !state.finished && state.decisions.length
         ? `étape ${state.stepIndex + 1}/${state.decisions.length}`

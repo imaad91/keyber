@@ -62,6 +62,10 @@ export type KeyberOsRuntimeConfig = {
     showShell: boolean;
     showClock: boolean;
     showObjectives: boolean;
+    /** Étape 2 — chrome /play */
+    showRightAside: boolean;
+    showSidebarLinks: boolean;
+    fullBleedShell: boolean;
   };
   ordinateur: {
     enabled: boolean;
@@ -136,6 +140,9 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     showShell: true,
     showClock: true,
     showObjectives: true,
+    showRightAside: true,
+    showSidebarLinks: true,
+    fullBleedShell: true,
   },
   ordinateur: {
     enabled: true,
@@ -321,6 +328,13 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
       showClock: raw.interfaceJoueur?.showClock ?? d.interfaceJoueur.showClock,
       showObjectives:
         raw.interfaceJoueur?.showObjectives ?? d.interfaceJoueur.showObjectives,
+      showRightAside:
+        raw.interfaceJoueur?.showRightAside ?? d.interfaceJoueur.showRightAside,
+      showSidebarLinks:
+        raw.interfaceJoueur?.showSidebarLinks ??
+        d.interfaceJoueur.showSidebarLinks,
+      fullBleedShell:
+        raw.interfaceJoueur?.fullBleedShell ?? d.interfaceJoueur.fullBleedShell,
     },
     ordinateur: {
       enabled: raw.ordinateur?.enabled ?? d.ordinateur.enabled,

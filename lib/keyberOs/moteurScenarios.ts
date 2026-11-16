@@ -18,6 +18,7 @@ import {
 import { osOnboardingBootWorld } from "@/lib/keyberOs/onboarding";
 import { osProgressionBootFromParam, osSkillSlug } from "@/lib/keyberOs/progression";
 import { osRelationsInitFromInterviews } from "@/lib/keyberOs/relations";
+import { readParamKpis } from "@/lib/scenarioParamSchema";
 import { formatOsClock } from "@/lib/keyberOs/temps";
 import type {
   OsChoice,
@@ -245,7 +246,7 @@ export function osScenariosBoot(
     world: createEmptyOsWorld({
       ...osOnboardingBootWorld(param),
     }),
-    kpis: createDefaultOsKpis(),
+    kpis: readParamKpis(param) ?? createDefaultOsKpis(),
   };
 }
 

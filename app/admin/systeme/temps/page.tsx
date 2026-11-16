@@ -25,8 +25,8 @@ export default function Page() {
         <p className="font-semibold">Journée jouable (Étape 10)</p>
         <p className="mt-1 text-teal-900/80">
           Horloge 08:00 → fin de journée · barre de progression · « Il te reste… »
-          · chaque action / app consomme des minutes. Cap fin de journée (DayEnd =
-          Étape 11).
+          · chaque action / app consomme des minutes. Cap fin de journée →{" "}
+          <strong>Cycle de vie</strong> (DayEnd).
         </p>
         <p className="mt-2 text-xs text-teal-800">
           Vérif : Book → ouvrir Interview / Atelier / une app Ordinateur → horloge

@@ -55,5 +55,36 @@ export function osDecisionsApplyChoice(
   next.production = Math.max(10, next.production + delta.production);
   next.commandes = Math.max(0, next.commandes + cfg.commandesDelta);
   next.feedback = `Choix enregistré : ${choice.label}`;
+  const jour = next.meta?.jourActuel ?? next.day;
+  const heure = next.meta?.heureActuelle ?? "12:00";
+  next.world = {
+    ...next.world,
+    dayDecisionId: choiceId,
+  };
+  next.historique = {
+    ...(next.historique ?? {
+      decisionsPrises: [],
+      evenementsDeclenches: [],
+    }),
+    decisionsPrises: [
+      ...(next.historique?.decisionsPrises ?? []),
+      {
+        decisionId: decision.id,
+        jour,
+        choixId: choiceId,
+        heure,
+        label: choice.label,
+      },
+    ],
+  };
+  if (next.finance) {
+    next.finance = {
+      ...next.finance,
+      tresorerie: next.tresorerieBrute,
+      stockKg: next.stock,
+      productionParJour: next.production,
+      commandes: next.commandes,
+    };
+  }
   return next;
 }

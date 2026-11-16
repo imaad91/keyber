@@ -84,6 +84,17 @@ export type KeyberOsRuntimeConfig = {
     startDay: number;
     startMinutes: number;
   };
+  cycleVie: {
+    enabled: boolean;
+    /** Nombre de jours jouables avant débrief. */
+    maxDays: number;
+    /** DayEnd auto quand l'horloge atteint la fin de journée. */
+    autoEndOnTimeFull: boolean;
+    /**
+     * Flag Admin : au prochain rendu Book, forcer DayEnd puis clear.
+     */
+    pendingForceDayEnd: boolean;
+  };
   interviews: {
     enabled: boolean;
   };
@@ -161,6 +172,12 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     startDay: 1,
     /** Minutes déjà écoulées au boot (0 = 08:00). */
     startMinutes: 0,
+  },
+  cycleVie: {
+    enabled: true,
+    maxDays: 5,
+    autoEndOnTimeFull: true,
+    pendingForceDayEnd: false,
   },
   interviews: { enabled: true },
   objectifs: { enabled: true },
@@ -364,6 +381,14 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
         24 * 60 - 1
       ),
     },
+    cycleVie: {
+      enabled: raw.cycleVie?.enabled ?? d.cycleVie.enabled,
+      maxDays: clamp(Number(raw.cycleVie?.maxDays ?? d.cycleVie.maxDays), 1, 14),
+      autoEndOnTimeFull:
+        raw.cycleVie?.autoEndOnTimeFull ?? d.cycleVie.autoEndOnTimeFull,
+      pendingForceDayEnd:
+        raw.cycleVie?.pendingForceDayEnd ?? d.cycleVie.pendingForceDayEnd,
+    },
     interviews: {
       enabled: raw.interviews?.enabled ?? d.interviews.enabled,
     },
@@ -482,6 +507,7 @@ export function setOsRuntimeConfig(
       },
     },
     temps: { ...b.config.temps, ...patch.temps },
+    cycleVie: { ...b.config.cycleVie, ...patch.cycleVie },
     interviews: { ...b.config.interviews, ...patch.interviews },
     objectifs: { ...b.config.objectifs, ...patch.objectifs },
     visibilite: { ...b.config.visibilite, ...patch.visibilite },
@@ -528,6 +554,8 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.ordinateur.enabled;
     case "temps":
       return c.temps.enabled;
+    case "cycle-vie":
+      return c.cycleVie.enabled;
     case "interviews":
       return c.interviews.enabled;
     case "objectifs":

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import {
   formatOsClock,
+  osCycleVieForceDayEnd,
   osInterviewSelect,
   osOrdinateurSetAction,
   osTempsDayProgressPct,
@@ -19,9 +21,11 @@ import {
   osBookInterfaceView,
 } from "@/lib/osBookPlay";
 import { formatRemainingLabel } from "@/lib/evenements";
+import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import { cn } from "@/lib/utils";
 import { OsAtelierLive } from "@/components/osPlay/OsAtelierLive";
 import { OsComputerDesktop } from "@/components/osPlay/OsComputerDesktop";
+import { OsDayEndScreen } from "@/components/osPlay/OsDayEndScreen";
 import { OsGameClockBar } from "@/components/osPlay/OsGameClockBar";
 import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
 import {
@@ -47,6 +51,20 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
   const ui = osBookInterfaceView(play);
   const fog = osVisibiliteFog(play);
   const computerOpen = play.activeAction === "computer";
+  const { config, setConfig } = useKeyberOsRuntime();
+
+  useEffect(() => {
+    const cfg = config.cycleVie;
+    if (!cfg?.pendingForceDayEnd || play.world?.showDayEnd) return;
+    setConfig({ cycleVie: { ...cfg, pendingForceDayEnd: false } });
+    setPlay(osCycleVieForceDayEnd(play));
+  }, [
+    config.cycleVie,
+    play,
+    play.world?.showDayEnd,
+    setConfig,
+    setPlay,
+  ]);
 
   if (!ui.showShell) {
     return (
@@ -83,12 +101,13 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
   return (
     <div
       className={cn(
-        "flex overflow-hidden text-foreground atmosphere-play",
+        "relative flex overflow-hidden text-foreground atmosphere-play",
         ui.fullBleedShell
           ? "h-[calc(100vh-2.5rem)] min-h-[560px]"
           : "min-h-[70vh] rounded-2xl border border-white/10 shadow-lg"
       )}
     >
+      <OsDayEndScreen play={play} setPlay={setPlay} />
       {/* Sidebar — même structure que ActionSidebar POC */}
       <aside className="flex h-full w-[232px] shrink-0 flex-col border-r border-white/10 bg-panel">
         <div className="border-b border-white/10 px-4 py-4">

@@ -13,6 +13,7 @@ export type KeyberOsComposanteId =
   | "donnees-sauvegarde"
   | "ordinateur"
   | "temps"
+  | "cycle-vie"
   | "interviews"
   | "objectifs"
   | "visibilite";
@@ -80,6 +81,12 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/temps",
     label: "Temps & Horloge",
     blurb: "Avance les minutes / jours à chaque action.",
+  },
+  {
+    id: "cycle-vie",
+    href: "/admin/systeme/cycle-vie",
+    label: "Cycle de vie",
+    blurb: "DayEnd, passage de jour, débrief de fin de semaine.",
   },
   {
     id: "interviews",
@@ -398,6 +405,39 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       workflowSteps: ["Action", "+minutes", "Recalcul jour/horloge", "UI clock"],
       ceQueCaNeFaitPas: ["Ne hardcode pas un calendrier d'entreprise."],
       codeRefs: ["lib/keyberOs/temps.ts", "app/admin/systeme/temps/page.tsx"],
+    },
+    "cycle-vie": {
+      id: "cycle-vie",
+      title: "Cycle de vie",
+      ceQueCaFait: [
+        "Affiche l'overlay DayEnd (fin de journée 18:00).",
+        "Passe au jour suivant ou ouvre le débrief en fin de semaine.",
+        "Marque la décision non prise si le joueur n'a pas décidé.",
+      ],
+      deQuoiCompose: [
+        "lib/keyberOs/cycleVie.ts",
+        "components/osPlay/OsDayEndScreen.tsx",
+      ],
+      commentCaMarche: [
+        "Horloge pleine (Temps) → showDayEnd si auto ON.",
+        "Admin peut forcer DayEnd (pendingForceDayEnd).",
+        "Bouton joueur → osCycleVieCloseAndAdvance.",
+      ],
+      workflowSteps: [
+        "Temps plein / Force Admin",
+        "Overlay DayEnd",
+        "Passer au jour N+1",
+        "Ou débrief (maxDays)",
+      ],
+      ceQueCaNeFaitPas: [
+        "Ne hardcode pas le contenu narratif Novacier.",
+        "Le débrief riche = Étape 13.",
+      ],
+      codeRefs: [
+        "lib/keyberOs/cycleVie.ts",
+        "components/osPlay/OsDayEndScreen.tsx",
+        "app/admin/systeme/cycle-vie/page.tsx",
+      ],
     },
     interviews: {
       id: "interviews",

@@ -112,18 +112,51 @@ export function osTempsAdvance(
   const hitEnd = prev < dayLen && nextElapsed >= dayLen;
 
   if (hitEnd) {
-    next = {
-      ...next,
-      world: {
-        ...next.world,
-        showDayEnd: true,
-      },
-      feedback: next.feedback ?? "Fin de journée — horloge au max.",
-      log: [
-        ...next.log,
-        `Temps & Horloge → +${add} min (J${day} ${formatOsClock(nextElapsed)}) · fin de journée`,
-      ],
-    };
+    const autoDayEnd =
+      getOsRuntimeConfig().cycleVie?.autoEndOnTimeFull !== false &&
+      (getOsRuntimeConfig().cycleVie?.enabled !== false);
+    if (autoDayEnd) {
+      const missed = !next.world?.dayDecisionId;
+      const moral = missed
+        ? Math.max(0, (next.humain?.moralEquipe ?? 70) - 5)
+        : next.humain?.moralEquipe;
+      const confiance = missed
+        ? Math.max(0, (next.humain?.confianceClient ?? 70) - 5)
+        : next.humain?.confianceClient;
+      next = {
+        ...next,
+        humain: next.humain
+          ? {
+              ...next.humain,
+              ...(missed
+                ? { moralEquipe: moral!, confianceClient: confiance! }
+                : {}),
+            }
+          : next.humain,
+        world: {
+          ...next.world,
+          showDayEnd: true,
+          phase: "DAY_END",
+          dayDecisionId: next.world?.dayDecisionId ?? "non-prise",
+        },
+        feedback: "Fin de journée — 18:00.",
+        log: [
+          ...next.log,
+          `Temps & Horloge → +${add} min (J${day} ${formatOsClock(nextElapsed)}) · DayEnd`,
+          ...(missed
+            ? ["Cycle de vie → décision non prise (−moral / confiance)"]
+            : []),
+        ],
+      };
+    } else {
+      next = {
+        ...next,
+        log: [
+          ...next.log,
+          `Temps & Horloge → +${add} min (J${day} ${formatOsClock(nextElapsed)}) · cap (DayEnd auto OFF)`,
+        ],
+      };
+    }
   } else {
     next = {
       ...next,

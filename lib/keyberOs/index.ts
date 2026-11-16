@@ -55,6 +55,12 @@ export {
   osInterviewSelect,
 } from "@/lib/keyberOs/interviews";
 export {
+  osObjectifMetricValue,
+  osObjectifsAfterChoice,
+  osObjectifsEvaluate,
+  osObjectifsOnDayEnd,
+} from "@/lib/keyberOs/objectifs";
+export {
   osRelationGet,
   osRelationSlots,
   osRelationsDefaultTrust,

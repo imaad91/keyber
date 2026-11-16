@@ -471,6 +471,67 @@ export function lumiereInterviews() {
   ];
 }
 
+function lumiereObjectifs() {
+  return [
+    {
+      id: "obj-lumiere-stock",
+      titre: "Tenir le stock Halo",
+      type: "JOURNALIER" as const,
+      status: "EN_COURS" as const,
+      description: "Éviter la rupture avant le pic — stock ≥ 80.",
+      cible: "Stock ≥ 80",
+      cibleNombre: 80,
+      metric: "stock",
+      op: "gte" as const,
+      progression: 0,
+      xp: 25,
+      failOnDayEnd: true,
+    },
+    {
+      id: "obj-lumiere-decide",
+      titre: "Trancher la priorité du jour",
+      type: "JOURNALIER" as const,
+      status: "EN_COURS" as const,
+      description: "Valider au moins une décision scénario.",
+      cible: "1 décision",
+      cibleNombre: 1,
+      metric: "stepIndex",
+      op: "gte" as const,
+      progression: 0,
+      xp: 20,
+      failOnDayEnd: true,
+    },
+    {
+      id: "obj-lumiere-mail",
+      titre: "Lire les mails urgents",
+      type: "JOURNALIER" as const,
+      status: "EN_COURS" as const,
+      description: "Ouvrir au moins un mail urgent (ops / events).",
+      cible: "1 mail urgent lu",
+      cibleNombre: 1,
+      metric: "emailsReadUrgent",
+      op: "gte" as const,
+      progression: 0,
+      xp: 15,
+      failOnDayEnd: true,
+    },
+    {
+      id: "obj-lumiere-hebdo",
+      titre: "Qualité semaine Noël",
+      type: "HEBDOMADAIRE" as const,
+      status: "EN_COURS" as const,
+      description: "Accumuler la qualité / pièces sur la semaine.",
+      cible: "Qualité ≥ 150",
+      cibleNombre: 150,
+      metric: "piecesBrutesSemaine",
+      op: "gte" as const,
+      progression: 0,
+      xp: 40,
+      failOnDayEnd: false,
+    },
+  ];
+}
+
 function withLumiereOrdinateur(
   param: ScenarioParamFile
 ): ScenarioParamFile {
@@ -482,6 +543,7 @@ function withLumiereOrdinateur(
         { id: "iv-samir", name: "Samir", role: "Logisticien" },
         { id: "iv-lea", name: "Léa", role: "E-commerce" },
       ],
+      objectifs: lumiereObjectifs(),
     },
   } as ScenarioParamFile;
 }

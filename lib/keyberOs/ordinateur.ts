@@ -4,6 +4,7 @@
 
 import { isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 import { osEvenementsTrigger } from "@/lib/keyberOs/moteurEvenements";
+import { osObjectifsEvaluate } from "@/lib/keyberOs/objectifs";
 import { osOnboardingAdvance } from "@/lib/keyberOs/onboarding";
 import {
   OS_ACTION_TIME_COST,
@@ -119,7 +120,7 @@ export function osOrdinateurMarkEmailRead(
   state: OsPlayState,
   emailId: string
 ): OsPlayState {
-  return {
+  const next: OsPlayState = {
     ...state,
     computer: {
       ...state.computer,
@@ -128,6 +129,7 @@ export function osOrdinateurMarkEmailRead(
       ),
     },
   };
+  return osObjectifsEvaluate(next);
 }
 
 export function osOrdinateurSyncAfterErp(state: OsPlayState): OsPlayState {

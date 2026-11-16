@@ -138,6 +138,15 @@ export type KeyberOsRuntimeConfig = {
     fogBelowLevel: number;
     defaultLevel: number;
     sensorDefaultInstalled: boolean;
+    /** Afficher la matrice de tiers dans le panneau. */
+    showMatrix: boolean;
+    /** Paliers d'investissement (coûts) — vide = défauts OS. */
+    investments: {
+      level: 1 | 2 | 3;
+      label: string;
+      description: string;
+      cost: number;
+    }[];
   };
 };
 
@@ -240,6 +249,8 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     fogBelowLevel: 2,
     defaultLevel: 1,
     sensorDefaultInstalled: false,
+    showMatrix: true,
+    investments: [],
   },
 };
 
@@ -506,6 +517,17 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
       sensorDefaultInstalled:
         raw.visibilite?.sensorDefaultInstalled ??
         d.visibilite.sensorDefaultInstalled,
+      showMatrix: raw.visibilite?.showMatrix ?? d.visibilite.showMatrix,
+      investments: Array.isArray(raw.visibilite?.investments)
+        ? raw.visibilite.investments
+            .map((inv) => ({
+              level: clamp(Number(inv.level), 1, 3) as 1 | 2 | 3,
+              label: String(inv.label ?? "").trim() || `Niveau ${inv.level}`,
+              description: String(inv.description ?? "").trim(),
+              cost: clamp(Number(inv.cost ?? 0), 0, 10_000_000),
+            }))
+            .filter((inv) => inv.level >= 1 && inv.level <= 3)
+        : [...d.visibilite.investments],
     },
   };
 }
@@ -613,7 +635,12 @@ export function setOsRuntimeConfig(
     interviews: { ...b.config.interviews, ...patch.interviews },
     relations: { ...b.config.relations, ...patch.relations },
     objectifs: { ...b.config.objectifs, ...patch.objectifs },
-    visibilite: { ...b.config.visibilite, ...patch.visibilite },
+    visibilite: {
+      ...b.config.visibilite,
+      ...patch.visibilite,
+      investments:
+        patch.visibilite?.investments ?? b.config.visibilite.investments,
+    },
   };
   const next = normalize(merged);
   next.updatedAt = new Date().toISOString();

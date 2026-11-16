@@ -71,6 +71,7 @@ export function createEmptyOsVisibilite(
     level: 1,
     sensorInstalled: false,
     parModule: {},
+    sensors: [],
     ...partial,
   };
 }

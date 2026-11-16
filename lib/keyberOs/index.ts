@@ -117,7 +117,16 @@ export {
   osEvenementsTrigger,
   osMapEventUiType,
 } from "@/lib/keyberOs/moteurEvenements";
-export { osVisibiliteFog, osVisibiliteInstallSensor } from "@/lib/keyberOs/visibilite";
+export {
+  OS_DEFAULT_VISIBILITY_INVESTMENTS,
+  OS_VISIBILITY_MATRIX,
+  osDefaultSensors,
+  osVisibiliteFog,
+  osVisibiliteInstallSensor,
+  osVisibiliteInvest,
+  osVisibiliteInvestments,
+  osVisibiliteSensors,
+} from "@/lib/keyberOs/visibilite";
 export {
   osKpiBarItems,
   osKpiRawValue,
@@ -125,3 +134,7 @@ export {
 } from "@/lib/keyberOs/kpiBar";
 export type { OsKpiFormatted } from "@/lib/keyberOs/kpiBar";
 export { createDefaultOsKpis } from "@/lib/keyberOs/createRichDefaults";
+export type {
+  OsSensor,
+  OsVisibilityInvestment,
+} from "@/lib/keyberOs/types";

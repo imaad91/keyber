@@ -6,6 +6,17 @@
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 import { buildComputerPackFromParam } from "@/lib/keyberOs/ordinateurPack";
+import {
+  createDefaultOsKpis,
+  createEmptyOsFinance,
+  createEmptyOsHistorique,
+  createEmptyOsHumain,
+  createEmptyOsMeta,
+  createEmptyOsProgression,
+  createEmptyOsVisibilite,
+  createEmptyOsWorld,
+  formatOsHeure,
+} from "@/lib/keyberOs/createRichDefaults";
 import type { OsDecision, OsPlayState } from "@/lib/keyberOs/types";
 
 function parseTresorerie(param: ScenarioParamFile): number {
@@ -61,6 +72,7 @@ export function osScenariosBoot(
   } else {
     log.push(`Moteur de Scénarios → ${param.Mode} — ${param.Nom}`);
   }
+  log.push("Données & Sauvegarde → schéma d'état OS riche initialisé (Étape 1)");
 
   const tresorerieBrute = parseTresorerie(param);
   const stock = parseStock(param);
@@ -73,6 +85,35 @@ export function osScenariosBoot(
     production,
     commandes
   );
+
+  const day = cfg.temps.startDay;
+  const minutesSinceStart = cfg.temps.startMinutes;
+  const dayLengthMinutes = cfg.temps.dayLengthMinutes;
+  const tempsRestant = Math.max(0, dayLengthMinutes - minutesSinceStart);
+
+  const meta = createEmptyOsMeta({
+    scenarioId: sessionId,
+    roleId: param.Rôle || null,
+    jourActuel: day,
+    heureActuelle: formatOsHeure(minutesSinceStart),
+    tempsRestantMinutes: tempsRestant,
+    week: 1,
+    minutesSinceStart,
+    dayLengthMinutes,
+  });
+
+  const finance = createEmptyOsFinance({
+    tresorerie: tresorerieBrute,
+    stockKg: stock,
+    productionParJour: production,
+    commandes,
+  });
+
+  const progression = createEmptyOsProgression();
+  const visibilite = createEmptyOsVisibilite({
+    level: cfg.visibilite.defaultLevel,
+    sensorInstalled: cfg.visibilite.sensorDefaultInstalled,
+  });
 
   return {
     sessionId,
@@ -90,18 +131,31 @@ export function osScenariosBoot(
     log,
     finished: !enabled || decisions.length === 0,
     feedback: null,
-    day: cfg.temps.startDay,
+    day,
     week: 1,
-    minutesSinceStart: cfg.temps.startMinutes,
-    dayLengthMinutes: cfg.temps.dayLengthMinutes,
-    visibilityLevel: cfg.visibilite.defaultLevel,
-    sensorInstalled: cfg.visibilite.sensorDefaultInstalled,
+    minutesSinceStart,
+    dayLengthMinutes,
+    visibilityLevel: visibilite.level,
+    sensorInstalled: visibilite.sensorInstalled,
     activeAction: null,
     computerApp: null,
     selectedInterviewId: null,
     computer: pack.computer,
     interviews: pack.interviews,
     objectives: pack.objectives,
+    meta,
+    finance,
+    humain: createEmptyOsHumain(),
+    relations: {},
+    progression,
+    visibilite,
+    historique: createEmptyOsHistorique(),
+    flags: {},
+    world: createEmptyOsWorld({
+      phase: "JOUR",
+      onboardingDone: true,
+    }),
+    kpis: createDefaultOsKpis(),
   };
 }
 

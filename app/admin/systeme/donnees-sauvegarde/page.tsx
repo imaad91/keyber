@@ -5,6 +5,7 @@ import {
   KeyberOsRuntimePanel,
   OsToggle,
 } from "@/components/admin/KeyberOsRuntimePanel";
+import { OsStateSchemaPanel } from "@/components/admin/OsStateSchemaPanel";
 import { KEYBER_OS_COMPOSANTES } from "@/lib/keyberOsDocs";
 import {
   OS_RUNTIME_DEFAULTS,
@@ -45,6 +46,8 @@ export default function Page() {
           }
         />
       </KeyberOsRuntimePanel>
+
+      <OsStateSchemaPanel />
     </div>
   );
 }

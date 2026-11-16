@@ -247,29 +247,69 @@ export function buildComputerPackFromParam(
         id: "doc-1",
         titre: "Procédure réception",
         type: "Procédure",
-        contenu: `Procédure générique pour ${entreprise}. Contrôle à réception, mise en stock, alerte seuil.`,
+        contenu: `Procédure générique — ${entreprise}.\n\n1. Contrôle quantitatif à quai\n2. Contrôle qualité échantillon\n3. Mise en stock + mise à jour ERP\n4. Alerte si seuil bas`,
       },
       {
         id: "doc-2",
         titre: "Contexte entreprise",
         type: "Note",
-        contenu: Object.entries(param.Contexte)
-          .slice(0, 8)
-          .map(([k, v]) => `${k}: ${v}`)
-          .join("\n"),
+        contenu:
+          Object.entries(param.Contexte)
+            .slice(0, 10)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join("\n") || `Entreprise: ${entreprise}\nSecteur: ${param.Secteur || "—"}`,
+      },
+      {
+        id: "doc-3",
+        titre: "Check-list maintenance",
+        type: "Check-list",
+        contenu:
+          "Avant démarrage ligne :\n- Niveau huile / lubrifiant\n- Garde-corps en place\n- Dernière alarme acquittée\n- OF du jour chargé dans l'ERP",
+      },
+      {
+        id: "doc-4",
+        titre: "Consignes sécurité",
+        type: "Consignes",
+        contenu:
+          "EPI obligatoires en zone production.\nSignaler toute panne via Chat interne + ERP Maintenance.\nNe pas forcer un redémarrage sans validation.",
       },
     ];
 
+  const secteur = param.Secteur || "industrie";
   const browser =
     o?.browser ??
     [
       {
         id: "b1",
-        title: "Veille sectorielle",
+        title: `Veille ${secteur} — tendances semaine`,
         url: "https://example.test/veille",
-        snippet: `Infos générales — secteur ${param.Secteur || "—"}.`,
-        body: "Résultats génériques (aucune entreprise hardcodée dans l'OS).",
-        tags: ["veille"],
+        snippet: `Synthèse sectorielle (${secteur}) : tensions supply chain et délais.`,
+        body: `Veille générique — secteur ${secteur}.\n\nLes délais fournisseurs restent tendus. Surveille stock et OF critiques. Aucune entreprise nommément citée dans le moteur OS.`,
+        tags: ["veille", "stock", "delais", secteur.toLowerCase()],
+      },
+      {
+        id: "b2",
+        title: "Maintenance préventive — bonnes pratiques",
+        url: "https://example.test/maintenance",
+        snippet: "Planifier avant panne : check-lists, pièces d'usure, créneaux.",
+        body: "Bonnes pratiques génériques : calendrier préventif, stock pièces critiques, escalade Chat + ERP si panne ligne.",
+        tags: ["maintenance", "panne", "machines"],
+      },
+      {
+        id: "b3",
+        title: "Pilotage production — KPI utiles",
+        url: "https://example.test/kpi",
+        snippet: "Trésorerie, rebut, moral, confiance client — lecture opérationnelle.",
+        body: "Les KPI génériques du dashboard (prod, pannes, stock) suffisent pour décider au quotidien. Active le capteur pour lever le brouillard.",
+        tags: ["kpi", "dashboard", "production", "fog"],
+      },
+      {
+        id: "b4",
+        title: "Rumeurs terrain (non vérifiées)",
+        url: "https://example.test/rumeurs",
+        snippet: "Bruits de couloir : surcharge ligne, fatigue équipe.",
+        body: "Contenu générique. Croiser avec Chat interne et interviews avant de décider. Une rumeur n'est pas un fait ERP.",
+        tags: ["rumeur", "rh", "equipe", "interview"],
       },
     ];
 

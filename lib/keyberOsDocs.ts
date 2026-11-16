@@ -539,11 +539,13 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       ceQueCaFait: [
         "Affiche l'InterviewView OS (portrait, questions, choix).",
         "Applique confianceDelta / XP / conséquences sur un choix.",
+        "Admin → aperçu PNJ (session Book + param Book), portraits SVG.",
       ],
       deQuoiCompose: [
         "lib/keyberOs/interviews.ts — osInterviewSelect, osApplyDialogueChoice.",
         "components/osPlay/OsInterviewView.tsx",
         "Pack param Ordinateur.interviews (questions[].choices).",
+        "app/admin/systeme/interviews/page.tsx — liste PNJ + avatars.",
       ],
       commentCaMarche: [
         "Action Interview → PNJ → question → choix → relation + journal.",

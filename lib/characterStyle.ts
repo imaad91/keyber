@@ -27,7 +27,25 @@ export type CharacterVisualId =
   | "pers-marie"
   | "pers-karim"
   | "pers-laurent"
-  | "pers-henri";
+  | "pers-henri"
+  /** Lumière & Co (Étape 38 — feeling portraits, pas PNG). */
+  | "pers-samir"
+  | "pers-lea"
+  | "pers-claire";
+
+/** Alias id/nom → slot visuel (Book OS / Lumière, hors registry Novacier). */
+const VISUAL_ALIASES: Record<string, CharacterVisualId> = {
+  "pers-samir": "pers-samir",
+  "iv-samir": "pers-samir",
+  samir: "pers-samir",
+  "pers-lea": "pers-lea",
+  "iv-lea": "pers-lea",
+  lea: "pers-lea",
+  léa: "pers-lea",
+  "pers-claire": "pers-claire",
+  claire: "pers-claire",
+  "claire morel": "pers-claire",
+};
 
 export type PortraitSize = "sm" | "md" | "lg" | "xl";
 
@@ -114,6 +132,33 @@ export const CHARACTER_META: Record<
     hair: "#F3F4F6",
     notes: "worn work jacket · glasses",
   },
+  "pers-samir": {
+    displayName: "Samir",
+    shortName: "Samir",
+    role: "Logisticien mentor",
+    accent: CHARACTER_PALETTE.mint,
+    jacketOrTop: "#1F7A55",
+    hair: "#3B2F2F",
+    notes: "warehouse polo · stopwatch vibe",
+  },
+  "pers-lea": {
+    displayName: "Léa",
+    shortName: "Léa",
+    role: "E-commerce",
+    accent: CHARACTER_PALETTE.blue,
+    jacketOrTop: "#5B8DEF",
+    hair: "#2C1810",
+    notes: "bright sweater · bob",
+  },
+  "pers-claire": {
+    displayName: "Claire Morel",
+    shortName: "Claire",
+    role: "Directrice",
+    accent: CHARACTER_PALETTE.navy,
+    jacketOrTop: "#0C3B38",
+    hair: "#1F2937",
+    notes: "navy blazer · bun",
+  },
 };
 
 export function expressionFromTrust(trust: number): CharacterExpression {
@@ -130,16 +175,21 @@ export function expressionBg(expression: CharacterExpression): string {
   return EXPRESSION_RULES[expression].bg;
 }
 
-/** Map free-text names (emails, chat, events) → character visual id */
+/** Map free-text names / ids (emails, chat, interviews) → character visual id */
 export function resolveCharacterId(
   nameOrId: string | null | undefined
 ): CharacterVisualId | null {
   if (!nameOrId) return null;
-  const n = nameOrId.toLowerCase();
+  const raw = nameOrId.trim();
+  const n = raw.toLowerCase();
+  if (n in CHARACTER_META) return n as CharacterVisualId;
   if (n.includes("pers-marie")) return "pers-marie";
   if (n.includes("pers-karim")) return "pers-karim";
   if (n.includes("pers-laurent")) return "pers-laurent";
   if (n.includes("pers-henri")) return "pers-henri";
+  if (n.includes("pers-samir")) return "pers-samir";
+  if (n.includes("pers-lea")) return "pers-lea";
+  if (n.includes("pers-claire")) return "pers-claire";
 
   // Match against active contexte contacts (display names), not hardcoded cast.
   for (const c of getContexteActif().computer.chatContacts) {
@@ -151,10 +201,22 @@ export function resolveCharacterId(
     }
   }
 
+  // Book OS / Lumière — ids & prénoms hors registry Novacier.
+  if (n in VISUAL_ALIASES) return VISUAL_ALIASES[n]!;
+  const firstToken = n.split(/[\s,—\-]+/)[0] ?? "";
+  if (firstToken && firstToken in VISUAL_ALIASES) {
+    return VISUAL_ALIASES[firstToken]!;
+  }
+  for (const [alias, visual] of Object.entries(VISUAL_ALIASES)) {
+    if (alias.length >= 4 && n.includes(alias)) return visual;
+  }
+
   if (n.includes("mentor") || n.includes("ancien")) return "pers-henri";
   if (n.includes("maintenance")) return "pers-karim";
   if (n.includes("directeur") || n.includes("direction")) return "pers-laurent";
   if (n.includes("atelier") || n.includes("cheffe")) return "pers-marie";
+  if (n.includes("logisticien")) return "pers-samir";
+  if (n.includes("e-commerce") || n.includes("ecommerce")) return "pers-lea";
   return null;
 }
 

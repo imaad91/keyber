@@ -21,6 +21,7 @@ import {
 } from "../lib/keyberOs/cycleVie";
 import { livreFromParam, summarizeLivreLore } from "../lib/osLivre";
 import { ensureContractKeysInParam } from "../lib/scenarioFileContract";
+import { resolveCharacterId } from "../lib/characterStyle";
 import type { OsPlayState } from "../lib/keyberOs/types";
 
 type Issue = { severity: "bug" | "warn" | "ok"; message: string };
@@ -267,6 +268,22 @@ function main() {
     issues.push({
       severity: "ok",
       message: `Contacts Journal OS: ${contactNames.slice(0, 3).join(", ")}`,
+    });
+  }
+
+  const portraitSamples = ["Samir", "Léa", "Claire", "iv-samir", "iv-lea"];
+  const missingPortraits = portraitSamples.filter(
+    (s) => !resolveCharacterId(s)
+  );
+  if (missingPortraits.length) {
+    issues.push({
+      severity: "bug",
+      message: `Portraits PNJ manquants: ${missingPortraits.join(", ")}`,
+    });
+  } else {
+    issues.push({
+      severity: "ok",
+      message: "Portraits SVG Lumière résolus (Samir / Léa / Claire)",
     });
   }
 

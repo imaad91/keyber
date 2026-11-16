@@ -781,6 +781,7 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Source = world.journal de la session Book OS active.",
         "Rempli par décisions, événements, interviews, onboarding, day-end.",
         "Étape 38 — portraits Journal OS via chatContacts session (pas registry Novacier).",
+        "Étape 38 — slots SVG Samir / Léa / Claire (feeling Novacier, pas de PNG).",
       ],
       deQuoiCompose: [
         "OsJournalEntry dans world.journal.",

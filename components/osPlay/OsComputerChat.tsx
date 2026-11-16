@@ -7,6 +7,7 @@
 
 import { useMemo, useState } from "react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
+import { resolveCharacterId } from "@/lib/characterStyle";
 import type { OsPlayState } from "@/lib/keyberOs";
 import { cn } from "@/lib/utils";
 
@@ -123,6 +124,7 @@ export function OsComputerChat({ play, setPlay }: Props) {
               )}
             >
               <CharacterAvatar
+                id={resolveCharacterId(t.id) ?? undefined}
                 name={t.name}
                 size={36}
                 trust={play.relations[t.id]}
@@ -147,7 +149,12 @@ export function OsComputerChat({ play, setPlay }: Props) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
-          <CharacterAvatar name={thread.name} size={40} trust={trust} />
+          <CharacterAvatar
+            id={resolveCharacterId(thread.id) ?? undefined}
+            name={thread.name}
+            size={40}
+            trust={trust}
+          />
           <div>
             <p className="text-sm font-semibold text-slate-900">
               {thread.name}
@@ -173,6 +180,7 @@ export function OsComputerChat({ play, setPlay }: Props) {
             >
               {msg.from !== "me" ? (
                 <CharacterAvatar
+                  id={resolveCharacterId(thread.id) ?? undefined}
                   name={thread.name}
                   size={28}
                   className="mt-0.5"

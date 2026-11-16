@@ -18,6 +18,7 @@ import {
 } from "@/lib/osBookPlay";
 import { formatRemainingLabel } from "@/lib/evenements";
 import { cn } from "@/lib/utils";
+import { OsAtelierLive } from "@/components/osPlay/OsAtelierLive";
 import { OsComputerDesktop } from "@/components/osPlay/OsComputerDesktop";
 import {
   BookMarked,
@@ -522,33 +523,6 @@ function OsInterviewPanel({
       ) : (
         <p className="text-sm text-muted">Choisis un interlocuteur.</p>
       )}
-    </div>
-  );
-}
-
-function OsAtelierLive({
-  play,
-  fog,
-}: {
-  play: OsPlayState;
-  fog: boolean;
-}) {
-  const line = play.computer.production[0];
-  const machine = play.computer.machines[0];
-  return (
-    <div className="mt-4 rounded-xl border border-ok/30 bg-ok/10 p-5">
-      <p className="text-xs font-bold uppercase tracking-wide text-ok">
-        Vue live production
-      </p>
-      <p className="mt-2 font-display text-lg font-semibold text-foreground">
-        {line?.ligne || "Ligne"} — {fog ? "???" : line?.etat}
-      </p>
-      <p className="mt-2 text-sm text-muted">
-        Produit aujourd&apos;hui :{" "}
-        {fog ? "???" : `${line?.produitAujourdhui}/${line?.objectifJour}`} ·
-        Machine {machine?.nom} ({fog ? "???" : machine?.etat}) · Stock{" "}
-        {fog ? "???" : play.stock}
-      </p>
     </div>
   );
 }

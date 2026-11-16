@@ -194,6 +194,10 @@ export const OS_STATE_FIELD_FAMILIES: OsStateFieldFamily[] = [
       { path: "computer.documents", meaning: "Documents" },
       { path: "computer.browser", meaning: "Résultats browser" },
       { path: "computer.dashboardCards", meaning: "Cartes dashboard" },
+      {
+        path: "computer.dashboardSeries",
+        meaning: "Séries graphiques dashboard (prod / pannes)",
+      },
       { path: "computerApp", meaning: "App ouverte (erp|mail|…)" },
     ],
   },

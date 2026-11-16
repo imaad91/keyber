@@ -27,6 +27,7 @@ type ParamOrdinateur = {
   documents?: OsComputerPack["documents"];
   browser?: OsComputerPack["browser"];
   dashboardCards?: OsComputerPack["dashboardCards"];
+  dashboardSeries?: OsComputerPack["dashboardSeries"];
   interviews?: OsInterview[];
   objectifs?: OsObjective[];
 };
@@ -340,14 +341,51 @@ export function buildComputerPackFromParam(
     o?.machines ??
     [
       {
-        nom: "Poste principal",
-        type: "Ops",
+        nom: "Poste découpe",
+        type: "Usinage",
         etat: "PRODUCTION",
-        vitesse: "nominale",
-        tauxRebut: "2%",
-        derniereMaint: "J-10",
-        prochaineMaint: "J+20",
+        vitesse: "62 u/h",
+        tauxRebut: "1.5%",
+        derniereMaint: "J-8",
+        prochaineMaint: "J+22",
       },
+      {
+        nom: "Presse",
+        type: "Formage",
+        etat: "PRODUCTION",
+        vitesse: "48 u/h",
+        tauxRebut: "2%",
+        derniereMaint: "J-12",
+        prochaineMaint: "J+18",
+      },
+      {
+        nom: "Ligne assemblage",
+        type: "Assemblage",
+        etat: "PANNE",
+        vitesse: "0 u/h",
+        tauxRebut: "—",
+        derniereMaint: "J-3",
+        prochaineMaint: "Urgente",
+      },
+      {
+        nom: "Poste contrôle",
+        type: "Qualité",
+        etat: "ARRET",
+        vitesse: "0 u/h",
+        tauxRebut: "0.5%",
+        derniereMaint: "J-5",
+        prochaineMaint: "J+30",
+      },
+    ];
+
+  const dashboardSeries =
+    o?.dashboardSeries ??
+    [
+      { name: "J1", prod: Math.max(40, production - 10), panne: 4 },
+      { name: "J2", prod: Math.max(40, production), panne: 5 },
+      { name: "J3", prod: Math.max(30, production - 20), panne: 18 },
+      { name: "J4", prod: Math.max(45, production - 5), panne: 8 },
+      { name: "J5", prod: Math.max(50, production + 10), panne: 6 },
     ];
 
   const factures =
@@ -394,6 +432,7 @@ export function buildComputerPackFromParam(
       documents,
       browser,
       dashboardCards,
+      dashboardSeries,
     },
     interviews,
     objectives,

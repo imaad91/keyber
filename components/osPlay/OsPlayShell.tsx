@@ -4,12 +4,9 @@ import Link from "next/link";
 import {
   formatOsClock,
   osInterviewSelect,
-  osOrdinateurMarkEmailRead,
-  osOrdinateurOpenApp,
   osOrdinateurSetAction,
   osVisibiliteFog,
   osVisibiliteInstallSensor,
-  type OsComputerAppId,
   type OsPlayState,
   type OsPlayerAction,
 } from "@/lib/keyberOs";
@@ -20,21 +17,14 @@ import {
   osBookInterfaceView,
 } from "@/lib/osBookPlay";
 import { formatRemainingLabel } from "@/lib/evenements";
-import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import { cn } from "@/lib/utils";
+import { OsComputerDesktop } from "@/components/osPlay/OsComputerDesktop";
 import {
   BookMarked,
   BookOpen,
-  Database,
-  FileText,
-  Globe,
-  LayoutDashboard,
   Lock,
-  Mail,
-  MessageCircle,
   Settings2,
   User,
-  X,
 } from "lucide-react";
 
 type Props = {
@@ -49,11 +39,9 @@ type Props = {
  * Données = état OS + param. Aucun contexte hardcodé.
  */
 export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
-  const { config } = useKeyberOsRuntime();
   const ui = osBookInterfaceView(play);
   const erp = osBookErpSnapshot(play);
   const fog = osVisibiliteFog(play);
-  const apps = config.ordinateur.apps;
   const computerOpen = play.activeAction === "computer";
 
   if (!ui.showShell) {
@@ -338,12 +326,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
             {!play.activeAction ? null : null}
 
             {play.activeAction === "computer" ? (
-              <OsComputer
-                play={play}
-                setPlay={setPlay}
-                apps={apps}
-                fog={fog}
-              />
+              <OsComputerDesktop play={play} setPlay={setPlay} fog={fog} />
             ) : null}
             {play.activeAction === "decide" ? (
               <OsDecide play={play} setPlay={setPlay} />
@@ -442,254 +425,6 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
   );
 }
 
-function OsComputer({
-  play,
-  setPlay,
-  apps,
-  fog,
-}: {
-  play: OsPlayState;
-  setPlay: (s: OsPlayState) => void;
-  apps: Record<OsComputerAppId, boolean>;
-  fog: boolean;
-}) {
-  const APP_META: {
-    id: OsComputerAppId;
-    titre: string;
-    icon: typeof Mail;
-  }[] = [
-    { id: "erp", titre: "ERP", icon: Database },
-    { id: "mail", titre: "Boîte Mail", icon: Mail },
-    { id: "dashboard", titre: "Dashboard", icon: LayoutDashboard },
-    { id: "documents", titre: "Documents", icon: FileText },
-    { id: "chat", titre: "Chat", icon: MessageCircle },
-    { id: "browser", titre: "Browser", icon: Globe },
-  ];
-
-  if (!play.computerApp) {
-    return (
-      <div className="mt-2">
-        <p className="mb-3 text-sm text-muted">
-          Ordinateur — choisis une application.
-        </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {APP_META.filter((a) => apps[a.id]).map((a) => (
-            <button
-              key={a.id}
-              type="button"
-              className="flex flex-col items-start gap-2 rounded-xl border border-white/10 bg-panel-2 p-4 text-left hover:bg-white/10"
-              onClick={() => setPlay(osOrdinateurOpenApp(play, a.id))}
-            >
-              <a.icon className="h-5 w-5 text-accent" />
-              <span className="text-sm font-semibold text-foreground">
-                {a.titre}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border border-slate-300 bg-slate-200 text-slate-900 shadow-soft">
-      <div className="flex items-center justify-between border-b border-slate-300 bg-slate-800 px-4 py-2.5 text-white">
-        <p className="text-sm font-semibold capitalize">{play.computerApp}</p>
-        <button
-          type="button"
-          className="rounded p-1 hover:bg-white/10"
-          onClick={() => setPlay(osOrdinateurOpenApp(play, null))}
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto bg-white p-3 text-sm">
-        {play.computerApp === "erp" ? (
-          <OsErpTable play={play} fog={fog} />
-        ) : null}
-        {play.computerApp === "mail" ? (
-          <OsMail play={play} setPlay={setPlay} />
-        ) : null}
-        {play.computerApp === "dashboard" ? (
-          <OsDash play={play} fog={fog} />
-        ) : null}
-        {play.computerApp === "documents" ? (
-          <ul className="space-y-2">
-            {play.computer.documents.map((d) => (
-              <li key={d.id} className="rounded-lg border p-3">
-                <p className="font-semibold">{d.titre}</p>
-                <p className="text-xs text-slate-500">{d.type}</p>
-                <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700">
-                  {d.contenu}
-                </pre>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {play.computerApp === "chat" ? <OsChat play={play} /> : null}
-        {play.computerApp === "browser" ? (
-          <ul className="space-y-2">
-            {play.computer.browser.map((b) => (
-              <li key={b.id} className="rounded-lg border p-3">
-                <p className="font-semibold">{b.title}</p>
-                <p className="text-xs text-sky-700">{b.url}</p>
-                <p className="mt-1 text-xs text-slate-600">{b.snippet}</p>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function OsErpTable({ play, fog }: { play: OsPlayState; fog: boolean }) {
-  const v = (x: string | number) => (fog ? "???" : String(x));
-  return (
-    <div className="space-y-4">
-      <section>
-        <h3 className="mb-2 font-semibold">Stocks</h3>
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b text-slate-500">
-              <th className="py-1">Réf</th>
-              <th>Nom</th>
-              <th>Qté</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {play.computer.stock.map((r) => (
-              <tr key={r.ref} className="border-b border-slate-100">
-                <td className="py-1">{r.ref}</td>
-                <td>{r.nom}</td>
-                <td>{v(r.qte)}</td>
-                <td>{v(r.statut)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-      <section>
-        <h3 className="mb-2 font-semibold">Commandes</h3>
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b text-slate-500">
-              <th className="py-1">N°</th>
-              <th>Client</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {play.computer.commandes.map((r) => (
-              <tr key={r.numero} className="border-b border-slate-100">
-                <td className="py-1">{r.numero}</td>
-                <td>{r.client}</td>
-                <td>{v(r.statut)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-      <section>
-        <h3 className="mb-2 font-semibold">Production</h3>
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b text-slate-500">
-              <th className="py-1">Ligne</th>
-              <th>Produit</th>
-              <th>État</th>
-            </tr>
-          </thead>
-          <tbody>
-            {play.computer.production.map((r) => (
-              <tr key={r.ligne} className="border-b border-slate-100">
-                <td className="py-1">{r.ligne}</td>
-                <td>{v(r.produitAujourdhui)}</td>
-                <td>{v(r.etat)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    </div>
-  );
-}
-
-function OsMail({
-  play,
-  setPlay,
-}: {
-  play: OsPlayState;
-  setPlay: (s: OsPlayState) => void;
-}) {
-  return (
-    <ul className="space-y-2">
-      {play.computer.emails.map((e) => (
-        <li key={e.id}>
-          <button
-            type="button"
-            className={cn(
-              "w-full rounded-lg border p-3 text-left",
-              e.read ? "bg-slate-50" : "border-sky-300 bg-sky-50"
-            )}
-            onClick={() => setPlay(osOrdinateurMarkEmailRead(play, e.id))}
-          >
-            <p className="text-xs text-slate-500">
-              {e.from} · J{e.day} {e.read ? "" : "· non lu"}
-            </p>
-            <p className="font-semibold">{e.subject}</p>
-            <pre className="mt-1 whitespace-pre-wrap text-xs text-slate-700">
-              {e.body}
-            </pre>
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function OsDash({ play, fog }: { play: OsPlayState; fog: boolean }) {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {play.computer.dashboardCards.map((c) => (
-        <div key={c.label} className="rounded-xl border bg-slate-50 p-4">
-          <p className="text-[10px] uppercase text-slate-500">{c.label}</p>
-          <p className="text-lg font-semibold">{fog ? "???" : c.value}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function OsChat({ play }: { play: OsPlayState }) {
-  const thread = play.computer.chatThreads[0];
-  const contact = play.computer.chatContacts.find(
-    (c) => c.id === thread?.contactId
-  );
-  return (
-    <div>
-      <p className="mb-2 text-xs text-slate-500">
-        {contact ? `${contact.name} · ${contact.role}` : "Chat"}
-      </p>
-      <div className="space-y-2">
-        {(thread?.messages || []).map((m, i) => (
-          <div
-            key={i}
-            className={cn(
-              "max-w-[80%] rounded-lg px-3 py-2 text-xs",
-              m.from === "me"
-                ? "ml-auto bg-sky-600 text-white"
-                : "bg-slate-100 text-slate-800"
-            )}
-          >
-            {m.text}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function OsDecide({
   play,

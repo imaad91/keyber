@@ -26,6 +26,7 @@ import {
   lumiereHistoireParam,
   lumiereHistoireText,
 } from "@/lib/lumiereCoDemoData";
+import { buildLumiereOrdinateurExcelPack } from "@/lib/lumiereCoFeeling";
 
 const KEY_CREATION = "keyber-studio-creation-v1";
 const KEY_EVENTS = "keyber-studio-evenements-v1";
@@ -103,6 +104,8 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
     ? creationState.creations
     : [];
   const narrationPack = buildLumiereNarrationPack();
+  /** Étape 37 — staging Ordinateur feeling rempli (exception démo). */
+  const ordinateurPack = buildLumiereOrdinateurExcelPack();
   const alreadyCreationIdx = creations.findIndex(
     (c) =>
       String((c as { id?: string }).id) === LUMIERE_CREATION_ID ||
@@ -116,7 +119,7 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
       nom: LUMIERE_NOM,
       secteur: LUMIERE_SECTEUR,
       fields,
-      ordinateurPack: {},
+      ordinateurPack,
       /** Étape 33 — staging narration rempli (exception démo Lumière). */
       narrationPack,
       roleNames: [LUMIERE_ROLE],
@@ -155,10 +158,11 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
     });
     writeJson(KEY_CREATION, { creations });
   } else {
-    /** Rafraîchit le staging narration Lumière (exception étape 33). */
+    /** Rafraîchit staging Ordinateur + narration Lumière (étapes 33/37). */
     const existing = creations[alreadyCreationIdx] as Record<string, unknown>;
     creations[alreadyCreationIdx] = {
       ...existing,
+      ordinateurPack,
       narrationPack,
       updatedAt: at,
     };

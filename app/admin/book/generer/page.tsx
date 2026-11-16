@@ -22,10 +22,12 @@ import {
   evaluateBookGeneration,
   filledContexteRecord,
 } from "@/lib/bookGenerationPrompt";
+import { useBookStore } from "@/lib/bookStore";
 import {
-  emptyBookGraph,
-  useBookStore,
-} from "@/lib/bookStore";
+  buildScenarioParamBlocksGraph,
+  formatScenarioParamBlocksSummary,
+  type ScenarioParamFileExtended,
+} from "@/lib/scenarioParamSchema";
 import { cn } from "@/lib/utils";
 
 function RecapDot({ ok, label }: { ok: boolean; label: string }) {
@@ -208,32 +210,29 @@ export default function BookGenererPage() {
             `Entreprise : ${creation.nom}`,
             `Compétence : ${compNom}`,
             `Cours : ${(coursByCompetence[compNom] ?? []).join(", ") || "(aucun)"}`,
+            `Événements : ${events.map((e) => e.nom).join(", ") || "(aucun)"}`,
             ``,
-            `Structure provisoire — contenu métier à compléter via Cursor (pas d'invention Studio).`,
+            `Structure complète (Étape 23) — blocs schéma présents ; contenu métier uniquement depuis Atelier (pas d'invention Studio).`,
+            ``,
+            formatScenarioParamBlocksSummary(
+              paramFile as ScenarioParamFileExtended
+            ),
           ].join("\n"),
-          graph: emptyBookGraph(),
+          graph: buildScenarioParamBlocksGraph(
+            paramFile as ScenarioParamFileExtended
+          ),
           paramFile,
           paramFileName: fichier,
         };
       }),
-      {
-        mode: "histoire" as const,
-        nom: `Histoire — ${rolePrincipal}`,
-        competenceName: "",
-        roleName: rolePrincipal,
-        itemKey: `hist:${rolePrincipal.toLowerCase()}`,
-        textContent: [
-          `# Histoire — ${rolePrincipal}`,
-          ``,
-          `Mode : Histoire`,
-          `Entreprise : ${creation.nom}`,
-          `Rôle : ${rolePrincipal}`,
-          `Événements : ${events.map((e) => e.nom).join(", ")}`,
-          ``,
-          `Structure provisoire — contenu métier à compléter via Cursor (pas d'invention Studio).`,
-        ].join("\n"),
-        graph: emptyBookGraph(),
-        paramFile: buildSkeletonParamFile({
+      (() => {
+        const fichierHist = buildParamFileName({
+          entrepriseNom: creation.nom,
+          mode: "histoire",
+          roleOrCompetence: rolePrincipal,
+          version: 1,
+        });
+        const paramFile = buildSkeletonParamFile({
           nom: `Histoire — ${rolePrincipal}`,
           version: 1,
           mode: "histoire",
@@ -245,20 +244,35 @@ export default function BookGenererPage() {
           events,
           roleNames: roleChecks,
           competences: compsPayload,
-          fichier: buildParamFileName({
-            entrepriseNom: creation.nom,
-            mode: "histoire",
-            roleOrCompetence: rolePrincipal,
-            version: 1,
-          }),
-        }),
-        paramFileName: buildParamFileName({
-          entrepriseNom: creation.nom,
-          mode: "histoire",
-          roleOrCompetence: rolePrincipal,
-          version: 1,
-        }),
-      },
+          fichier: fichierHist,
+        });
+        return {
+          mode: "histoire" as const,
+          nom: `Histoire — ${rolePrincipal}`,
+          competenceName: "",
+          roleName: rolePrincipal,
+          itemKey: `hist:${rolePrincipal.toLowerCase()}`,
+          textContent: [
+            `# Histoire — ${rolePrincipal}`,
+            ``,
+            `Mode : Histoire`,
+            `Entreprise : ${creation.nom}`,
+            `Rôle : ${rolePrincipal}`,
+            `Événements : ${events.map((e) => e.nom).join(", ")}`,
+            ``,
+            `Structure complète (Étape 23) — blocs schéma présents ; contenu métier uniquement depuis Atelier (pas d'invention Studio).`,
+            ``,
+            formatScenarioParamBlocksSummary(
+              paramFile as ScenarioParamFileExtended
+            ),
+          ].join("\n"),
+          graph: buildScenarioParamBlocksGraph(
+            paramFile as ScenarioParamFileExtended
+          ),
+          paramFile,
+          paramFileName: fichierHist,
+        };
+      })(),
     ];
 
     const res = createProvisionalFromGeneration({
@@ -275,7 +289,7 @@ export default function BookGenererPage() {
       setShellNote(res.error);
     } else {
       setShellNote(
-        `${res.entries.length} coquille(s) V1 dans le Book (En cours de test).`
+        `${res.entries.length} coquille(s) V1 — structure param complète (Ordinateur, Jours, Interviews…) dans le Book (En cours de test).`
       );
     }
   }
@@ -295,7 +309,9 @@ export default function BookGenererPage() {
 
       <p className="mb-6 max-w-2xl text-sm text-slate-600">
         Formulaire Book : contexte → rôles → compétences → événements auto.
-        Le Prompt se copie dans Cursor. Aucun contenu métier inventé ici.
+        Générer crée la <strong>structure complète</strong> du fichier de
+        paramétrage (blocs vides OK). Le Prompt se copie dans Cursor. Aucun
+        contenu métier inventé ici.
       </p>
 
       {/* Récap permanent */}

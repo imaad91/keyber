@@ -9,7 +9,9 @@ import type {
   OsEmail,
   OsInterview,
   OsObjective,
+  OsSensor,
 } from "@/lib/keyberOs/types";
+import { osDefaultSensors } from "@/lib/keyberOs/visibilite";
 
 type ParamOrdinateur = {
   stock?: OsComputerPack["stock"];
@@ -30,6 +32,7 @@ type ParamOrdinateur = {
   dashboardSeries?: OsComputerPack["dashboardSeries"];
   interviews?: OsInterview[];
   objectifs?: OsObjective[];
+  sensors?: OsSensor[];
 };
 
 function asOrdinateur(param: ScenarioParamFile): ParamOrdinateur | null {
@@ -54,6 +57,7 @@ export function buildComputerPackFromParam(
   computer: OsComputerPack;
   interviews: OsInterview[];
   objectives: OsObjective[];
+  sensors: OsSensor[];
 } {
   const o = asOrdinateur(param);
   const entreprise = param.Entreprise || "Entreprise";
@@ -556,6 +560,14 @@ export function buildComputerPackFromParam(
       },
     ];
 
+  const sensors: OsSensor[] =
+    o?.sensors?.length
+      ? o.sensors.map((s) => ({
+          ...s,
+          installed: Boolean(s.installed),
+        }))
+      : osDefaultSensors();
+
   return {
     computer: {
       stock,
@@ -577,6 +589,7 @@ export function buildComputerPackFromParam(
     },
     interviews,
     objectives,
+    sensors,
   };
 }
 

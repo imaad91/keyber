@@ -532,6 +532,30 @@ function lumiereObjectifs() {
   ];
 }
 
+function lumiereSensors() {
+  return [
+    {
+      id: "sensor-quai",
+      label: "Capteur quai / gerbeur",
+      description:
+        "Mesure flux picking hauteur — lève le brouillard stock / prod.",
+      cost: 18_000,
+      unlockLevel: 2,
+      modules: ["stock", "production", "rebut"],
+      installed: false,
+    },
+    {
+      id: "sensor-wms-live",
+      label: "Passerelle WMS live",
+      description: "Temps réel entrepôt + trésorerie ops.",
+      cost: 42_000,
+      unlockLevel: 3,
+      modules: ["stock", "production", "tresorerie", "rebut", "moral"],
+      installed: false,
+    },
+  ];
+}
+
 function withLumiereOrdinateur(
   param: ScenarioParamFile
 ): ScenarioParamFile {
@@ -544,6 +568,7 @@ function withLumiereOrdinateur(
         { id: "iv-lea", name: "Léa", role: "E-commerce" },
       ],
       objectifs: lumiereObjectifs(),
+      sensors: lumiereSensors(),
     },
   } as ScenarioParamFile;
 }

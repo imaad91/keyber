@@ -133,11 +133,33 @@ export type OsProgressionBlock = {
   competencesCiblees: Record<string, OsCompetenceProgress>;
 };
 
+/** Capteur / investissement Visibilité (inventaire param). */
+export type OsSensor = {
+  id: string;
+  label: string;
+  description: string;
+  cost: number;
+  /** Niveau global atteint à l'installation (1–3). */
+  unlockLevel: number;
+  /** KPI / modules clarifiés (parModule → PRECIS ou TEMPS_REEL). */
+  modules?: string[];
+  installed?: boolean;
+};
+
+export type OsVisibilityInvestment = {
+  level: 1 | 2 | 3;
+  label: string;
+  description: string;
+  cost: number;
+};
+
 export type OsVisibiliteBlock = {
   level: number;
   sensorInstalled: boolean;
   /** Tiers par module / kpi id. */
   parModule: Record<string, OsVisibilityTier>;
+  /** Inventaire capteurs (param / Admin). */
+  sensors: OsSensor[];
 };
 
 export type OsHistorique = {

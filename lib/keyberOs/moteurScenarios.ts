@@ -166,9 +166,16 @@ export function osScenariosBoot(
   });
 
   const progression = createEmptyOsProgression();
+  const sensors = pack.sensors.map((s) => ({
+    ...s,
+    installed: cfg.visibilite.sensorDefaultInstalled
+      ? s.unlockLevel <= 2 || s.installed
+      : Boolean(s.installed),
+  }));
   const visibilite = createEmptyOsVisibilite({
     level: cfg.visibilite.defaultLevel,
     sensorInstalled: cfg.visibilite.sensorDefaultInstalled,
+    sensors,
   });
 
   return {

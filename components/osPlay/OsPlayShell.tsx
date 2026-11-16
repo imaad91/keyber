@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   formatOsClock,
   osCycleVieForceDayEnd,
@@ -13,7 +13,6 @@ import {
   osTempsElapsed,
   osTempsRemaining,
   osVisibiliteFog,
-  osVisibiliteInstallSensor,
   type OsPlayState,
   type OsPlayerAction,
 } from "@/lib/keyberOs";
@@ -37,6 +36,7 @@ import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
 import { OsObjectivePanel } from "@/components/osPlay/OsObjectivePanel";
 import { OsOnboardingCoach } from "@/components/osPlay/OsOnboardingCoach";
 import { OsUrgentEventBanner } from "@/components/osPlay/OsUrgentEventBanner";
+import { OsVisibilityPanel } from "@/components/osPlay/OsVisibilityPanel";
 import {
   BookMarked,
   BookOpen,
@@ -61,6 +61,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
   const fog = osVisibiliteFog(play);
   const computerOpen = play.activeAction === "computer";
   const { config, setConfig } = useKeyberOsRuntime();
+  const [visibilityOpen, setVisibilityOpen] = useState(false);
 
   useEffect(() => {
     const notif = config.notifications;
@@ -369,9 +370,9 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
               <button
                 type="button"
                 className="mt-4 rounded-lg bg-accent-warm/20 px-3 py-2 text-xs font-semibold text-accent-warm"
-                onClick={() => setPlay(osVisibiliteInstallSensor(play))}
+                onClick={() => setVisibilityOpen(true)}
               >
-                Installer un capteur (lever le brouillard ERP)
+                Ouvrir Visibilité (lever le brouillard ERP)
               </button>
             ) : null}
 
@@ -420,6 +421,12 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
         </div>
       </div>
       <OsEventNotificationToast play={play} setPlay={setPlay} />
+      <OsVisibilityPanel
+        play={play}
+        setPlay={setPlay}
+        open={visibilityOpen}
+        onClose={() => setVisibilityOpen(false)}
+      />
     </div>
   );
 }

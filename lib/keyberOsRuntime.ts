@@ -94,6 +94,8 @@ export type KeyberOsRuntimeConfig = {
      * Flag Admin : au prochain rendu Book, forcer DayEnd puis clear.
      */
     pendingForceDayEnd: boolean;
+    /** Intro + coach Jour 0 en Mode Histoire. */
+    onboardingEnabled: boolean;
   };
   interviews: {
     enabled: boolean;
@@ -178,6 +180,7 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     maxDays: 5,
     autoEndOnTimeFull: true,
     pendingForceDayEnd: false,
+    onboardingEnabled: true,
   },
   interviews: { enabled: true },
   objectifs: { enabled: true },
@@ -388,6 +391,8 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
         raw.cycleVie?.autoEndOnTimeFull ?? d.cycleVie.autoEndOnTimeFull,
       pendingForceDayEnd:
         raw.cycleVie?.pendingForceDayEnd ?? d.cycleVie.pendingForceDayEnd,
+      onboardingEnabled:
+        raw.cycleVie?.onboardingEnabled ?? d.cycleVie.onboardingEnabled,
     },
     interviews: {
       enabled: raw.interviews?.enabled ?? d.interviews.enabled,

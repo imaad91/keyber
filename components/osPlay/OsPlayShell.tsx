@@ -27,7 +27,9 @@ import { OsAtelierLive } from "@/components/osPlay/OsAtelierLive";
 import { OsComputerDesktop } from "@/components/osPlay/OsComputerDesktop";
 import { OsDayEndScreen } from "@/components/osPlay/OsDayEndScreen";
 import { OsGameClockBar } from "@/components/osPlay/OsGameClockBar";
+import { OsIntroNarrative } from "@/components/osPlay/OsIntroNarrative";
 import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
+import { OsOnboardingCoach } from "@/components/osPlay/OsOnboardingCoach";
 import {
   BookMarked,
   BookOpen,
@@ -95,8 +97,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
     "interview",
     "atelier-live",
   ];
-  const gateOnboarding =
-    !play.world?.onboardingDone && play.param.Mode === "Histoire";
+  const gateOnboarding = !play.world?.onboardingDone;
 
   return (
     <div
@@ -108,6 +109,9 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
       )}
     >
       <OsDayEndScreen play={play} setPlay={setPlay} />
+      {!play.world?.introSeen ? (
+        <OsIntroNarrative play={play} setPlay={setPlay} />
+      ) : null}
       {/* Sidebar — même structure que ActionSidebar POC */}
       <aside className="flex h-full w-[232px] shrink-0 flex-col border-r border-white/10 bg-panel">
         <div className="border-b border-white/10 px-4 py-4">
@@ -275,6 +279,10 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
               <p className="mb-3 rounded-xl border border-accent-warm/30 bg-accent-warm/10 px-3 py-2 text-sm text-accent-warm">
                 {play.feedback}
               </p>
+            ) : null}
+
+            {!computerOpen ? (
+              <OsOnboardingCoach play={play} setPlay={setPlay} />
             ) : null}
 
             {!computerOpen ? (

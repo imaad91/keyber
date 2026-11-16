@@ -64,6 +64,17 @@ export {
   osCycleVieCloseAndAdvance,
   osCycleVieForceDayEnd,
 } from "@/lib/keyberOs/cycleVie";
+export {
+  OS_ONBOARDING_STEPS,
+  osFinishOnboarding,
+  osIntroLines,
+  osIsHistoireMode,
+  osMarkIntroSeen,
+  osOnboardingAdvance,
+  osOnboardingBootWorld,
+  osOnboardingCurrentMeta,
+  osOnboardingNeedsFlow,
+} from "@/lib/keyberOs/onboarding";
 export { osVisibiliteFog, osVisibiliteInstallSensor } from "@/lib/keyberOs/visibilite";
 export {
   osKpiBarItems,

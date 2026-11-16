@@ -20,6 +20,7 @@ import {
   osTempsAdvance,
   osTempsCanSpend,
 } from "@/lib/keyberOs/temps";
+import { osApplyMatchedFin } from "@/lib/keyberOs/fins";
 import type { OsPlayState } from "@/lib/keyberOs/types";
 
 export function osPipelineBoot(
@@ -67,7 +68,7 @@ export function osPipelineApplyChoice(
     activeAction: "decide",
   };
   if (next.stepIndex >= next.decisions.length) {
-    next = { ...next, finished: true };
+    next = osApplyMatchedFin({ ...next, finished: true });
   }
 
   if (!next.finished) {

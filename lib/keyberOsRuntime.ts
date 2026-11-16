@@ -165,6 +165,10 @@ export type KeyberOsRuntimeConfig = {
   profil: {
     enabled: boolean;
   };
+  /** Fins & endings (Étape 30) — lit param.Fins. */
+  fins: {
+    enabled: boolean;
+  };
 };
 
 const DEFAULT_DELTAS: [DecisionOptionDeltas, DecisionOptionDeltas, DecisionOptionDeltas] =
@@ -279,6 +283,9 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     enabled: true,
   },
   profil: {
+    enabled: true,
+  },
+  fins: {
     enabled: true,
   },
 };
@@ -583,6 +590,9 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
     profil: {
       enabled: raw.profil?.enabled ?? d.profil.enabled,
     },
+    fins: {
+      enabled: raw.fins?.enabled ?? d.fins.enabled,
+    },
   };
 }
 
@@ -756,6 +766,8 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.livre.enabled;
     case "profil":
       return c.profil.enabled;
+    case "fins":
+      return c.fins.enabled;
     default:
       return true;
   }

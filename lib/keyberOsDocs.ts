@@ -21,7 +21,8 @@ export type KeyberOsComposanteId =
   | "visibilite"
   | "journal"
   | "livre"
-  | "profil";
+  | "profil"
+  | "fins";
 
 export type KeyberOsNavItem = {
   id: KeyberOsComposanteId | "vue-globale";
@@ -141,6 +142,12 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/profil",
     label: "Profil",
     blurb: "Profil joueur = XP, skills, badges (Progression OS).",
+  },
+  {
+    id: "fins",
+    href: "/admin/systeme/fins",
+    label: "Fins",
+    blurb: "Fins de scénario = param.Fins (conditions + écrans).",
   },
   {
     id: "donnees-sauvegarde",
@@ -659,6 +666,41 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "lib/keyberOs/visibilite.ts",
         "components/osPlay/OsVisibilityPanel.tsx",
         "app/admin/systeme/visibilite/page.tsx",
+      ],
+    },
+    fins: {
+      id: "fins",
+      title: "Fins & Endings",
+      ceQueCaFait: [
+        "Évalue les fins déclarées dans param.Fins (conditions métriques).",
+        "Ouvre l'écran de fin / débrief avec label + narration param.",
+        "Fallback bandes génériques si Fins vides (Phase E contenu).",
+      ],
+      deQuoiCompose: [
+        "lib/keyberOs/fins.ts — normalize + evaluate.",
+        "Blocs Fins Book Vue Code.",
+        "Pont pipeline (fin de décisions) + osOpenDebrief.",
+      ],
+      commentCaMarche: [
+        "Conditions AND sur ethique / pieces / stock / tresorerie…",
+        "kind VICTOIRE | PARTIELLE | ECHEC (déduit de l'id si absent).",
+        "Match → world.matchedFinId + ending + feedback.",
+      ],
+      workflowSteps: [
+        "Param Fins",
+        "Session Book",
+        "Condition remplie / fin décisions",
+        "Écran fin",
+      ],
+      ceQueCaNeFaitPas: [
+        "N'invente pas les fins Lumière (Phase E).",
+        "Ne remplace pas le Journal des décisions Admin.",
+      ],
+      codeRefs: [
+        "lib/keyberOs/fins.ts",
+        "lib/keyberOs/debrief.ts",
+        "lib/keyberOs/pipeline.ts",
+        "app/admin/systeme/fins/page.tsx",
       ],
     },
     profil: {

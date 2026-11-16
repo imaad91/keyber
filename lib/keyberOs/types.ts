@@ -332,6 +332,9 @@ export type OsWorld = {
   eventNotifications: OsEventNotification[];
   urgentBanner: OsUrgentBanner;
   lastSkillDebrief: string[];
+  /** Étape 30 — fin param matchée. */
+  matchedFinId?: string | null;
+  matchedFinLabel?: string | null;
 };
 
 export type OsKpiDef = {
@@ -452,4 +455,5 @@ export type OsModuleId =
   | "visibilite"
   | "journal"
   | "livre"
-  | "profil";
+  | "profil"
+  | "fins";

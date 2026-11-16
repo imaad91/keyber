@@ -5,6 +5,7 @@
 
 import type { OsEndingKind, OsPlayState } from "@/lib/keyberOs/types";
 import { osDonneesSaveProgress } from "@/lib/keyberOs/donneesSauvegarde";
+import { osEvaluateFin, osFinsModuleEnabled } from "@/lib/keyberOs/fins";
 import { osSkillProgressList } from "@/lib/keyberOs/progression";
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 
@@ -21,6 +22,9 @@ export function osPiecesQualite(state: OsPlayState): number {
 }
 
 export function osComputeEnding(state: OsPlayState): OsEndingKind {
+  if (osFinsModuleEnabled()) {
+    return osEvaluateFin(state).kind;
+  }
   const q = osPiecesQualite(state);
   const e = state.humain?.ethique ?? 70;
   const ethiqueFloor = 20;
@@ -92,12 +96,24 @@ export function osOpenDebrief(state: OsPlayState): OsPlayState {
       log: [...state.log, "Débrief → module Cycle de vie OFF"],
     };
   }
-  const ending = osComputeEnding(state);
+  const match = osFinsModuleEnabled()
+    ? osEvaluateFin(state)
+    : {
+        fin: null as null,
+        kind: osComputeEnding(state) as Exclude<OsEndingKind, null>,
+        narration: "",
+        xp: 0,
+        source: "legacy" as const,
+      };
+  const ending = match.kind;
   const pieces = osPiecesQualite(state);
   const ethique = state.humain?.ethique ?? 70;
+  const narration =
+    match.narration || osEndingNarration(ending, pieces, ethique);
   const skillLines = osBuildSkillDebriefLines(state);
   const xpGain =
-    ending === "VICTOIRE" ? 80 : ending === "PARTIELLE" ? 50 : 30;
+    match.xp ||
+    (ending === "VICTOIRE" ? 80 : ending === "PARTIELLE" ? 50 : 30);
   const nextXp = (state.progression?.xp ?? state.xp ?? 0) + xpGain;
   const xpPerLevel = getOsRuntimeConfig().progression.xpPerLevel || 100;
   const nextNiveau = Math.max(
@@ -110,7 +126,7 @@ export function osOpenDebrief(state: OsPlayState): OsPlayState {
     xp: nextXp,
     niveau: nextNiveau,
     finished: true,
-    feedback: osEndingNarration(ending, pieces, ethique),
+    feedback: narration,
     progression: {
       ...(state.progression ?? {
         xp: nextXp,
@@ -128,13 +144,15 @@ export function osOpenDebrief(state: OsPlayState): OsPlayState {
       showDebrief: true,
       phase: "DEBRIEF",
       ending,
+      matchedFinId: match.fin?.id ?? null,
+      matchedFinLabel: match.fin?.label ?? null,
       lastSkillDebrief: skillLines,
       journal: [
         {
           id: `j-debrief-${Date.now()}`,
           day: state.meta?.jourActuel ?? state.day,
-          titre: "Débrief de fin de semaine",
-          narration: osEndingNarration(ending, pieces, ethique),
+          titre: match.fin?.label || "Débrief de fin de semaine",
+          narration,
           xp: xpGain,
           at: "16:00",
         },
@@ -145,7 +163,9 @@ export function osOpenDebrief(state: OsPlayState): OsPlayState {
     computerApp: null,
     log: [
       ...state.log,
-      `Cycle de vie → débrief ${ending} (+${xpGain} XP)`,
+      match.source === "param" && match.fin
+        ? `Fins → ${match.fin.id} (${ending}) +${xpGain} XP`
+        : `Cycle de vie → débrief ${ending} (+${xpGain} XP)`,
     ],
   };
   return osDonneesSaveProgress(next);

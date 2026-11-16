@@ -1,7 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { cn } from "@/lib/utils";
+
+const PIPELINE = [
+  "Bibliothèques",
+  "Contexte",
+  "Événements OS",
+  "Ordinateur",
+  "Jours",
+  "Fins",
+  "Book génère",
+  "Test",
+  "Live",
+] as const;
 
 const STEPS: {
   n: number;
@@ -14,7 +27,7 @@ const STEPS: {
   {
     n: 0,
     title: "Bibliothèques (une fois pour toutes)",
-    body: "Tu prépares tes bibliothèques, une fois pour toutes. Tu télécharges le Template Rôles, tu le remplis en Excel, tu l'importes, tu valides. Tu télécharges le Template Compétences + Cours (un seul Excel, 2 onglets : Onglet 1 Compétences, Onglet 2 Cours), tu le remplis, tu l'importes, tu valides. C'est fait une fois, tu les réutilises pour toutes les entreprises.",
+    body: "Tu prépares tes bibliothèques, une fois pour toutes. Template Rôles → Excel → import → valide. Template Compétences + Cours (2 onglets) → Excel → import → valide. Réutilisable pour toutes les entreprises. Aucun contenu inventé par l'OS.",
     accent: "bg-slate-50 border-slate-300",
     ring: "bg-slate-700",
     badge: "text-slate-800",
@@ -22,55 +35,63 @@ const STEPS: {
   {
     n: 1,
     title: "Excel Contexte",
-    body: "Tu crées ton contexte, en Excel. Tu télécharges le Template Contexte hyper complet, tu le remplis avec un maximum de détails, tu l'importes, tu valides la soumission. Tu ne remplis jamais les champs directement dans l'Admin.",
+    body: "Tu crées le contexte entreprise en Excel (Template Contexte). Import + validation dans Atelier → Création. Tu ne remplis jamais les champs métier à la main dans l'Admin. Ce contexte alimente le Book et le Livre (structure).",
     accent: "bg-sky-50 border-sky-200",
     ring: "bg-sky-600",
     badge: "text-sky-900",
   },
   {
     n: 2,
-    title: "Événements de cette entreprise",
-    body: "Tu crées les événements de cette entreprise, en Excel, cas par cas. Dans Atelier → Événements (onglet unique), tu télécharges le Template Événements, tu choisis l'entreprise, tu remplis uniquement les événements de cette entreprise, tu importes, tu valides. Un fichier = une entreprise. On ne partage pas les événements entre entreprises (AgriBio ≠ Novacier), sinon ça devient lassant pour les joueurs. Pas de coches dans Création : l'import les lie automatiquement.",
+    title: "Événements de cette entreprise (pont OS)",
+    body: "Atelier → Événements : Template Excel avec colonnes OS (jour, heure, urgent, deadline, condition, conséquences). Un fichier = une entreprise. L'import mappe vers « Événements entreprise » du param → Moteur d'Événements Keyber OS. Pas de coches dans Création : l'import les lie.",
     accent: "bg-rose-50 border-rose-200",
     ring: "bg-rose-600",
     badge: "text-rose-950",
   },
   {
     n: 3,
-    title: "Sélectionner, ne pas recréer",
-    body: "Tu sélectionnes, tu ne recrées pas. Dans la fiche de ta création, tu coches les rôles possibles parmi ta Bibliothèque Rôles, et tu coches les compétences possibles parmi ta Bibliothèque Compétences. Tu ne recrées rien, tu sélectionnes.",
+    title: "Sélectionner rôles & compétences",
+    body: "Dans la fiche Création, tu coches les rôles et compétences possibles parmi tes bibliothèques. Tu ne recrées rien. Ces coches + événements + contexte partent dans le Prompt Book.",
     accent: "bg-violet-50 border-violet-200",
     ring: "bg-violet-600",
     badge: "text-violet-900",
   },
   {
     n: 4,
-    title: "Scénarios provisoires (IA)",
-    body: "Tu demandes à l'IA de générer des scénarios provisoires depuis le Book. Tu cliques sur « Générer des scénarios » en haut du Book, tu choisis le contexte, tu coches rôles et compétences, les événements de l'entreprise sont pris automatiquement, tu génères le Prompt, tu le copies dans Cursor / Claude Sonnet. L'IA n'invente aucun nouvel événement. Les coquilles arrivent en En cours de test, dans la bonne section.",
+    title: "Book — génération structure complète",
+    body: "Book → « Générer des scénarios ». Le Prompt / la coquille crée un fichier de paramétrage avec tous les blocs feeling : Ordinateur, Jours, Interviews, Objectifs, Kpis, Conséquences, Intro, Livre, Fins, Décisions… Blocs vides OK. L'IA n'invente pas mails / ERP / dialogues hors de ce que tu as fourni (Excel / coches). Contenu riche (ex. Lumière) = Phase E.",
     accent: "bg-amber-50 border-amber-200",
     ring: "bg-amber-500",
     badge: "text-amber-950",
   },
   {
     n: 5,
+    title: "Ordinateur · Jours · Fins (param / Excel)",
+    body: "Pour le feeling POC, le param doit porter Ordinateur (apps ERP, mail, chat, docs, browser…), Jours (timeline), et Fins (conditions + écrans). Les templates Excel satellites Ordinateur arrivent ensuite (étape 32) : tu télécharges, tu remplis, tu importes — l'OS n'invente pas. Checklist « parité feeling » sur la carte Book te montre ce qui est encore rouge.",
+    accent: "bg-indigo-50 border-indigo-200",
+    ring: "bg-indigo-600",
+    badge: "text-indigo-950",
+  },
+  {
+    n: 6,
     title: "Discussion & ajustements",
-    body: "Tu discutes avec l'IA, tu modifies les provisoires, jusqu'à ce que tu sois content. Tu gardes, tu modifies, tu supprimes les provisoires.",
+    body: "Tu discutes avec l'IA, tu modifies les coquilles / le param (Vue Texte · Graphique · Code), jusqu'à ce que tu sois content. Tu gardes, tu modifies, tu supprimes. Contrôle → rapport parité feeling propose les trous sans patcher.",
     accent: "bg-orange-50 border-orange-200",
     ring: "bg-orange-500",
     badge: "text-orange-950",
   },
   {
-    n: 6,
-    title: "Prototype → Book (test)",
-    body: "Tu valides, l'IA implémente un prototype, tu testes. Si c'est bon, tu valides le prototype, ça part dans le Book, en En cours de test. Si ce n'est pas bon, tu retournes en provisoire, tu rediscutes avec l'IA.",
+    n: 7,
+    title: "Test — En cours de test → /jouer/book",
+    body: "Les cartes partent en Book → En cours de test (Admin seul). Tu lances « Tester » : shell Keyber OS officiel `/jouer/book/[id]` (pas le POC `/play` Novacier). Tu vérifies Ordinateur, mail, events, journal, livre, profil, fins. Droit « publier Live » visible dans Équipe (affichage V1).",
     accent: "bg-emerald-50 border-emerald-200",
     ring: "bg-emerald-600",
     badge: "text-emerald-950",
   },
   {
-    n: 7,
-    title: "Book : En cours de test → Live",
-    body: "Dans le module Book, à part, ta création apparaît en En cours de test, visible uniquement pour toi, l'Admin. Tu testes une dernière fois. C'est bon ? Tu cliques sur « Passer en Live ». Maintenant, les joueurs peuvent y jouer. Plus tard, si tu veux modifier, tu cliques sur « Retourner en Création », ça crée une V2, tu modifies, tu valides, la V2 apparaît dans le Book, en En cours de test, avec l'historique V1, V2.",
+    n: 8,
+    title: "Live — joueurs",
+    body: "C'est bon ? « Passer en Live ». Les joueurs voient la carte et jouent le même shell OS. Pour modifier : « Retourner en Création » → V2 → re-test → Live. Historique V1, V2 conservé. `/play` reste le legacy Novacier jusqu'à migration.",
     accent: "bg-teal-50 border-teal-200",
     ring: "bg-teal-600",
     badge: "text-teal-950",
@@ -91,18 +112,58 @@ export default function AtelierWorkflowPage() {
         title="Atelier — Workflow"
       />
 
-      <p className="mb-2 max-w-2xl text-sm text-slate-600">
-        Mode d&apos;emploi de la création — des bibliothèques jusqu&apos;au
-        Live. Toujours visible, <strong>lecture seule</strong> : tu ne le
-        modifies pas.
+      <p className="mb-2 max-w-3xl text-sm text-slate-600">
+        Mode d&apos;emploi V1 — des bibliothèques jusqu&apos;au feeling POC
+        (Ordinateur · Jours · Fins · Test · Live). Toujours visible,{" "}
+        <strong>lecture seule</strong> : tu ne le modifies pas ici (relecture /
+        validation du texte bienvenue).
       </p>
 
       <section
+        className="mt-4 overflow-x-auto rounded-2xl border border-violet-200 bg-violet-50/80 p-4"
+        aria-label="Chaîne feeling POC"
+      >
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-violet-700">
+          Chaîne jusqu&apos;au feeling POC
+        </p>
+        <ol className="flex min-w-max items-center gap-1.5 text-xs font-semibold text-violet-950">
+          {PIPELINE.map((label, i) => (
+            <li key={label} className="flex items-center gap-1.5">
+              <span
+                className={cn(
+                  "rounded-lg border px-2.5 py-1.5",
+                  label === "Ordinateur" ||
+                    label === "Jours" ||
+                    label === "Fins" ||
+                    label === "Test" ||
+                    label === "Live"
+                    ? "border-violet-500 bg-white shadow-sm"
+                    : "border-violet-200 bg-violet-100/80"
+                )}
+              >
+                {label}
+              </span>
+              {i < PIPELINE.length - 1 ? (
+                <span className="text-violet-400" aria-hidden>
+                  →
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+        <p className="mt-2 text-[11px] text-violet-800/80">
+          Entrée joueur officielle :{" "}
+          <code className="rounded bg-white/80 px-1">/jouer/book/[id]</code> ·
+          Legacy : <code className="rounded bg-white/80 px-1">/play</code>
+        </p>
+      </section>
+
+      <section
         className="mt-6 select-none rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8"
-        aria-label="Workflow de création KEYBER — 8 étapes"
+        aria-label="Workflow de création KEYBER — 9 étapes"
       >
         <h2 className="mb-6 text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-          Des bibliothèques au Live — 8 étapes (0 → 7)
+          Des bibliothèques au Live — 9 étapes (0 → 8)
         </h2>
 
         <ol className="mx-auto flex max-w-2xl flex-col items-stretch">
@@ -175,9 +236,9 @@ export default function AtelierWorkflowPage() {
           Règle d&apos;or
         </p>
         <p className="mt-2 text-sm leading-relaxed sm:text-base">
-          Toi = Chef : tu décides, tu donnes les inputs, tu valides, tu
-          bloques. IA = Constructeur : elle construit, elle n&apos;invente
-          jamais le contenu métier.
+          Toi = Chef : tu décides, tu donnes les inputs Excel / coches, tu
+          valides, tu bloques. IA = Constructeur : elle assemble la structure,
+          elle n&apos;invente jamais le contenu métier.
         </p>
       </section>
 
@@ -187,8 +248,9 @@ export default function AtelierWorkflowPage() {
             Mode Compétence
           </p>
           <p className="mt-2 text-sm leading-relaxed text-sky-950">
-            Mode Compétence = Entraînement intensif : Catégorie → Compétence →
-            Cours + Scénarios très précis. Pas de rôle.
+            Entraînement intensif : Catégorie → Compétence → Cours + Scénarios
+            précis. Pas de rôle. Param + Ordinateur / Fins quand même pour le
+            feeling shell.
           </p>
         </section>
         <section className="rounded-2xl border border-violet-200 bg-violet-50 p-5">
@@ -196,13 +258,24 @@ export default function AtelierWorkflowPage() {
             Mode Histoire
           </p>
           <p className="mt-2 text-sm leading-relaxed text-violet-950">
-            Mode Histoire = Mise en pratique : Rôle → Secteur → Entreprise →
-            Histoire libre, avec tes événements de cette entreprise, décisions
-            qui influencent d&apos;autres décisions. Pas de choix de compétence
-            au début.
+            Mise en pratique : Rôle → Secteur → Entreprise → Histoire, avec les
+            événements OS de cette entreprise, Jours, Fins, Livre. Pas de choix
+            de compétence au début.
           </p>
         </section>
       </div>
+
+      <p className="mt-6 text-xs text-slate-500">
+        Voir aussi{" "}
+        <Link href="/admin/systeme/vue-globale" className="underline">
+          Keyber OS → Vue Globale
+        </Link>{" "}
+        et{" "}
+        <Link href="/admin/controle/rapports/parite" className="underline">
+          Contrôle → Parité feeling
+        </Link>
+        .
+      </p>
     </div>
   );
 }

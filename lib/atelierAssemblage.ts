@@ -19,10 +19,8 @@ import {
   filledContexteRecord,
   type ScenarioParamFile,
 } from "@/lib/bookGenerationPrompt";
-import {
-  emptyOrdinateurStructure,
-  normalizeScenarioParamFile,
-} from "@/lib/scenarioParamSchema";
+import { ensureContractKeysInParam } from "@/lib/scenarioFileContract";
+import { emptyOrdinateurStructure } from "@/lib/scenarioParamSchema";
 
 export type AssemblageLogLevel = "ok" | "info" | "warn";
 
@@ -250,7 +248,8 @@ export function assembleParamFromAtelier(
     Kpis: fromNarr.Kpis.length ? fromNarr.Kpis : skeleton.Kpis,
   };
 
-  const paramFile = normalizeScenarioParamFile(raw) as ScenarioParamFile;
+  /** Étape 35 — toutes les clés contrat présentes (vides OK). */
+  const paramFile = ensureContractKeysInParam(raw) as ScenarioParamFile;
 
   const stats: AssemblageStats = {
     contexteFields,

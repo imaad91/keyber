@@ -75,6 +75,14 @@ export {
   osOnboardingCurrentMeta,
   osOnboardingNeedsFlow,
 } from "@/lib/keyberOs/onboarding";
+export {
+  OS_DEBRIEF_TARGET_PIECES,
+  osBuildSkillDebriefLines,
+  osComputeEnding,
+  osEndingNarration,
+  osOpenDebrief,
+  osPiecesQualite,
+} from "@/lib/keyberOs/debrief";
 export { osVisibiliteFog, osVisibiliteInstallSensor } from "@/lib/keyberOs/visibilite";
 export {
   osKpiBarItems,

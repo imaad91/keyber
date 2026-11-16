@@ -50,6 +50,7 @@ Profil (Étape 29) : `/profil` lit Progression OS + world.badges ; Admin → Key
 Fins (Étape 30) : `param.Fins` → conditions → écran fin / débrief ; Admin → Keyber OS → Fins ; contenu Lumière Phase E.
 Workflow Atelier (Étape 31) : mode d’emploi V1 — chaîne Ordinateur / Jours / Fins / Test / Live jusqu’au feeling POC.
 Excel Ordinateur (Étape 32) : `KEYBER_Template_Ordinateur.xlsx` multi-onglets ; import dry-run sur fiche Création (staging). Contenu Lumière = toi.
+Excel Narration / décisions (Étape 33) : `KEYBER_Template_Narration_Decisions.xlsx` (PNJ, Objectifs, Kpis, Jours, Décisions, Options, Fins) ; import dry-run staging Création. Démo remplie : `data/scenarios/lumiere-co/KEYBER_Narration_Lumiere_Co.xlsx`.
 Jouer une carte Book : **`/jouer/book/[id]`** — **chemin officiel Keyber OS** (Étape 20).
 Bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
 Shell : `components/osPlay/OsPlayShell.tsx` ← pipeline `lib/keyberOs/pipeline.ts`.

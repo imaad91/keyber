@@ -476,7 +476,7 @@ export function lumiereInterviews() {
   ];
 }
 
-function lumiereObjectifs() {
+export function lumiereObjectifs() {
   return [
     {
       id: "obj-lumiere-stock",
@@ -537,6 +537,254 @@ function lumiereObjectifs() {
   ];
 }
 
+/** Étape 33 — KPIs barre / dashboard (Lumière). */
+export function lumiereKpis() {
+  return [
+    {
+      id: "kpi-stock",
+      label: "Stock Halo",
+      format: "number",
+      path: "stock",
+      unit: "u",
+    },
+    {
+      id: "kpi-cash",
+      label: "Trésorerie",
+      format: "currency",
+      path: "tresorerie",
+      unit: "€",
+    },
+    {
+      id: "kpi-confiance",
+      label: "Confiance client",
+      format: "percent",
+      path: "confianceClient",
+      unit: "%",
+    },
+    {
+      id: "kpi-moral",
+      label: "Moral équipe",
+      format: "number",
+      path: "moral",
+      unit: "",
+    },
+  ];
+}
+
+/** Étape 33 — timeline jours (Lumière). */
+export function lumiereJours() {
+  return [
+    {
+      id: "jour-1",
+      jour: 1,
+      label: "J1 — Feu au quai",
+      phase: "urgence",
+      decisionIds: ["h1", "d1"],
+      eventIds: ["lumiere-ev-1", "lumiere-ev-2", "lumiere-ev-4"],
+    },
+    {
+      id: "jour-2",
+      jour: 2,
+      label: "J2 — Pic Noël",
+      phase: "pic",
+      decisionIds: ["h2"],
+      eventIds: ["lumiere-ev-3"],
+    },
+  ];
+}
+
+export function lumiereFinsHistoire() {
+  return [
+    {
+      id: "fin-semaine",
+      label: "Semaine tenue, clients livrés",
+      kind: "victory" as const,
+      narration:
+        "Les délais J+2 tiennent. Claire valide le plan de la semaine — le quai respire.",
+      xp: 80,
+      priority: 10,
+      conditions: [
+        { metric: "confianceClient", op: "gte" as const, value: 55 },
+        { metric: "stock", op: "gte" as const, value: 60 },
+      ],
+    },
+    {
+      id: "fin-chaos",
+      label: "Retards massifs J+2",
+      kind: "defeat" as const,
+      narration:
+        "Le SAV flambe, le packing déborde. Le pic Noël t’a dépassé.",
+      xp: 15,
+      priority: 1,
+      conditions: [
+        { metric: "confianceClient", op: "lte" as const, value: 35 },
+      ],
+    },
+  ];
+}
+
+export function lumiereFinsCompetence() {
+  return [
+    {
+      id: "fin-ok",
+      label: "Stock tenu jusqu'à Noël",
+      kind: "victory" as const,
+      narration:
+        "Plan MRP tenu : Halo au-dessus du seuil, cash encore gérable.",
+      xp: 60,
+      priority: 10,
+      conditions: [{ metric: "stock", op: "gte" as const, value: 80 }],
+    },
+    {
+      id: "fin-rupture",
+      label: "Rupture Halo en pic",
+      kind: "defeat" as const,
+      narration: "Rupture sur Halo au pic — le site vend du vent.",
+      xp: 10,
+      priority: 1,
+      conditions: [{ metric: "stock", op: "lte" as const, value: 20 }],
+    },
+  ];
+}
+
+/** Décisions Histoire (source unique pour Excel + param). */
+export function lumiereDecisionsHistoire() {
+  return [
+    {
+      id: "h1",
+      titre: "Priorité du jour",
+      dilemme: "Trois urgences en même temps — que traites-tu d'abord ?",
+      jour: 1,
+      xpGagne: 25,
+      options: [
+        {
+          id: "h1-opt0",
+          label: "Traiter le retard fournisseur",
+          feedbackTexte:
+            "Tu sécurises le réappro. Stock remonte, trésorerie un peu sous tension.",
+          consequences: [
+            { cible: "stock", valeur: 25 },
+            { cible: "tresorerie", valeur: -1500 },
+            { cible: "moral", valeur: 2 },
+          ],
+        },
+        {
+          id: "h1-opt1",
+          label: "Sauver le colis perdu",
+          feedbackTexte:
+            "Le client respire. Confiance en hausse, production un peu ralentie.",
+          consequences: [
+            { cible: "confianceClient", valeur: 8 },
+            { cible: "production", valeur: -5 },
+            { cible: "xp", valeur: 15 },
+          ],
+        },
+        {
+          id: "h1-opt2",
+          label: "Sécuriser le rack",
+          feedbackTexte:
+            "Sécurité d'abord. Éthique et moral montent ; le temps file.",
+          consequences: [
+            { cible: "ethique", valeur: 5 },
+            { cible: "moral", valeur: 4 },
+            { cible: "temps", valeur: 30 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "h2",
+      titre: "Pic Noël",
+      dilemme: "Le volume explose — comment tiens-tu la semaine ?",
+      jour: 2,
+      xpGagne: 30,
+      options: [
+        {
+          id: "h2-opt0",
+          label: "Heures sup packing",
+          feedbackTexte:
+            "Les colis sortent. Production et pièces montent ; le moral fatigue.",
+          consequences: [
+            { cible: "production", valeur: 15 },
+            { cible: "pieces", valeur: 40 },
+            { cible: "moral", valeur: -6 },
+            { cible: "tresorerie", valeur: -800 },
+          ],
+        },
+        {
+          id: "h2-opt1",
+          label: "Couper pubs",
+          feedbackTexte:
+            "Tu réduis la pression commerciale. Trésorerie préservée, commandes en baisse.",
+          consequences: [
+            { cible: "tresorerie", valeur: 2000 },
+            { cible: "commandes", valeur: -3 },
+            { cible: "confianceClient", valeur: -4 },
+          ],
+        },
+        {
+          id: "h2-opt2",
+          label: "Prioriser top SKU",
+          feedbackTexte:
+            "Focus SKU rentables. Qualité semaine et score progressent.",
+          consequences: [
+            { cible: "piecesBrutesSemaine", valeur: 60 },
+            { cible: "score", valeur: 20 },
+            { cible: "stock", valeur: -10 },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
+/** Décisions Compétence MRP. */
+export function lumiereDecisionsCompetence() {
+  return [
+    {
+      id: "d1",
+      titre: "Réappro Halo",
+      dilemme: "Le stock Halo fond — quelle manœuvre ?",
+      jour: 1,
+      xpGagne: 20,
+      competenceId: LUMIERE_COMPETENCE,
+      options: [
+        {
+          id: "d1-opt0",
+          label: "Commander MingLight maintenant",
+          feedbackTexte: "Commande passée. Stock remonte, cash en baisse.",
+          consequences: [
+            { cible: "stock", valeur: 40 },
+            { cible: "tresorerie", valeur: -3000 },
+          ],
+        },
+        {
+          id: "d1-opt1",
+          label: "Partager MingLight + VietGlow",
+          feedbackTexte:
+            "Tu diversifies. Moins de risque, prod un peu plus complexe.",
+          consequences: [
+            { cible: "stock", valeur: 20 },
+            { cible: "production", valeur: -3 },
+            { cible: "moral", valeur: 3 },
+          ],
+        },
+        {
+          id: "d1-opt2",
+          label: "Couper la promo Halo",
+          feedbackTexte:
+            "Pression allégée. Commandes baissent, trésorerie préservée.",
+          consequences: [
+            { cible: "tresorerie", valeur: 1500 },
+            { cible: "commandes", valeur: -2 },
+            { cible: "confianceClient", valeur: -5 },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
 function lumiereSensors() {
   return [
     {
@@ -566,6 +814,8 @@ function withLumiereOrdinateur(
 ): ScenarioParamFile {
   const interviews = lumiereInterviews();
   const objectifs = lumiereObjectifs();
+  const kpis = lumiereKpis();
+  const jours = lumiereJours();
   return {
     ...param,
     Ordinateur: {
@@ -580,8 +830,8 @@ function withLumiereOrdinateur(
     /** Étape 21 — blocs top-level visibles (miroir + coquilles). */
     Interviews: interviews,
     Objectifs: objectifs,
-    Jours: [],
-    Kpis: [],
+    Jours: jours,
+    Kpis: kpis,
     Conséquences: [],
     Intro: [],
   } as ScenarioParamFile;
@@ -607,89 +857,42 @@ export function lumiereCompetenceParam(
     "Compétences sélectionnées": [
       { nom: LUMIERE_COMPETENCE, cours: [LUMIERE_COURS] },
     ],
-    Décisions: [
-      {
-        id: "d1",
-        titre: "Réappro Halo",
-        dilemme: "Le stock Halo fond — quelle manœuvre ?",
-        xpGagne: 20,
-        competenceId: LUMIERE_COMPETENCE,
-        options: [
+    Décisions: lumiereDecisionsCompetence().map((d) => ({
+      ...d,
+      options: d.options.map((o, i) => ({
+        ...o,
+        impacts:
+          i === 0
+            ? [
+                { label: "Stock", value: "+40", tone: "pos" as const },
+                { label: "Cash", value: "−3 k€", tone: "neg" as const },
+              ]
+            : i === 1
+              ? [
+                  { label: "Stock", value: "+20", tone: "pos" as const },
+                  { label: "Prod", value: "−3", tone: "neg" as const },
+                ]
+              : [
+                  { label: "Cash", value: "+1,5 k€", tone: "pos" as const },
+                  { label: "Confiance", value: "−5", tone: "neg" as const },
+                ],
+        competenceImpacts: [
           {
-            id: "d1-opt0",
-            label: "Commander MingLight maintenant",
-            feedbackTexte: "Commande passée. Stock remonte, cash en baisse.",
-            consequences: [
-              { cible: "stock", valeur: 40 },
-              { cible: "tresorerie", valeur: -3000 },
-            ],
-            impacts: [
-              { label: "Stock", value: "+40", tone: "pos" },
-              { label: "Cash", value: "−3 k€", tone: "neg" },
-            ],
-            competenceImpacts: [
-              {
-                competenceId: LUMIERE_COMPETENCE,
-                type: "ciblee" as const,
-                xp: 20,
-                feedback: "Plan MRP : réappro immédiat chiffré.",
-                indicateurIndex: 0,
-              },
-            ],
-          },
-          {
-            id: "d1-opt1",
-            label: "Partager MingLight + VietGlow",
-            feedbackTexte: "Tu diversifies. Moins de risque, prod un peu plus complexe.",
-            consequences: [
-              { cible: "stock", valeur: 20 },
-              { cible: "production", valeur: -3 },
-              { cible: "moral", valeur: 3 },
-            ],
-            impacts: [
-              { label: "Stock", value: "+20", tone: "pos" },
-              { label: "Prod", value: "−3", tone: "neg" },
-            ],
-            competenceImpacts: [
-              {
-                competenceId: LUMIERE_COMPETENCE,
-                type: "ciblee" as const,
-                xp: 25,
-                feedback: "Plan MRP : multi-sources + buffer.",
-                indicateurIndex: 1,
-              },
-            ],
-          },
-          {
-            id: "d1-opt2",
-            label: "Couper la promo Halo",
-            feedbackTexte: "Pression allégée. Commandes baissent, trésorerie préservée.",
-            consequences: [
-              { cible: "tresorerie", valeur: 1500 },
-              { cible: "commandes", valeur: -2 },
-              { cible: "confianceClient", valeur: -5 },
-            ],
-            impacts: [
-              { label: "Cash", value: "+1,5 k€", tone: "pos" },
-              { label: "Confiance", value: "−5", tone: "neg" },
-            ],
-            competenceImpacts: [
-              {
-                competenceId: LUMIERE_COMPETENCE,
-                type: "ciblee" as const,
-                xp: 12,
-                feedback: "Plan MRP : demande révisée (promo coupée).",
-                indicateurIndex: 2,
-              },
-            ],
+            competenceId: LUMIERE_COMPETENCE,
+            type: "ciblee" as const,
+            xp: i === 0 ? 20 : i === 1 ? 25 : 12,
+            feedback:
+              i === 0
+                ? "Plan MRP : réappro immédiat chiffré."
+                : i === 1
+                  ? "Plan MRP : multi-sources + buffer."
+                  : "Plan MRP : demande révisée (promo coupée).",
+            indicateurIndex: i,
           },
         ],
-      },
-    ],
-    Fins: [
-      { id: "fin-ok", label: "Stock tenu jusqu'à Noël" },
-      { id: "fin-rupture", label: "Rupture Halo en pic" },
-    ],
+      })),
+    })),
+    Fins: lumiereFinsCompetence(),
     fichier,
   });
 }
@@ -714,119 +917,157 @@ export function lumiereHistoireParam(
     "Compétences sélectionnées": [
       { nom: LUMIERE_COMPETENCE, cours: [LUMIERE_COURS] },
     ],
-    Décisions: [
-      {
-        id: "h1",
-        titre: "Priorité du jour",
-        dilemme: "Trois urgences en même temps — que traites-tu d'abord ?",
-        xpGagne: 25,
-        options: [
-          {
-            id: "h1-opt0",
-            label: "Traiter le retard fournisseur",
-            feedbackTexte:
-              "Tu sécurises le réappro. Stock remonte, trésorerie un peu sous tension.",
-            consequences: [
-              { cible: "stock", valeur: 25 },
-              { cible: "tresorerie", valeur: -1500 },
-              { cible: "moral", valeur: 2 },
-            ],
-            impacts: [
+    Décisions: lumiereDecisionsHistoire().map((d) => ({
+      ...d,
+      options: d.options.map((o, i) => {
+        const impactsByDecision: Record<
+          string,
+          { label: string; value: string; tone: "pos" | "neg" | "neu" }[][]
+        > = {
+          h1: [
+            [
               { label: "Stock", value: "+25", tone: "pos" },
               { label: "Trésorerie", value: "−1,5 k€", tone: "neg" },
             ],
-          },
-          {
-            id: "h1-opt1",
-            label: "Sauver le colis perdu",
-            feedbackTexte:
-              "Le client respire. Confiance en hausse, production un peu ralentie.",
-            consequences: [
-              { cible: "confianceClient", valeur: 8 },
-              { cible: "production", valeur: -5 },
-              { cible: "xp", valeur: 15 },
-            ],
-            impacts: [
+            [
               { label: "Confiance", value: "+8", tone: "pos" },
               { label: "Prod", value: "−5", tone: "neg" },
             ],
-          },
-          {
-            id: "h1-opt2",
-            label: "Sécuriser le rack",
-            feedbackTexte:
-              "Sécurité d'abord. Éthique et moral montent ; le temps file.",
-            consequences: [
-              { cible: "ethique", valeur: 5 },
-              { cible: "moral", valeur: 4 },
-              { cible: "temps", valeur: 30 },
-            ],
-            impacts: [
+            [
               { label: "Éthique", value: "+5", tone: "pos" },
               { label: "Temps", value: "+30 min", tone: "neu" },
             ],
-          },
-        ],
-      },
-      {
-        id: "h2",
-        titre: "Pic Noël",
-        dilemme: "Le volume explose — comment tiens-tu la semaine ?",
-        xpGagne: 30,
-        options: [
-          {
-            id: "h2-opt0",
-            label: "Heures sup packing",
-            feedbackTexte:
-              "Les colis sortent. Production et pièces montent ; le moral fatigue.",
-            consequences: [
-              { cible: "production", valeur: 15 },
-              { cible: "pieces", valeur: 40 },
-              { cible: "moral", valeur: -6 },
-              { cible: "tresorerie", valeur: -800 },
-            ],
-            impacts: [
+          ],
+          h2: [
+            [
               { label: "Prod", value: "+15", tone: "pos" },
               { label: "Moral", value: "−6", tone: "neg" },
             ],
-          },
-          {
-            id: "h2-opt1",
-            label: "Couper pubs",
-            feedbackTexte:
-              "Tu réduis la pression commerciale. Trésorerie préservée, commandes en baisse.",
-            consequences: [
-              { cible: "tresorerie", valeur: 2000 },
-              { cible: "commandes", valeur: -3 },
-              { cible: "confianceClient", valeur: -4 },
-            ],
-            impacts: [
+            [
               { label: "Cash", value: "+2 k€", tone: "pos" },
               { label: "Commandes", value: "−3", tone: "neg" },
             ],
-          },
-          {
-            id: "h2-opt2",
-            label: "Prioriser top SKU",
-            feedbackTexte:
-              "Focus SKU rentables. Qualité semaine et score progressent.",
-            consequences: [
-              { cible: "piecesBrutesSemaine", valeur: 60 },
-              { cible: "score", valeur: 20 },
-              { cible: "stock", valeur: -10 },
-            ],
-            impacts: [
+            [
               { label: "Qualité", value: "+60", tone: "pos" },
               { label: "Stock", value: "−10", tone: "neg" },
             ],
-          },
-        ],
-      },
-    ],
-    Fins: [
-      { id: "fin-semaine", label: "Semaine tenue, clients livrés" },
-      { id: "fin-chaos", label: "Retards massifs J+2" },
-    ],
+          ],
+        };
+        return {
+          ...o,
+          impacts: impactsByDecision[d.id]?.[i] ?? [],
+        };
+      }),
+    })),
+    Fins: lumiereFinsHistoire(),
     fichier,
   });
+}
+
+/**
+ * Étape 33 — pack Excel narration/décisions rempli pour Lumière (exception démo).
+ * Inclut Histoire + Compétence pour staging Studio.
+ */
+export function buildLumiereNarrationPack(): import("@/lib/atelierNarrationExcel").NarrationExcelPack {
+  const interviews = lumiereInterviews();
+  const interviewRows: import("@/lib/atelierNarrationExcel").NarrationExcelRow[] =
+    [];
+  for (const iv of interviews) {
+    const lines =
+      iv.lines?.length > 0 ? iv.lines : [{ q: "", a: "" }];
+    for (const line of lines) {
+      interviewRows.push({
+        Id: iv.id,
+        Nom: iv.nom,
+        Rôle: iv.role,
+        Phrase: iv.phrase,
+        Bio: iv.bio,
+        Confiance: String(iv.relationConfiance),
+        "Ligne Q": line.q,
+        "Ligne A": line.a,
+      });
+    }
+  }
+
+  const decisions = [
+    ...lumiereDecisionsHistoire(),
+    ...lumiereDecisionsCompetence(),
+  ];
+  const optionRows: import("@/lib/atelierNarrationExcel").NarrationExcelRow[] =
+    [];
+  for (const d of decisions) {
+    for (const o of d.options) {
+      const c0 = o.consequences?.[0];
+      optionRows.push({
+        "Decision id": d.id,
+        "Option id": o.id,
+        Label: o.label,
+        Feedback: o.feedbackTexte,
+        "Conséquence cible": c0?.cible ?? "",
+        "Conséquence valeur":
+          c0?.valeur != null ? String(c0.valeur) : "",
+      });
+    }
+  }
+
+  const fins = [...lumiereFinsHistoire(), ...lumiereFinsCompetence()];
+
+  return {
+    interviews: interviewRows,
+    objectifs: lumiereObjectifs().map((o) => ({
+      Id: o.id,
+      Titre: o.titre,
+      Type: o.type,
+      Statut: o.status,
+      Description: o.description,
+      Cible: o.cible,
+      "Cible nombre": String(o.cibleNombre ?? ""),
+      Métrique: o.metric,
+      Op: o.op,
+      XP: String(o.xp ?? ""),
+      "Fail DayEnd": o.failOnDayEnd ? "oui" : "non",
+    })),
+    kpis: lumiereKpis().map((k) => ({
+      Id: k.id,
+      Label: k.label,
+      Format: k.format,
+      Path: k.path,
+      Unit: k.unit ?? "",
+    })),
+    jours: lumiereJours().map((j) => ({
+      Id: j.id,
+      Jour: String(j.jour),
+      Label: j.label,
+      Phase: j.phase,
+      "Decision ids (csv)": j.decisionIds.join(", "),
+      "Event ids (csv)": j.eventIds.join(", "),
+    })),
+    decisions: decisions.map((d) => ({
+      Id: d.id,
+      Titre: d.titre,
+      Dilemme: d.dilemme,
+      Jour: String(d.jour ?? ""),
+      XP: String(d.xpGagne ?? ""),
+      "Compétence id":
+        "competenceId" in d && d.competenceId
+          ? String(d.competenceId)
+          : "",
+    })),
+    options: optionRows,
+    fins: fins.map((f) => {
+      const c0 = f.conditions?.[0];
+      return {
+        Id: f.id,
+        Label: f.label,
+        Kind: f.kind ?? "",
+        Narration: f.narration ?? "",
+        XP: String(f.xp ?? ""),
+        "Condition métrique": c0?.metric ?? "",
+        "Condition op": c0?.op ?? "",
+        "Condition valeur":
+          c0?.value != null ? String(c0.value) : "",
+        Priority: String(f.priority ?? ""),
+      };
+    }),
+  };
 }

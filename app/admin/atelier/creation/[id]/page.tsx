@@ -30,6 +30,17 @@ import {
   type OrdinateurExcelPack,
   type OrdinateurSheetParseSummary,
 } from "@/lib/atelierOrdinateurExcel";
+import {
+  countNarrationPackRows,
+  downloadNarrationFilledPack,
+  downloadNarrationSheetTemplate,
+  downloadNarrationTemplate,
+  NARRATION_SHEETS,
+  parseNarrationExcelDryRun,
+  type NarrationExcelPack,
+  type NarrationSheetParseSummary,
+} from "@/lib/atelierNarrationExcel";
+import { buildLumiereNarrationPack } from "@/lib/lumiereCoDemoData";
 import { useAtelierRolesStore } from "@/lib/atelierRolesStore";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import { cn } from "@/lib/utils";
@@ -54,6 +65,7 @@ export default function AtelierCreationDetailPage() {
     setRoleNames,
     setCompetenceNames,
     setOrdinateurPack,
+    setNarrationPack,
     addScenario,
     removeScenario,
     markPrototypeTested,
@@ -66,6 +78,7 @@ export default function AtelierCreationDetailPage() {
   const { competences } = useAtelierCompetencesStore();
   const creation = getCreation(id);
   const ordinateurFileRef = useRef<HTMLInputElement>(null);
+  const narrationFileRef = useRef<HTMLInputElement>(null);
 
   const [scenarioNom, setScenarioNom] = useState("");
   const [scenarioMode, setScenarioMode] =
@@ -78,6 +91,13 @@ export default function AtelierCreationDetailPage() {
   const [pendingPack, setPendingPack] = useState<OrdinateurExcelPack | null>(
     null
   );
+  const [narrDryRun, setNarrDryRun] = useState<
+    NarrationSheetParseSummary[] | null
+  >(null);
+  const [narrError, setNarrError] = useState<string | null>(null);
+  const [narrBusy, setNarrBusy] = useState(false);
+  const [pendingNarrPack, setPendingNarrPack] =
+    useState<NarrationExcelPack | null>(null);
 
   if (!creation) {
     return (
@@ -294,6 +314,132 @@ export default function AtelierCreationDetailPage() {
                 }}
               >
                 Enregistrer le staging Ordinateur
+              </AdminButton>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
+
+      {/* Étape 33 — Templates Excel narration & décisions */}
+      <section className="mb-8 rounded-2xl border border-violet-200 bg-violet-50/50 p-5 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">
+          Narration &amp; décisions — templates Excel (Étape 33)
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          PNJ / Interviews, Objectifs, Kpis, Jours, Décisions, Options, Fins.
+          Tu fournis le contenu ; l&apos;OS n&apos;invente rien. Import =
+          dry-run puis staging (pas encore Live).
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Staging actuel :{" "}
+          {countNarrationPackRows(creation.narrationPack ?? {})} ligne(s)
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <AdminButton
+            type="button"
+            onClick={() => downloadNarrationTemplate()}
+          >
+            <Download className="h-4 w-4" />
+            Télécharger Template Narration (tous onglets)
+          </AdminButton>
+          <AdminButton
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              downloadNarrationFilledPack(
+                buildLumiereNarrationPack(),
+                "KEYBER_Narration_Lumiere_Co.xlsx"
+              )
+            }
+          >
+            <Download className="h-4 w-4" />
+            Exemple rempli Lumière
+          </AdminButton>
+          <AdminButton
+            type="button"
+            variant="secondary"
+            disabled={locked || narrBusy}
+            onClick={() => narrationFileRef.current?.click()}
+          >
+            <Upload className="h-4 w-4" />
+            Importer Excel (dry-run)
+          </AdminButton>
+          <input
+            ref={narrationFileRef}
+            type="file"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0] ?? null;
+              setNarrError(null);
+              setNarrDryRun(null);
+              setPendingNarrPack(null);
+              if (!file) return;
+              setNarrBusy(true);
+              try {
+                const buf = await file.arrayBuffer();
+                const res = parseNarrationExcelDryRun(buf);
+                if (!res.ok) {
+                  setNarrError(res.error);
+                  return;
+                }
+                setNarrDryRun(res.sheets);
+                setPendingNarrPack(res.pack);
+              } finally {
+                setNarrBusy(false);
+                if (narrationFileRef.current)
+                  narrationFileRef.current.value = "";
+              }
+            }}
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {NARRATION_SHEETS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className="rounded-md border border-violet-200 bg-white px-2 py-1 text-[10px] font-semibold text-violet-900 hover:bg-violet-50"
+              onClick={() => downloadNarrationSheetTemplate(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        {narrError ? (
+          <p className="mt-3 text-sm text-rose-600">{narrError}</p>
+        ) : null}
+        {narrDryRun ? (
+          <div className="mt-3 rounded-xl border border-violet-100 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-violet-800">
+              Dry-run —{" "}
+              {narrDryRun.reduce((n, s) => n + s.rowCount, 0)} ligne(s)
+            </p>
+            <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-slate-600">
+              {narrDryRun.map((s) => (
+                <li key={s.sheetId}>
+                  {s.label} : {s.rowCount} ligne(s) · colonnes{" "}
+                  {s.recognizedColumns}/{s.expectedColumns}
+                  {s.warnings.length
+                    ? ` · ${s.warnings.join(" · ")}`
+                    : ""}
+                </li>
+              ))}
+            </ul>
+            {!locked && pendingNarrPack ? (
+              <AdminButton
+                type="button"
+                className="mt-3"
+                onClick={() => {
+                  const res = setNarrationPack(creation.id, pendingNarrPack);
+                  if (res.error) {
+                    setNarrError(res.error);
+                    return;
+                  }
+                  setNarrDryRun(null);
+                  setPendingNarrPack(null);
+                }}
+              >
+                Enregistrer le staging Narration
               </AdminButton>
             ) : null}
           </div>

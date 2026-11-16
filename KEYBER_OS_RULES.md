@@ -53,6 +53,7 @@ Excel Ordinateur (Étape 32) : `KEYBER_Template_Ordinateur.xlsx` multi-onglets ;
 Excel Narration / décisions (Étape 33) : `KEYBER_Template_Narration_Decisions.xlsx` (PNJ, Objectifs, Kpis, Jours, Décisions, Options, Fins) ; import dry-run staging Création. Démo remplie : `data/scenarios/lumiere-co/KEYBER_Narration_Lumiere_Co.xlsx`.
 Assemblage Atelier → Book (Étape 34) : Book → Générer « Assembler Atelier → Book » (ou fiche Book « Ré-assembler ») fusionne Contexte + Events + packs Excel staging → Vue Code ; journal Admin ; zéro invention.
 Contrat fichier unique (Étape 35) : 1 scénario = 1 JSON sous `data/scenarios/<id>/` ; tous les blocs dans le fichier (vides OK) ; refus pointeurs / blocs hors fichier (`lib/scenarioFileContract.ts`). Admin : Book Vue Code + Données & Sauvegarde.
+Loader OS Book (Étape 36) : `resolveOsBookParam` — disk ou embedded seulement ; log `source = fichier X` ; **aucun** fallback Novacier / getScenario / data/contextes. Source affichée dans Données & Sauvegarde.
 Jouer une carte Book : **`/jouer/book/[id]`** — **chemin officiel Keyber OS** (Étape 20).
 Bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
 Shell : `components/osPlay/OsPlayShell.tsx` ← pipeline `lib/keyberOs/pipeline.ts`.

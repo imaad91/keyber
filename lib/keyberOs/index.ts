@@ -47,6 +47,18 @@ export {
 } from "@/lib/keyberOs/donneesSauvegarde";
 
 export {
+  OS_PARAM_LOADER_RULES,
+  resolveOsBookParam,
+  rememberOsParamSource,
+  readRememberedOsParamSource,
+} from "@/lib/keyberOs/paramLoader";
+export type {
+  OsParamLoadSource,
+  OsParamSourceKind,
+  OsParamResolveResult,
+} from "@/lib/keyberOs/paramLoader";
+
+export {
   osOrdinateurSetAction,
   osOrdinateurOpenApp,
   osOrdinateurMarkEmailRead,

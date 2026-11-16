@@ -21,15 +21,36 @@ import {
   osTempsCanSpend,
 } from "@/lib/keyberOs/temps";
 import { osApplyMatchedFin } from "@/lib/keyberOs/fins";
+import type { OsParamLoadSource } from "@/lib/keyberOs/paramLoader";
 import type { OsPlayState } from "@/lib/keyberOs/types";
 
 export function osPipelineBoot(
   param: ScenarioParamFile,
-  sessionId: string
+  sessionId: string,
+  paramSource?: OsParamLoadSource | null
 ): OsPlayState {
   const load = osDonneesLoadParam(param);
-  const state = osScenariosBoot(param, sessionId, [load.log]);
-  return osDonneesSaveProgress(state);
+  const bootLogs = [
+    paramSource
+      ? `Loader OS → ${paramSource.label}${
+          paramSource.relativePath ? ` · ${paramSource.relativePath}` : ""
+        }`
+      : `Loader OS → source = fichier ${param.fichier || param.Nom || "?"} (unspecified)`,
+    load.log,
+  ];
+  if (!load.ok) {
+    return {
+      ...osScenariosBoot(param, sessionId, bootLogs),
+      paramSource: paramSource ?? null,
+      finished: true,
+      feedback: load.log,
+    };
+  }
+  const state = osScenariosBoot(param, sessionId, bootLogs);
+  return osDonneesSaveProgress({
+    ...state,
+    paramSource: paramSource ?? null,
+  });
 }
 
 export function osPipelineApplyChoice(

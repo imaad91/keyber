@@ -13,23 +13,24 @@ import {
   useBookStore,
   type BookStatus,
 } from "@/lib/bookStore";
-import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 import { osDonneesLoadProgress } from "@/lib/keyberOs/donneesSauvegarde";
 import {
   OS_LEGACY_PLAY_PATH,
   OS_LIVE_CATALOG_PATH,
   osBookPlayHref,
 } from "@/lib/keyberOs/bookBridge";
+import {
+  rememberOsParamSource,
+  resolveOsBookParam,
+} from "@/lib/keyberOs/paramLoader";
 import { createOsBookPlayState, type OsBookPlayState } from "@/lib/osBookPlay";
 import {
   clearOsActivePlay,
   publishOsActivePlay,
 } from "@/lib/osActivePlayStore";
 import {
-  fetchParamFile,
   getAdminPlaySession,
   getPlayCatalogEntry,
-  paramFileExists,
   setAdminPlaySession,
 } from "@/lib/playCatalog";
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
@@ -89,38 +90,40 @@ export default function JouerBookEntryPage() {
       const name =
         entry?.paramFileName || catalog?.paramFileName || paramFileName;
 
-      const apply = (resolved: ScenarioParamFile, missing: boolean) => {
-        if (cancelled) return;
-        setFileMissing(missing);
-        const sessionId = String(id);
-        const resumed = osDonneesLoadProgress(sessionId);
-        setPlay(resumed ?? createOsBookPlayState(resolved, sessionId));
-      };
-      const fail = () => {
-        if (cancelled) return;
+      /** Étape 36 — loader strict : disk | embedded uniquement (pas Novacier). */
+      const resolved = await resolveOsBookParam({
+        paramFileName: name,
+        embedded,
+      });
+      if (cancelled) return;
+
+      if (!resolved.ok) {
         setFileMissing(true);
         setPlay(null);
-      };
-
-      if (!name) {
-        if (embedded) apply(embedded, false);
-        else fail();
         return;
       }
 
-      const exists = await paramFileExists(name);
-      if (cancelled) return;
-      if (!exists) {
-        if (embedded) apply(embedded, true);
-        else fail();
+      rememberOsParamSource(resolved.source);
+      setFileMissing(resolved.diskMissing);
+      const sessionId = String(id);
+      const resumed = osDonneesLoadProgress(sessionId);
+      if (resumed) {
+        setPlay({
+          ...resumed,
+          param: resolved.param,
+          paramSource: resolved.source,
+          log: [
+            resolved.log,
+            ...(resumed.log || []).filter(
+              (l) => !String(l).startsWith("Loader OS →")
+            ),
+          ],
+        });
         return;
       }
-
-      const fromDisk = await fetchParamFile(name);
-      if (cancelled) return;
-      const resolved = fromDisk || embedded;
-      if (resolved) apply(resolved, !fromDisk);
-      else fail();
+      setPlay(
+        createOsBookPlayState(resolved.param, sessionId, resolved.source)
+      );
     }
     void boot();
     return () => {

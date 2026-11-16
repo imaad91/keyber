@@ -20,8 +20,8 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["interface-joueur"]} />
 
       <KeyberOsRuntimePanel
-        title="Interface Joueur — affichage"
-        description="Contrôle ce que le Front-End Book affiche (jauges ERP, ligne XP, log pipeline). Pas de contenu métier."
+        title="Interface Joueur — shell & affichage"
+        description="Shell type POC (sidebar + Ordinateur) et éléments visibles."
         onReset={() =>
           setConfig({
             interfaceJoueur: { ...OS_RUNTIME_DEFAULTS.interfaceJoueur },
@@ -33,6 +33,27 @@ export default function Page() {
           checked={mod.enabled}
           onChange={(enabled) =>
             setConfig({ interfaceJoueur: { ...mod, enabled } })
+          }
+        />
+        <OsToggle
+          label="Shell play (sidebar + workspace)"
+          checked={mod.showShell}
+          onChange={(showShell) =>
+            setConfig({ interfaceJoueur: { ...mod, showShell } })
+          }
+        />
+        <OsToggle
+          label="Horloge / jour"
+          checked={mod.showClock}
+          onChange={(showClock) =>
+            setConfig({ interfaceJoueur: { ...mod, showClock } })
+          }
+        />
+        <OsToggle
+          label="Objectifs sidebar"
+          checked={mod.showObjectives}
+          onChange={(showObjectives) =>
+            setConfig({ interfaceJoueur: { ...mod, showObjectives } })
           }
         />
         <OsToggle

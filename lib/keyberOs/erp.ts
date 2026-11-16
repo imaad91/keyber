@@ -1,6 +1,5 @@
 /**
  * Keyber OS — ERP
- * Met à jour / expose les chiffres (Stock, Trésorerie, …). Générique.
  */
 
 import {
@@ -8,6 +7,7 @@ import {
   getOsRuntimeConfig,
   isOsModuleEnabled,
 } from "@/lib/keyberOsRuntime";
+import { osVisibiliteFog } from "@/lib/keyberOs/visibilite";
 import type { OsErpSnapshot, OsPlayState } from "@/lib/keyberOs/types";
 
 export function osErpSnapshot(state: OsPlayState): OsErpSnapshot {
@@ -21,9 +21,14 @@ export function osErpSnapshot(state: OsPlayState): OsErpSnapshot {
     stock: state.stock,
     production: state.production,
     commandes: state.commandes,
-    fournisseurs: events.filter((e) => /fournisseur/i.test(e.type)).length,
-    clients: events.filter((e) => /client/i.test(e.type)).length,
-    equipe: cfg.erp.equipeBase,
+    fournisseurs:
+      state.computer.fournisseurs.length ||
+      events.filter((e) => /fournisseur/i.test(e.type)).length,
+    clients:
+      state.computer.clients.length ||
+      events.filter((e) => /client/i.test(e.type)).length,
+    equipe: state.computer.employes.length || cfg.erp.equipeBase,
+    fog: osVisibiliteFog(state),
   };
 }
 
@@ -39,7 +44,7 @@ export function osErpLogUpdate(state: OsPlayState): OsPlayState {
     ...state,
     log: [
       ...state.log,
-      `ERP → chiffres mis à jour (Trésorerie brute ${state.tresorerieBrute}, facteur OS ${cfg.erp.tresorerieFacteur}, équipe ${cfg.erp.equipeBase})`,
+      `ERP → chiffres mis à jour (Trésorerie brute ${state.tresorerieBrute}, facteur OS ${cfg.erp.tresorerieFacteur}, fog=${osVisibiliteFog(state)})`,
     ],
   };
 }

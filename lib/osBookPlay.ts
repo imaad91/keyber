@@ -1,7 +1,6 @@
 /**
  * Session de jeu Book → Keyber OS (Front-End).
- * Délègue aux modules runtime lib/keyberOs/* (mêmes composantes que l'Admin).
- * Aucun nom d'entreprise hardcodé.
+ * Délègue aux modules runtime lib/keyberOs/*
  */
 
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
@@ -13,7 +12,6 @@ import {
   type OsPlayState,
 } from "@/lib/keyberOs";
 
-/** @deprecated alias — préférer OsPlayState */
 export type OsBookPlayState = OsPlayState;
 export type { OsPlayState };
 

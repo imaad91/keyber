@@ -20,6 +20,11 @@ function moduleEnabled(
     erp: config.erp.enabled,
     progression: config.progression.enabled,
     "interface-joueur": config.interfaceJoueur.enabled,
+    ordinateur: config.ordinateur.enabled,
+    temps: config.temps.enabled,
+    interviews: config.interviews.enabled,
+    objectifs: config.objectifs.enabled,
+    visibilite: config.visibilite.enabled,
   };
   if (id in map) return map[id as OsModuleId] ?? null;
   return null;

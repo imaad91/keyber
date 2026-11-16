@@ -42,8 +42,9 @@ Jouer une carte Book : `/jouer/book/[id]` — bandeau orange MODE TEST si En cou
 Démo optionnelle seed Studio localStorage uniquement (données sous `data/scenarios/<id>/`, jamais dans le code OS).
 
 **Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
-Sous-onglets (ordre fixe) : Vue Globale · ERP · Moteur de Scénarios · Moteur de Décisions & Branches · Moteur d'Événements · Progression, Scores & Niveaux · Interface Joueur · Données & Sauvegarde.
-Pipeline Front : `lib/keyberOs/pipeline.ts` (Données → Scénarios → Décisions → Événements → ERP → Progression → Interface → Sauvegarde).
+Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Interviews** · **Objectifs** · **Visibilité** · Données & Sauvegarde.
+Pipeline Front : `lib/keyberOs/pipeline.ts` + shell `components/osPlay/OsPlayShell.tsx` (parité POC : mail, chat, ERP tables, dashboard live, interviews…).
+Pack Ordinateur synthétisé depuis le param (`Ordinateur` optionnel) via `ordinateurPack.ts` — aucun nom d'entreprise dans le moteur.
 Aucun contenu métier inventé — le moteur lit les fichiers de paramétrage.
 Config runtime OS : `keyber-os-runtime-v1` (une section par composante) — Admin et Front-End partagent la même source. Progression jeu : `keyber-os-play-saves-v1`.
 Pont Book → Front-End : `keyber-play-catalog-v1` (Live uniquement). Le jeu ne lit pas `keyber-studio-*` (Atelier).

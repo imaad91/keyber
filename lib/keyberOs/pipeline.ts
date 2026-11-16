@@ -1,7 +1,5 @@
 /**
- * Keyber OS — Pipeline Vue Globale
- * Enchaîne les composantes dans l'ordre Admin :
- * Données → Scénarios → Décisions + Événements → ERP → Progression → Interface → Sauvegarde
+ * Keyber OS — Pipeline Vue Globale (étendu parité POC)
  */
 
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
@@ -15,6 +13,9 @@ import {
   osInterfaceAdvanceLog,
   osInterfaceViewModel,
 } from "@/lib/keyberOs/interfaceJoueur";
+import { osOrdinateurSyncAfterErp } from "@/lib/keyberOs/ordinateur";
+import { osObjectifsAfterChoice } from "@/lib/keyberOs/objectifs";
+import { osTempsAdvance, OS_ACTION_TIME_COST } from "@/lib/keyberOs/temps";
 import type { OsPlayState } from "@/lib/keyberOs/types";
 
 export function osPipelineBoot(
@@ -26,9 +27,6 @@ export function osPipelineBoot(
   return osDonneesSaveProgress(state);
 }
 
-/**
- * Choix joueur → Décisions → Événements → ERP → Progression → Interface → Sauvegarde
- */
 export function osPipelineApplyChoice(
   state: OsPlayState,
   choiceId: string
@@ -40,14 +38,17 @@ export function osPipelineApplyChoice(
     return { ...state, finished: true };
   }
 
-  // Événement sur l'étape courante, puis avance
+  next = osTempsAdvance(next, OS_ACTION_TIME_COST.decide);
   next = osEvenementsTrigger(next);
   next = osErpLogUpdate(next);
+  next = osOrdinateurSyncAfterErp(next);
   next = osProgressionApply(next);
+  next = osObjectifsAfterChoice(next);
 
   next = {
     ...next,
     stepIndex: next.stepIndex + 1,
+    activeAction: "decide",
   };
   if (next.stepIndex >= next.decisions.length) {
     next = { ...next, finished: true };

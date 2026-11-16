@@ -10,7 +10,12 @@ export type KeyberOsComposanteId =
   | "moteur-evenements"
   | "progression"
   | "interface-joueur"
-  | "donnees-sauvegarde";
+  | "donnees-sauvegarde"
+  | "ordinateur"
+  | "temps"
+  | "interviews"
+  | "objectifs"
+  | "visibilite";
 
 export type KeyberOsNavItem = {
   id: KeyberOsComposanteId | "vue-globale";
@@ -61,7 +66,37 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     id: "interface-joueur",
     href: "/admin/systeme/interface-joueur",
     label: "Interface Joueur",
-    blurb: "Montre jauges, cartes de décision, Ordinateur / ERP et notifications.",
+    blurb: "Shell play : jauges, décisions, Ordinateur, interviews, live prod.",
+  },
+  {
+    id: "ordinateur",
+    href: "/admin/systeme/ordinateur",
+    label: "Ordinateur",
+    blurb: "Apps : ERP, mail, chat, dashboard, documents, browser.",
+  },
+  {
+    id: "temps",
+    href: "/admin/systeme/temps",
+    label: "Temps & Horloge",
+    blurb: "Avance les minutes / jours à chaque action.",
+  },
+  {
+    id: "interviews",
+    href: "/admin/systeme/interviews",
+    label: "Interviews / PNJ",
+    blurb: "Dialogues avec les personnages du paramétrage.",
+  },
+  {
+    id: "objectifs",
+    href: "/admin/systeme/objectifs",
+    label: "Objectifs",
+    blurb: "Objectifs journaliers / hebdo et statut COMPLETE.",
+  },
+  {
+    id: "visibilite",
+    href: "/admin/systeme/visibilite",
+    label: "Visibilité",
+    blurb: "Brouillard ERP (???) et capteurs.",
   },
   {
     id: "donnees-sauvegarde",
@@ -306,8 +341,107 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       ],
       codeRefs: [
         "lib/keyberOs/interfaceJoueur.ts",
+        "components/osPlay/OsPlayShell.tsx",
         "app/jouer/book/[id]/page.tsx",
-        "app/admin/systeme/interface-joueur/page.tsx",
+      ],
+    },
+    ordinateur: {
+      id: "ordinateur",
+      title: "Ordinateur",
+      ceQueCaFait: [
+        "Expose les apps ERP, mail, chat, dashboard (live prod), documents, browser.",
+        "Lit le pack Ordinateur synthétisé depuis le fichier de paramétrage.",
+      ],
+      deQuoiCompose: [
+        "lib/keyberOs/ordinateur.ts",
+        "lib/keyberOs/ordinateurPack.ts",
+        "components/osPlay/OsPlayShell.tsx",
+      ],
+      commentCaMarche: [
+        "Le joueur ouvre Ordinateur depuis le shell Interface Joueur.",
+        "Chaque app consomme du temps (module Temps).",
+        "Les données viennent du param / synthèse OS, pas d'entreprise hardcodée.",
+      ],
+      workflowSteps: [
+        "Action Ordinateur",
+        "Choix d'app",
+        "Lecture données param",
+        "Retour shell / décision",
+      ],
+      ceQueCaNeFaitPas: [
+        "N'invente pas de mails métier Novacier en dur.",
+        "Ne lit pas keyber-studio-*.",
+      ],
+      codeRefs: [
+        "lib/keyberOs/ordinateur.ts",
+        "app/admin/systeme/ordinateur/page.tsx",
+      ],
+    },
+    temps: {
+      id: "temps",
+      title: "Temps & Horloge",
+      ceQueCaFait: [
+        "Avance minutes / jours / semaines à chaque action joueur.",
+      ],
+      deQuoiCompose: ["lib/keyberOs/temps.ts"],
+      commentCaMarche: [
+        "Coûts en minutes par action (ordinateur, décision, interview…).",
+        "Configurable : durée de journée, heure de départ.",
+      ],
+      workflowSteps: ["Action", "+minutes", "Recalcul jour/horloge", "UI clock"],
+      ceQueCaNeFaitPas: ["Ne hardcode pas un calendrier d'entreprise."],
+      codeRefs: ["lib/keyberOs/temps.ts", "app/admin/systeme/temps/page.tsx"],
+    },
+    interviews: {
+      id: "interviews",
+      title: "Interviews / PNJ",
+      ceQueCaFait: [
+        "Propose des dialogues Q/R issus du paramétrage (ou synthèse générique).",
+      ],
+      deQuoiCompose: ["lib/keyberOs/interviews.ts"],
+      commentCaMarche: [
+        "Action Interview → sélection PNJ → lignes de dialogue.",
+      ],
+      workflowSteps: ["Interview", "Choix PNJ", "Dialogue", "Retour shell"],
+      ceQueCaNeFaitPas: ["Ne hardcode pas Karim/Marie Novacier."],
+      codeRefs: [
+        "lib/keyberOs/interviews.ts",
+        "app/admin/systeme/interviews/page.tsx",
+      ],
+    },
+    objectifs: {
+      id: "objectifs",
+      title: "Objectifs",
+      ceQueCaFait: [
+        "Suit des objectifs EN_COURS / COMPLETE (stock, décision…).",
+      ],
+      deQuoiCompose: ["lib/keyberOs/objectifs.ts"],
+      commentCaMarche: [
+        "Après un choix, recalcule le statut des objectifs.",
+      ],
+      workflowSteps: ["Choix", "Éval objectifs", "COMPLETE éventuel", "UI sidebar"],
+      ceQueCaNeFaitPas: ["N'invente pas d'objectifs AutoVolt."],
+      codeRefs: [
+        "lib/keyberOs/objectifs.ts",
+        "app/admin/systeme/objectifs/page.tsx",
+      ],
+    },
+    visibilite: {
+      id: "visibilite",
+      title: "Visibilité",
+      ceQueCaFait: [
+        "Applique un brouillard ??? sur ERP / dashboard si niveau bas sans capteur.",
+      ],
+      deQuoiCompose: ["lib/keyberOs/visibilite.ts"],
+      commentCaMarche: [
+        "fog = !sensor && visibilityLevel < seuil Admin.",
+        "Le joueur peut installer un capteur depuis le shell.",
+      ],
+      workflowSteps: ["Lecture chiffres", "Test fog", "??? ou valeur", "Capteur optionnel"],
+      ceQueCaNeFaitPas: ["Ne dépend d'aucun scénario nommé."],
+      codeRefs: [
+        "lib/keyberOs/visibilite.ts",
+        "app/admin/systeme/visibilite/page.tsx",
       ],
     },
     "donnees-sauvegarde": {

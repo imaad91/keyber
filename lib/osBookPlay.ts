@@ -13,6 +13,7 @@ import {
   osPipelineBoot,
   type OsPlayState,
 } from "@/lib/keyberOs";
+import type { OsParamLoadSource } from "@/lib/keyberOs/paramLoader";
 
 export type OsBookPlayState = OsPlayState;
 export type { OsPlayState };
@@ -30,9 +31,10 @@ export type OsBookPlayDecision = {
 
 export function createOsBookPlayState(
   param: ScenarioParamFile,
-  sessionId = `session-${param.fichier || param.Nom || "play"}`
+  sessionId = `session-${param.fichier || param.Nom || "play"}`,
+  paramSource?: OsParamLoadSource | null
 ): OsBookPlayState {
-  return osPipelineBoot(param, sessionId);
+  return osPipelineBoot(param, sessionId, paramSource);
 }
 
 export function osBookErpSnapshot(state: OsBookPlayState) {

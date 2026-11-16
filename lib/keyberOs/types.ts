@@ -18,6 +18,7 @@ import type {
   ProductionRow,
   StockRow,
 } from "@/lib/computerTypes";
+import type { OsParamLoadSource } from "@/lib/keyberOs/paramLoader";
 
 /* ─── primitives ─── */
 
@@ -372,6 +373,8 @@ export type OsComputerPack = {
 export type OsPlayState = {
   sessionId: string;
   param: ScenarioParamFile;
+  /** Étape 36 — provenance du param (disk | embedded), jamais Novacier. */
+  paramSource?: OsParamLoadSource | null;
   stepIndex: number;
   decisions: OsDecision[];
   eventsFired: string[];

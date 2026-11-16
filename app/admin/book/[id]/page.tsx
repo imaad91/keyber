@@ -21,6 +21,10 @@ import {
 } from "@/lib/bookStore";
 import { setAdminPlaySession } from "@/lib/playCatalog";
 import {
+  livreFromParam,
+  summarizeLivreLore,
+} from "@/lib/osLivre";
+import {
   buildScenarioParamBlocksGraph,
   normalizeScenarioParamFile,
   summarizeScenarioParamBlocks,
@@ -383,6 +387,16 @@ export default function BookDetailPage() {
 
       {tab === "texte" ? (
         <div className="mb-4 space-y-4">
+          <div className="rounded-2xl border border-violet-200 bg-violet-50/70 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-violet-800">
+              Livre — résumé lore (Étape 28)
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-violet-950">
+              {summarizeLivreLore(livreFromParam(liveParam)).map((line) => (
+                <li key={line}>· {line}</li>
+              ))}
+            </ul>
+          </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">

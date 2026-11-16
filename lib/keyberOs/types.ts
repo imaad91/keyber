@@ -450,4 +450,5 @@ export type OsModuleId =
   | "relations"
   | "objectifs"
   | "visibilite"
-  | "journal";
+  | "journal"
+  | "livre";

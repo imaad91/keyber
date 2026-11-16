@@ -19,7 +19,8 @@ export type KeyberOsComposanteId =
   | "relations"
   | "objectifs"
   | "visibilite"
-  | "journal";
+  | "journal"
+  | "livre";
 
 export type KeyberOsNavItem = {
   id: KeyberOsComposanteId | "vue-globale";
@@ -127,6 +128,12 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/journal",
     label: "Journal",
     blurb: "Journal de bord joueur = historique OS (world.journal).",
+  },
+  {
+    id: "livre",
+    href: "/admin/systeme/livre",
+    label: "Livre",
+    blurb: "Livre de l'entreprise = param.Livre (structure, lore Phase E).",
   },
   {
     id: "donnees-sauvegarde",
@@ -645,6 +652,41 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "lib/keyberOs/visibilite.ts",
         "components/osPlay/OsVisibilityPanel.tsx",
         "app/admin/systeme/visibilite/page.tsx",
+      ],
+    },
+    livre: {
+      id: "livre",
+      title: "Livre de l'entreprise",
+      ceQueCaFait: [
+        "Affiche le Livre sidebar (même feeling que le POC).",
+        "Source = param.Livre de la session Book OS (structure même vide).",
+        "Résumé lore visible aussi en Book Vue Texte.",
+      ],
+      deQuoiCompose: [
+        "Bloc Livre dans le schéma param (histoire, activité, chiffres…).",
+        "Page /livre (OS si session Book active, sinon POC).",
+        "Lien sidebar OsPlayShell.",
+      ],
+      commentCaMarche: [
+        "Génération Book crée une coquille Livre vide (nom = Entreprise).",
+        "Contenu métier (ex. Lumière) = Phase E — pas inventé ici.",
+        "Session active via osActivePlayStore pour la navigation shell → /livre.",
+      ],
+      workflowSteps: [
+        "Session Book",
+        "Sidebar Livre",
+        "Tabs structure",
+        "Retour shell",
+      ],
+      ceQueCaNeFaitPas: [
+        "N'invente pas d'histoire / glossaire entreprise.",
+        "Ne réutilise pas l'organigramme Novacier en mode OS.",
+      ],
+      codeRefs: [
+        "lib/osLivre.ts",
+        "components/LivreEntrepriseView.tsx",
+        "app/livre/page.tsx",
+        "app/admin/systeme/livre/page.tsx",
       ],
     },
     journal: {

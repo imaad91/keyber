@@ -45,6 +45,7 @@ Pont Événements (Étape 24) : Excel Atelier → `atelierEventsToParam` → « 
 Contrôle parité (Étape 25) : `/admin/controle/rapports/parite` — rapport lisible (Book checklist, modules OS OFF, double moteur) ; propose, ne patche pas.
 Gouvernance Live (Étape 26) : flag `peutPublierLive` sur Équipe — visible fiche + note Book ; V1 n’empêche pas `setStatus(live)`.
 Journal (Étape 27) : `/journal` lit `world.journal` via session Book OS (`osActivePlayStore`) ; Admin → Keyber OS → Journal.
+Livre (Étape 28) : `/livre` lit `param.Livre` (structure vide OK) ; Admin → Keyber OS → Livre ; résumé lore Book Vue Texte.
 Jouer une carte Book : **`/jouer/book/[id]`** — **chemin officiel Keyber OS** (Étape 20).
 Bandeau orange MODE TEST si En cours de test ; badge vert LIVE si Live.
 Shell : `components/osPlay/OsPlayShell.tsx` ← pipeline `lib/keyberOs/pipeline.ts`.

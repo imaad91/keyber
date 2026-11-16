@@ -157,6 +157,10 @@ export type KeyberOsRuntimeConfig = {
   journal: {
     enabled: boolean;
   };
+  /** Livre de l'entreprise (Étape 28) — lit param.Livre. */
+  livre: {
+    enabled: boolean;
+  };
 };
 
 const DEFAULT_DELTAS: [DecisionOptionDeltas, DecisionOptionDeltas, DecisionOptionDeltas] =
@@ -265,6 +269,9 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     investments: [],
   },
   journal: {
+    enabled: true,
+  },
+  livre: {
     enabled: true,
   },
 };
@@ -563,6 +570,9 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
     journal: {
       enabled: raw.journal?.enabled ?? d.journal.enabled,
     },
+    livre: {
+      enabled: raw.livre?.enabled ?? d.livre.enabled,
+    },
   };
 }
 
@@ -732,6 +742,8 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.visibilite.enabled;
     case "journal":
       return c.journal.enabled;
+    case "livre":
+      return c.livre.enabled;
     default:
       return true;
   }

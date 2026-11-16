@@ -6,10 +6,6 @@
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 import type { OsObjective, OsPlayState } from "@/lib/keyberOs/types";
 
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n));
-}
-
 /** Lit une métrique numérique depuis l'état OS. */
 export function osObjectifMetricValue(
   state: OsPlayState,
@@ -131,7 +127,6 @@ function evaluateOne(state: OsPlayState, obj: OsObjective): OsObjective {
   const raw = osObjectifMetricValue(state, obj.metric);
   if (raw == null) return obj;
 
-  const progression = clamp(raw, 0, Math.max(cibleN, raw));
   const done = met(raw, obj.op, cibleN);
   return {
     ...obj,

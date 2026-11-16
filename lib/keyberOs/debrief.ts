@@ -5,6 +5,7 @@
 
 import type { OsEndingKind, OsPlayState } from "@/lib/keyberOs/types";
 import { osDonneesSaveProgress } from "@/lib/keyberOs/donneesSauvegarde";
+import { osSkillProgressList } from "@/lib/keyberOs/progression";
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 
 /** Objectif pièces qualité générique (param override possible plus tard). */
@@ -66,17 +67,17 @@ export function osBuildSkillDebriefLines(state: OsPlayState): string[] {
     lines.push(`${events} événement(s) déclenché(s) — revois le fil.`);
   }
 
-  const generales = state.progression?.competencesGenerales ?? {};
-  const ciblees = state.progression?.competencesCiblees ?? {};
-  const skillIds = [
-    ...Object.keys(generales),
-    ...Object.keys(ciblees),
-  ].slice(0, 3);
-  if (skillIds.length) {
-    lines.push(`Compétences touchées : ${skillIds.join(", ")}.`);
+  const skills = osSkillProgressList(state);
+  if (skills.length) {
+    for (const s of skills.slice(0, 5)) {
+      const kind = s.type === "ciblee" ? "Ciblée" : "Générale";
+      lines.push(
+        `${kind} — ${s.nom} : niv. ${s.niveau} · ${s.xp}/${s.threshold} XP`
+      );
+    }
   } else {
     lines.push(
-      "Compétences : progresse via les décisions et les interviews (module Progression)."
+      "Compétences : ajoute des compétences au param (Compétences sélectionnées)."
     );
   }
   return lines;

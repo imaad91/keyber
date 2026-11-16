@@ -35,6 +35,7 @@ import { OsIntroNarrative } from "@/components/osPlay/OsIntroNarrative";
 import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
 import { OsObjectivePanel } from "@/components/osPlay/OsObjectivePanel";
 import { OsOnboardingCoach } from "@/components/osPlay/OsOnboardingCoach";
+import { OsSkillProgressPanel } from "@/components/osPlay/OsSkillProgressPanel";
 import { OsUrgentEventBanner } from "@/components/osPlay/OsUrgentEventBanner";
 import { OsVisibilityPanel } from "@/components/osPlay/OsVisibilityPanel";
 import {
@@ -388,6 +389,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
           {showAside ? (
             <aside className="hidden min-h-0 space-y-6 overflow-y-auto border-l border-white/10 bg-panel/60 p-4 lg:block">
               {ui.showObjectives ? <OsObjectivePanel play={play} /> : null}
+              <OsSkillProgressPanel play={play} />
               <section>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                   Fil d&apos;événements

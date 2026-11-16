@@ -66,6 +66,11 @@ export type KeyberOsRuntimeConfig = {
     xpPerChoice: number;
     scorePerChoice: number;
     xpPerLevel: number;
+    /** XP compétence à chaque décision (si pas d'impacts explicites). */
+    skillXpEnabled: boolean;
+    xpPerSkillChoice: number;
+    /** Seuil XP interne d'une compétence pour +1 niveau skill. */
+    xpPerSkillLevel: number;
   };
   interfaceJoueur: {
     enabled: boolean;
@@ -192,6 +197,9 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     xpPerChoice: 25,
     scorePerChoice: 10,
     xpPerLevel: 100,
+    skillXpEnabled: true,
+    xpPerSkillChoice: 15,
+    xpPerSkillLevel: 100,
   },
   interfaceJoueur: {
     enabled: true,
@@ -412,6 +420,22 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
       ),
       xpPerLevel: clamp(
         Number(raw.progression?.xpPerLevel ?? d.progression.xpPerLevel),
+        1,
+        10000
+      ),
+      skillXpEnabled:
+        raw.progression?.skillXpEnabled ?? d.progression.skillXpEnabled,
+      xpPerSkillChoice: clamp(
+        Number(
+          raw.progression?.xpPerSkillChoice ?? d.progression.xpPerSkillChoice
+        ),
+        0,
+        1000
+      ),
+      xpPerSkillLevel: clamp(
+        Number(
+          raw.progression?.xpPerSkillLevel ?? d.progression.xpPerSkillLevel
+        ),
         1,
         10000
       ),

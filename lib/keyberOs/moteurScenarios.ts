@@ -12,11 +12,11 @@ import {
   createEmptyOsHistorique,
   createEmptyOsHumain,
   createEmptyOsMeta,
-  createEmptyOsProgression,
   createEmptyOsVisibilite,
   createEmptyOsWorld,
 } from "@/lib/keyberOs/createRichDefaults";
 import { osOnboardingBootWorld } from "@/lib/keyberOs/onboarding";
+import { osProgressionBootFromParam, osSkillSlug } from "@/lib/keyberOs/progression";
 import { osRelationsInitFromInterviews } from "@/lib/keyberOs/relations";
 import { formatOsClock } from "@/lib/keyberOs/temps";
 import type {
@@ -24,6 +24,7 @@ import type {
   OsConsequence,
   OsDecision,
   OsPlayState,
+  OsSkillImpact,
 } from "@/lib/keyberOs/types";
 
 function parseTresorerie(param: ScenarioParamFile): number {
@@ -53,7 +54,25 @@ type RawChoice =
       feedbackTexte?: string;
       consequences?: OsConsequence[];
       impacts?: OsChoice["impacts"];
+      competenceImpacts?: OsSkillImpact[];
+      competencesImpactees?: OsSkillImpact[];
     };
+
+function parseSkillImpacts(
+  raw: OsSkillImpact[] | undefined
+): OsSkillImpact[] | undefined {
+  if (!Array.isArray(raw) || !raw.length) return undefined;
+  const list = raw
+    .filter((i) => i && typeof i.competenceId === "string" && Number(i.xp) > 0)
+    .map((i) => ({
+      competenceId: osSkillSlug(i.competenceId),
+      type: i.type,
+      xp: Number(i.xp),
+      feedback: i.feedback,
+      indicateurIndex: i.indicateurIndex,
+    }));
+  return list.length ? list : undefined;
+}
 
 function parseChoice(
   raw: RawChoice,
@@ -77,6 +96,9 @@ function parseChoice(
         )
       : undefined,
     impacts: raw.impacts,
+    competenceImpacts: parseSkillImpacts(
+      raw.competenceImpacts ?? raw.competencesImpactees
+    ),
   };
 }
 
@@ -94,6 +116,8 @@ export function osScenariosParseDecisions(
       dilemme?: string;
       jour?: number;
       xpGagne?: number;
+      competenceId?: string;
+      Compétence?: string;
       options?: RawChoice[];
       choix?: RawChoice[];
     };
@@ -103,12 +127,16 @@ export function osScenariosParseDecisions(
       : Array.isArray(row.choix)
         ? row.choix
         : [];
+    const competenceId = row.competenceId || row.Compétence || param.Compétence;
     return {
       id: decisionId,
       titre: row.titre || `Décision ${i + 1}`,
       dilemme: row.dilemme,
       jour: row.jour,
       xpGagne: row.xpGagne,
+      competenceId: competenceId?.trim()
+        ? osSkillSlug(competenceId)
+        : undefined,
       options: rawOpts.map((opt, j) => parseChoice(opt, decisionId, j)),
     };
   });
@@ -165,7 +193,7 @@ export function osScenariosBoot(
     commandes,
   });
 
-  const progression = createEmptyOsProgression();
+  const progression = osProgressionBootFromParam(param);
   const sensors = pack.sensors.map((s) => ({
     ...s,
     installed: cfg.visibilite.sensorDefaultInstalled

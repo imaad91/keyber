@@ -5,6 +5,7 @@
 
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 import { osDonneesSaveProgress } from "@/lib/keyberOs/donneesSauvegarde";
+import { osOpenDebrief } from "@/lib/keyberOs/debrief";
 import {
   formatOsClock,
   osTempsAdvance,
@@ -111,17 +112,7 @@ export function osCycleVieCloseAndAdvance(state: OsPlayState): OsPlayState {
   };
 
   if (day >= maxDays) {
-    next = {
-      ...next,
-      world: {
-        ...next.world,
-        showDebrief: true,
-        phase: "DEBRIEF",
-      },
-      feedback: "Semaine terminée — ouverture du débrief.",
-      log: [...next.log, "Cycle de vie → fin de semaine → débrief"],
-    };
-    return osDonneesSaveProgress(next);
+    return osOpenDebrief(next);
   }
 
   const nextDay = day + 1;

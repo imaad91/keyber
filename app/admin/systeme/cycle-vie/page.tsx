@@ -23,15 +23,16 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["cycle-vie"]} />
 
       <section className="mt-6 rounded-2xl border border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-950">
-        <p className="font-semibold">DayEnd + Intro / Onboarding (Étapes 11–12)</p>
+        <p className="font-semibold">
+          DayEnd · Intro · Débrief (Étapes 11–13)
+        </p>
         <p className="mt-1 text-violet-900/80">
-          Overlay fin de journée · Intro Jour 0 · coach 4 étapes (actions
-          verrouillées puis unlock). Textes génériques / param — pas de contenu
-          Novacier. Textes Lumière = Phase E.
+          Overlay fin de journée · Intro Jour 0 · coach 4 étapes · débrief fin
+          de semaine (Victoire / Partielle / Échec + lignes compétences).
         </p>
         <p className="mt-2 text-xs text-violet-800">
-          Vérif Histoire : Book Mode Histoire → intro → coach 1–4 → Terminer la
-          visite. DayEnd : bouton forcer ci-dessous.
+          Vérif débrief : Forcer Débrief ci-dessous → Book. Ou DayEnd au dernier
+          jour → Passer au débrief.
         </p>
       </section>
 
@@ -79,7 +80,18 @@ export default function Page() {
           >
             Forcer DayEnd (prochain rendu Book)
           </AdminButton>
-          {mod.pendingForceDayEnd ? (
+          <AdminButton
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              setConfig({
+                cycleVie: { ...mod, pendingForceDebrief: true },
+              })
+            }
+          >
+            Forcer Débrief
+          </AdminButton>
+          {mod.pendingForceDayEnd || mod.pendingForceDebrief ? (
             <span className="text-xs font-semibold text-amber-700">
               En attente — ouvre / rafraîchis le Book
             </span>

@@ -6,7 +6,9 @@ import {
   formatOsClock,
   osCycleVieForceDayEnd,
   osInterviewSelect,
+  osOpenDebrief,
   osOrdinateurSetAction,
+  osPipelineBoot,
   osTempsDayProgressPct,
   osTempsElapsed,
   osTempsRemaining,
@@ -26,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { OsAtelierLive } from "@/components/osPlay/OsAtelierLive";
 import { OsComputerDesktop } from "@/components/osPlay/OsComputerDesktop";
 import { OsDayEndScreen } from "@/components/osPlay/OsDayEndScreen";
+import { OsDebriefView } from "@/components/osPlay/OsDebriefView";
 import { OsGameClockBar } from "@/components/osPlay/OsGameClockBar";
 import { OsIntroNarrative } from "@/components/osPlay/OsIntroNarrative";
 import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
@@ -57,6 +60,11 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
 
   useEffect(() => {
     const cfg = config.cycleVie;
+    if (cfg?.pendingForceDebrief && !play.world?.showDebrief) {
+      setConfig({ cycleVie: { ...cfg, pendingForceDebrief: false } });
+      setPlay(osOpenDebrief(play));
+      return;
+    }
     if (!cfg?.pendingForceDayEnd || play.world?.showDayEnd) return;
     setConfig({ cycleVie: { ...cfg, pendingForceDayEnd: false } });
     setPlay(osCycleVieForceDayEnd(play));
@@ -64,9 +72,30 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
     config.cycleVie,
     play,
     play.world?.showDayEnd,
+    play.world?.showDebrief,
     setConfig,
     setPlay,
   ]);
+
+  if (play.world?.showDebrief) {
+    return (
+      <div
+        className={cn(
+          "overflow-auto text-foreground atmosphere-play",
+          ui.fullBleedShell
+            ? "h-[calc(100vh-2.5rem)] min-h-[560px]"
+            : "min-h-[70vh] rounded-2xl border border-white/10 shadow-lg"
+        )}
+      >
+        <OsDebriefView
+          play={play}
+          onReplay={() =>
+            setPlay(osPipelineBoot(play.param, play.sessionId))
+          }
+        />
+      </div>
+    );
+  }
 
   if (!ui.showShell) {
     return (

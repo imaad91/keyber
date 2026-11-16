@@ -20,6 +20,18 @@ export default function Page() {
     <div>
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["progression"]} />
 
+      <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 text-sm text-emerald-950">
+        <p className="font-semibold">Débrief (Étape 13)</p>
+        <p className="mt-1 text-emerald-900/80">
+          Fin de semaine → XP bonus selon ending (Victoire / Partielle / Échec) +
+          lignes compétences dans{" "}
+          <code className="rounded bg-white/80 px-1 text-xs">
+            OsDebriefView
+          </code>
+          . Forcer via Admin → Cycle de vie.
+        </p>
+      </section>
+
       <KeyberOsRuntimePanel
         title="Progression — XP / score / niveaux"
         description="Chaque choix joueur applique ces valeurs. Seuil de niveau = niveau actuel × XP par niveau."

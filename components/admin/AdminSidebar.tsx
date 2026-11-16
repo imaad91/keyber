@@ -69,6 +69,7 @@ const NAV: NavItem[] = [
       { href: "/admin/systeme/relations", label: "Relations" },
       { href: "/admin/systeme/objectifs", label: "Objectifs" },
       { href: "/admin/systeme/visibilite", label: "Visibilité" },
+      { href: "/admin/systeme/journal", label: "Journal" },
       {
         href: "/admin/systeme/donnees-sauvegarde",
         label: "Données & Sauvegarde",

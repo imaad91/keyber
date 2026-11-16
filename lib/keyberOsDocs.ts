@@ -18,7 +18,8 @@ export type KeyberOsComposanteId =
   | "interviews"
   | "relations"
   | "objectifs"
-  | "visibilite";
+  | "visibilite"
+  | "journal";
 
 export type KeyberOsNavItem = {
   id: KeyberOsComposanteId | "vue-globale";
@@ -120,6 +121,12 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/visibilite",
     label: "Visibilité",
     blurb: "Brouillard ERP (???) et capteurs.",
+  },
+  {
+    id: "journal",
+    href: "/admin/systeme/journal",
+    label: "Journal",
+    blurb: "Journal de bord joueur = historique OS (world.journal).",
   },
   {
     id: "donnees-sauvegarde",
@@ -638,6 +645,43 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "lib/keyberOs/visibilite.ts",
         "components/osPlay/OsVisibilityPanel.tsx",
         "app/admin/systeme/visibilite/page.tsx",
+      ],
+    },
+    journal: {
+      id: "journal",
+      title: "Journal de bord",
+      ceQueCaFait: [
+        "Affiche le journal de bord joueur (même feeling que le POC).",
+        "Source = world.journal de la session Book OS active.",
+        "Rempli par décisions, événements, interviews, onboarding, day-end.",
+      ],
+      deQuoiCompose: [
+        "OsJournalEntry dans world.journal.",
+        "Page /journal (OS si session Book active, sinon POC /play).",
+        "Lien sidebar OsPlayShell.",
+      ],
+      commentCaMarche: [
+        "Chaque moteur OS pousse une entrée journal (titre, narration, xp, jour).",
+        "Session active publiée via osActivePlayStore pour survivre à la navigation.",
+        "Module OFF → message Admin sur /journal (OS).",
+      ],
+      workflowSteps: [
+        "Session Book",
+        "Décision / événement",
+        "Entrée world.journal",
+        "Sidebar → /journal",
+        "Retour jeu",
+      ],
+      ceQueCaNeFaitPas: [
+        "N'invente pas de narration métier.",
+        "Ne remplace pas le Journal des décisions Admin (Workflow).",
+        "Ne lit pas useGameStore quand une session Book OS est active.",
+      ],
+      codeRefs: [
+        "lib/osActivePlayStore.ts",
+        "components/JournalView.tsx",
+        "app/journal/page.tsx",
+        "app/admin/systeme/journal/page.tsx",
       ],
     },
     "donnees-sauvegarde": {

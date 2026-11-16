@@ -153,6 +153,10 @@ export type KeyberOsRuntimeConfig = {
       cost: number;
     }[];
   };
+  /** Journal de bord joueur (Étape 27) — lit world.journal. */
+  journal: {
+    enabled: boolean;
+  };
 };
 
 const DEFAULT_DELTAS: [DecisionOptionDeltas, DecisionOptionDeltas, DecisionOptionDeltas] =
@@ -259,6 +263,9 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     sensorDefaultInstalled: false,
     showMatrix: true,
     investments: [],
+  },
+  journal: {
+    enabled: true,
   },
 };
 
@@ -543,7 +550,7 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
         d.visibilite.sensorDefaultInstalled,
       showMatrix: raw.visibilite?.showMatrix ?? d.visibilite.showMatrix,
       investments: Array.isArray(raw.visibilite?.investments)
-        ? raw.visibilite.investments
+        ? raw.visibilite!.investments
             .map((inv) => ({
               level: clamp(Number(inv.level), 1, 3) as 1 | 2 | 3,
               label: String(inv.label ?? "").trim() || `Niveau ${inv.level}`,
@@ -552,6 +559,9 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
             }))
             .filter((inv) => inv.level >= 1 && inv.level <= 3)
         : [...d.visibilite.investments],
+    },
+    journal: {
+      enabled: raw.journal?.enabled ?? d.journal.enabled,
     },
   };
 }
@@ -720,6 +730,8 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.objectifs.enabled;
     case "visibilite":
       return c.visibilite.enabled;
+    case "journal":
+      return c.journal.enabled;
     default:
       return true;
   }

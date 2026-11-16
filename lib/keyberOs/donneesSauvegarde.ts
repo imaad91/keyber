@@ -14,8 +14,8 @@ import {
   createEmptyOsProgression,
   createEmptyOsVisibilite,
   createEmptyOsWorld,
-  formatOsHeure,
 } from "@/lib/keyberOs/createRichDefaults";
+import { formatOsClock } from "@/lib/keyberOs/temps";
 import type { OsPlayState } from "@/lib/keyberOs/types";
 
 /** Migre une sauvegarde plate (pré-Étape 1) vers le schéma riche. */
@@ -23,7 +23,7 @@ export function ensureOsRichState(state: OsPlayState): OsPlayState {
   if (state.meta && state.finance && state.world && state.kpis) {
     return state;
   }
-  const minutes = state.minutesSinceStart ?? 8 * 60;
+  const minutes = state.minutesSinceStart ?? 0;
   const dayLen = state.dayLengthMinutes ?? 600;
   return {
     ...state,
@@ -35,7 +35,7 @@ export function ensureOsRichState(state: OsPlayState): OsPlayState {
         week: state.week ?? 1,
         minutesSinceStart: minutes,
         dayLengthMinutes: dayLen,
-        heureActuelle: formatOsHeure(minutes),
+        heureActuelle: formatOsClock(minutes),
         tempsRestantMinutes: Math.max(0, dayLen - minutes),
       }),
     finance:

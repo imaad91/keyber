@@ -1,17 +1,94 @@
 /**
- * Keyber OS — Temps & Horloge
+ * Keyber OS — Temps & Horloge (Étape 10 : journée jouable).
+ * minutesSinceStart = minutes écoulées depuis le début de journée (08:00),
+ * comme le POC (0 → dayLengthMinutes ≈ 18:00).
  */
 
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 import type { OsPlayState } from "@/lib/keyberOs/types";
 
-export function formatOsClock(minutesSinceStart: number): string {
-  const m = ((minutesSinceStart % (24 * 60)) + 24 * 60) % (24 * 60);
-  const h = Math.floor(m / 60);
-  const min = m % 60;
+/** Heure d'ouverture atelier (affichage horloge). */
+export const OS_WORK_DAY_START_HOUR = 8;
+
+/**
+ * Horloge joueur : 08:00 + minutes écoulées dans la journée.
+ */
+export function formatOsClock(minutesElapsedInDay: number): string {
+  const elapsed = Math.max(0, Math.floor(minutesElapsedInDay));
+  const total = OS_WORK_DAY_START_HOUR * 60 + elapsed;
+  const h = Math.floor(total / 60) % 24;
+  const min = total % 60;
   return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
 }
 
+export function osTempsDayLength(state: OsPlayState): number {
+  const cfg = getOsRuntimeConfig().temps;
+  return (
+    state.meta?.dayLengthMinutes ||
+    state.dayLengthMinutes ||
+    cfg.dayLengthMinutes ||
+    600
+  );
+}
+
+export function osTempsElapsed(state: OsPlayState): number {
+  return state.meta?.minutesSinceStart ?? state.minutesSinceStart ?? 0;
+}
+
+export function osTempsRemaining(state: OsPlayState): number {
+  return Math.max(0, osTempsDayLength(state) - osTempsElapsed(state));
+}
+
+export function osTempsDayProgressPct(state: OsPlayState): number {
+  const len = Math.max(1, osTempsDayLength(state));
+  return Math.min(100, Math.max(0, (osTempsElapsed(state) / len) * 100));
+}
+
+export function osTempsCanSpend(state: OsPlayState, minutes: number): boolean {
+  if (!isOsModuleEnabled("temps")) return true;
+  if (minutes <= 0) return true;
+  return osTempsRemaining(state) >= minutes;
+}
+
+function syncTempsMirrors(
+  state: OsPlayState,
+  elapsed: number,
+  day: number,
+  week: number,
+  dayLen: number
+): OsPlayState {
+  const tempsRestantMinutes = Math.max(0, dayLen - elapsed);
+  const heureActuelle = formatOsClock(elapsed);
+  return {
+    ...state,
+    minutesSinceStart: elapsed,
+    day,
+    week,
+    dayLengthMinutes: dayLen,
+    meta: {
+      ...(state.meta ?? {
+        scenarioId: state.sessionId,
+        roleId: null,
+        jourActuel: day,
+        heureActuelle,
+        tempsRestantMinutes,
+        week,
+        minutesSinceStart: elapsed,
+        dayLengthMinutes: dayLen,
+      }),
+      jourActuel: day,
+      week,
+      minutesSinceStart: elapsed,
+      dayLengthMinutes: dayLen,
+      heureActuelle,
+      tempsRestantMinutes,
+    },
+  };
+}
+
+/**
+ * Avance l'horloge. Cap à fin de journée (pas de wrap) — DayEnd = Étape 11.
+ */
 export function osTempsAdvance(
   state: OsPlayState,
   minutes: number
@@ -22,33 +99,47 @@ export function osTempsAdvance(
       log: [...state.log, "Temps & Horloge → module désactivé (Admin)"],
     };
   }
-  const cfg = getOsRuntimeConfig().temps;
-  let minutesSinceStart = state.minutesSinceStart + Math.max(0, minutes);
-  let day = state.day;
-  let week = state.week;
-  const dayLen = state.dayLengthMinutes || cfg.dayLengthMinutes;
-  while (minutesSinceStart >= dayLen) {
-    minutesSinceStart -= dayLen;
-    day += 1;
-    if (day > 5) {
-      day = 1;
-      week += 1;
-    }
+  const add = Math.max(0, Math.floor(minutes));
+  if (add === 0) return state;
+
+  const dayLen = osTempsDayLength(state);
+  const prev = osTempsElapsed(state);
+  const nextElapsed = Math.min(dayLen, prev + add);
+  const day = state.meta?.jourActuel ?? state.day;
+  const week = state.meta?.week ?? state.week;
+
+  let next = syncTempsMirrors(state, nextElapsed, day, week, dayLen);
+  const hitEnd = prev < dayLen && nextElapsed >= dayLen;
+
+  if (hitEnd) {
+    next = {
+      ...next,
+      world: {
+        ...next.world,
+        showDayEnd: true,
+      },
+      feedback: next.feedback ?? "Fin de journée — horloge au max.",
+      log: [
+        ...next.log,
+        `Temps & Horloge → +${add} min (J${day} ${formatOsClock(nextElapsed)}) · fin de journée`,
+      ],
+    };
+  } else {
+    next = {
+      ...next,
+      log: [
+        ...next.log,
+        `Temps & Horloge → +${add} min (J${day} ${formatOsClock(nextElapsed)}, reste ${osTempsRemaining(next)} min)`,
+      ],
+    };
   }
-  return {
-    ...state,
-    minutesSinceStart,
-    day,
-    week,
-    log: [
-      ...state.log,
-      `Temps & Horloge → +${minutes} min (J${day} ${formatOsClock(minutesSinceStart)})`,
-    ],
-  };
+
+  return next;
 }
 
+/** Coûts minutes par action / app (alignés shell + POC). */
 export const OS_ACTION_TIME_COST: Record<string, number> = {
-  computer: 5,
+  computer: 0,
   erp: 15,
   mail: 5,
   dashboard: 10,

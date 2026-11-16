@@ -478,17 +478,19 @@ export default function AtelierCreationDetailPage() {
         </p>
       </section>
 
-      {/* Génération déplacée dans le Book */}
+      {/* Assemblage / génération dans le Book */}
       <section className="mb-8 rounded-2xl border border-amber-200 bg-amber-50/60 p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-900">
-          Génération des scénarios
+          Assemblage Atelier → Book (Étape 34)
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          La génération IA se fait dans le{" "}
+          Les packs Excel staging (Ordinateur + Narration) + événements se
+          fusionnent dans le{" "}
           <Link href="/admin/book/generer" className="font-medium underline">
-            Book → Générer des scénarios
+            Book → Générer → Assembler Atelier → Book
           </Link>
-          . Pas de bouton de génération ici.
+          . Vue Code peuplée uniquement de ce qui est importé. Pas
+          d&apos;assemblage inventé ici.
         </p>
       </section>
 

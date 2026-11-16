@@ -59,7 +59,7 @@ const STEPS: {
   {
     n: 4,
     title: "Book — génération structure complète",
-    body: "Book → « Générer des scénarios ». Le Prompt / la coquille crée un fichier de paramétrage avec tous les blocs feeling : Ordinateur, Jours, Interviews, Objectifs, Kpis, Conséquences, Intro, Livre, Fins, Décisions… Blocs vides OK. L'IA n'invente pas mails / ERP / dialogues hors de ce que tu as fourni (Excel / coches). Contenu riche (ex. Lumière) = Phase E.",
+    body: "Book → « Générer des scénarios » → Assembler Atelier → Book (Étape 34). Fusion déterministe : Contexte + Événements + Excel Ordinateur / Narration staging + coches → param (Vue Code). Journal d'assemblage Admin. Blocs vides OK si rien importé. Prompt Cursor en option. L'IA / le Studio n'inventent pas hors de ce que tu as fourni.",
     accent: "bg-amber-50 border-amber-200",
     ring: "bg-amber-500",
     badge: "text-amber-950",

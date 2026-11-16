@@ -33,7 +33,14 @@ function Section({
 }
 
 /** Structure identique pour chaque composante Keyber OS — lecture seule. */
-export function KeyberOsComposanteView({ doc }: { doc: ComposanteDoc }) {
+export function KeyberOsComposanteView({
+  doc,
+  /** Contenu visible juste sous la sous-nav (ex. galerie PNJ). */
+  lead,
+}: {
+  doc: ComposanteDoc;
+  lead?: ReactNode;
+}) {
   return (
     <div>
       <AdminBreadcrumb
@@ -47,6 +54,8 @@ export function KeyberOsComposanteView({ doc }: { doc: ComposanteDoc }) {
         title={`Keyber OS — ${doc.title}`}
       />
       <KeyberOsSubNav />
+
+      {lead ? <div className="mb-6">{lead}</div> : null}
 
       <p className="mb-6 max-w-2xl text-sm text-slate-600">
         Documentation + module runtime (bandeau vert ci-dessous). Aucun

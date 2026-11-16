@@ -8,40 +8,85 @@ import {
   OsToggle,
 } from "@/components/admin/KeyberOsRuntimePanel";
 import { useBookStore } from "@/lib/bookStore";
+import type { CharacterVisualId } from "@/lib/characterStyle";
 import { resolveCharacterId } from "@/lib/characterStyle";
 import { KEYBER_OS_COMPOSANTES } from "@/lib/keyberOsDocs";
 import {
   OS_RUNTIME_DEFAULTS,
   useKeyberOsRuntime,
 } from "@/lib/keyberOsRuntime";
+import { LUMIERE_PNJ_PREVIEW } from "@/lib/lumierePnjPreview";
 import { useOsActivePlay } from "@/lib/osActivePlayStore";
-import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 import { readParamInterviews } from "@/lib/scenarioParamSchema";
-import type { OsInterview } from "@/lib/keyberOs/types";
-import lumiereHistoireParam from "@/data/scenarios/lumiere-co/lumiere-co_logisticien-histoire_v1.json";
 
-type PnjRow = {
+type PnjCard = {
   id: string;
   nom: string;
   role: string;
-  source: string;
+  visualId: CharacterVisualId | null;
   questions: number;
   trust?: number;
+  badge: string;
 };
 
-function rowsFromInterviews(
-  list: OsInterview[],
-  source: string,
-  relations?: Record<string, number>
-): PnjRow[] {
-  return list.map((iv) => ({
-    id: iv.id,
-    nom: iv.nom,
-    role: iv.role || "—",
-    source,
-    questions: iv.questions?.length ?? 0,
-    trust: relations?.[iv.id],
-  }));
+function PnjGallery({ cards }: { cards: PnjCard[] }) {
+  return (
+    <section className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-4 shadow-sm">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 className="text-base font-semibold text-emerald-950">
+            Personnages / PNJ
+          </h2>
+          <p className="mt-0.5 text-xs text-emerald-900/70">
+            Galerie toujours visible (démo Lumière + session / Book si
+            présents). Portraits SVG — pas de PNG.
+          </p>
+        </div>
+        <p className="text-xs font-semibold tabular-nums text-emerald-800">
+          {cards.length} personnage{cards.length > 1 ? "s" : ""}
+        </p>
+      </div>
+
+      {cards.length === 0 ? (
+        <p className="mt-3 text-sm text-emerald-900/80">
+          Aucun PNJ — anormal. Recharge la page ou vérifie le param Interviews.
+        </p>
+      ) : (
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {cards.map((p) => (
+            <li
+              key={p.id}
+              className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-white p-3 shadow-sm"
+            >
+              <CharacterAvatar
+                id={p.visualId ?? undefined}
+                name={p.nom}
+                trust={p.trust ?? 55}
+                size={64}
+              />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-900">
+                  {p.nom}
+                </p>
+                <p className="truncate text-xs text-slate-600">{p.role}</p>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {p.questions > 0
+                    ? `${p.questions} question(s) interview`
+                    : "Contact / organigramme"}
+                  {typeof p.trust === "number"
+                    ? ` · confiance ${p.trust}`
+                    : ""}
+                </p>
+                <p className="mt-0.5 truncate text-[10px] font-medium text-emerald-700">
+                  {p.badge}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
 }
 
 export default function Page() {
@@ -50,91 +95,112 @@ export default function Page() {
   const active = useOsActivePlay();
   const { entries } = useBookStore();
 
-  const sessionRows: PnjRow[] =
-    active.play && active.meta
-      ? rowsFromInterviews(
-          active.play.interviews || [],
-          `Session · ${active.meta.title}`,
-          active.play.relations
-        )
-      : [];
+  const byId = new Map<string, PnjCard>();
 
-  const bookRows: PnjRow[] = [];
-  const seen = new Set(sessionRows.map((r) => r.id));
+  // 1) Toujours : cast Lumière (feeling Test).
+  for (const p of LUMIERE_PNJ_PREVIEW) {
+    byId.set(p.id, {
+      id: p.id,
+      nom: p.nom,
+      role: p.role,
+      visualId: p.visualId,
+      questions: p.questions,
+      badge: "Démo Lumière & Co",
+    });
+  }
+
+  // 2) Book params (enrichit / ajoute d'autres entreprises plus tard).
   for (const e of entries) {
     if (!e.paramFile) continue;
     const list = readParamInterviews(e.paramFile) || [];
-    if (!list.length) continue;
-    const label = `Book · ${e.entrepriseNom || e.nom} · ${e.nom} (V${e.version})`;
-    for (const row of rowsFromInterviews(list, label)) {
-      if (seen.has(row.id)) continue;
-      seen.add(row.id);
-      bookRows.push(row);
+    for (const iv of list) {
+      const visual =
+        resolveCharacterId(iv.id) ?? resolveCharacterId(iv.nom) ?? null;
+      const prev = byId.get(iv.id);
+      byId.set(iv.id, {
+        id: iv.id,
+        nom: iv.nom || prev?.nom || iv.id,
+        role: iv.role || prev?.role || "—",
+        visualId: visual ?? prev?.visualId ?? null,
+        questions: iv.questions?.length ?? prev?.questions ?? 0,
+        trust: prev?.trust,
+        badge: `Book · ${e.entrepriseNom || e.nom} (V${e.version})`,
+      });
     }
   }
 
-  const chatExtras: PnjRow[] = [];
-  if (active.play?.computer?.chatContacts?.length) {
-    for (const c of active.play.computer.chatContacts) {
-      if (seen.has(c.id)) continue;
-      seen.add(c.id);
-      chatExtras.push({
+  // 3) Session active (jauges live).
+  if (active.play && active.meta) {
+    for (const iv of active.play.interviews || []) {
+      const visual =
+        resolveCharacterId(iv.id) ?? resolveCharacterId(iv.nom) ?? null;
+      const prev = byId.get(iv.id);
+      byId.set(iv.id, {
+        id: iv.id,
+        nom: iv.nom || prev?.nom || iv.id,
+        role: iv.role || prev?.role || "—",
+        visualId: visual ?? prev?.visualId ?? null,
+        questions: iv.questions?.length ?? prev?.questions ?? 0,
+        trust: active.play.relations?.[iv.id] ?? prev?.trust,
+        badge: `Session · ${active.meta.title}`,
+      });
+    }
+    for (const c of active.play.computer?.chatContacts || []) {
+      if (byId.has(c.id)) {
+        const prev = byId.get(c.id)!;
+        byId.set(c.id, {
+          ...prev,
+          trust: active.play.relations?.[c.id] ?? prev.trust,
+        });
+        continue;
+      }
+      byId.set(c.id, {
         id: c.id,
         nom: c.name,
         role: c.role || "Contact chat",
-        source: "Chat Ordinateur (session)",
+        visualId: resolveCharacterId(c.id) ?? resolveCharacterId(c.name),
         questions: 0,
         trust: active.play.relations?.[c.id],
+        badge: "Chat session",
       });
     }
   }
 
-  // Fallback démo Lumière (fichier scénario) si Book pas encore seedé.
-  const demoRows: PnjRow[] = [];
-  if (sessionRows.length === 0 && bookRows.length === 0) {
-    const demoList =
-      readParamInterviews(
-        lumiereHistoireParam as unknown as ScenarioParamFile
-      ) || [];
-    for (const row of rowsFromInterviews(
-      demoList,
-      "Démo Lumière · fichier scénario"
-    )) {
-      if (seen.has(row.id)) continue;
-      seen.add(row.id);
-      demoRows.push(row);
-    }
-    const contacts =
-      (
-        lumiereHistoireParam as {
-          Ordinateur?: { chatContacts?: { id: string; name: string; role?: string }[] };
-        }
-      ).Ordinateur?.chatContacts || [];
-    for (const c of contacts) {
-      if (seen.has(c.id)) continue;
-      seen.add(c.id);
-      demoRows.push({
-        id: c.id,
-        nom: c.name,
-        role: c.role || "Contact chat",
-        source: "Démo Lumière · chat",
-        questions: 0,
-      });
-    }
-  }
-
-  const rows = [...sessionRows, ...chatExtras, ...bookRows, ...demoRows];
+  const cards = Array.from(byId.values());
 
   return (
     <div>
-      <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES.interviews} />
+      <KeyberOsComposanteView
+        doc={KEYBER_OS_COMPOSANTES.interviews}
+        lead={
+          <>
+            <PnjGallery cards={cards} />
+            {active.meta && active.play ? (
+              <p className="mt-2 text-xs text-slate-500">
+                Session active : {active.meta.title} ·{" "}
+                <Link
+                  href={`/jouer/book/${encodeURIComponent(active.meta.bookEntryId)}`}
+                  className="underline"
+                >
+                  ouvrir shell
+                </Link>
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-slate-500">
+                Pas de session Test — la galerie montre quand même la démo
+                Lumière. Book → Tester pour les jauges live.
+              </p>
+            )}
+          </>
+        }
+      />
 
       <section className="mt-6 rounded-2xl border border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-950">
         <p className="font-semibold">Dialogues multi-lignes (Étape 16)</p>
         <p className="mt-1 text-violet-900/80">
-          Catalogue = pack Ordinateur / param (<code className="text-xs">interviews</code>{" "}
+          Catalogue = pack Ordinateur / param (<code className="text-xs">Interviews</code>{" "}
           avec <code className="text-xs">questions[].choices</code>). Feeling
-          visual novel POC : portrait, questions, réponses → confiance.
+          visual novel : portrait, questions, réponses → confiance.
         </p>
         <p className="mt-2 text-xs text-violet-800">
           Jauges → sous-onglet{" "}
@@ -144,7 +210,7 @@ export default function Page() {
           >
             Relations
           </Link>
-          . Contenu narratif riche = Phase E.
+          .
         </p>
       </section>
 
@@ -163,74 +229,6 @@ export default function Page() {
           }
         />
       </KeyberOsRuntimePanel>
-
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-900">
-          Personnages / PNJ
-        </h2>
-        <p className="mt-1 text-xs text-slate-500">
-          Aperçu depuis la session Book OS active et les param Book (pas le
-          registry Novacier).
-        </p>
-
-        {active.meta && active.play ? (
-          <p className="mt-2 text-xs text-slate-500">
-            Session : {active.meta.title} ·{" "}
-            <Link
-              href={`/jouer/book/${encodeURIComponent(active.meta.bookEntryId)}`}
-              className="underline"
-            >
-              ouvrir shell
-            </Link>
-          </p>
-        ) : (
-          <p className="mt-2 text-xs text-amber-700">
-            Pas de session Test active — liste Book ci-dessous. Pour les jauges
-            live : Book → Tester, puis reviens ici.
-          </p>
-        )}
-
-        {rows.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">
-            Aucun PNJ trouvé. Vérifie Book → Vue Code → bloc{" "}
-            <code className="rounded bg-slate-100 px-1">Interviews</code> (ex.
-            Lumière : Samir, Léa).
-          </p>
-        ) : (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {rows.map((p) => (
-              <li
-                key={`${p.source}-${p.id}`}
-                className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3"
-              >
-                <CharacterAvatar
-                  id={resolveCharacterId(p.id) ?? undefined}
-                  name={p.nom}
-                  trust={p.trust ?? 55}
-                  size={56}
-                />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">
-                    {p.nom}
-                  </p>
-                  <p className="truncate text-xs text-slate-600">{p.role}</p>
-                  <p className="mt-1 text-[11px] text-slate-400">
-                    {p.questions > 0
-                      ? `${p.questions} question(s)`
-                      : "Contact"}
-                    {typeof p.trust === "number"
-                      ? ` · confiance ${p.trust}`
-                      : ""}
-                  </p>
-                  <p className="mt-0.5 truncate text-[10px] text-slate-400">
-                    {p.source}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }

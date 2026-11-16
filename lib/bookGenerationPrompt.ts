@@ -8,6 +8,10 @@ import type { AtelierBibliothequeCompetence } from "@/lib/atelierCompetencesStor
 import type { AtelierBibliothequeCours } from "@/lib/atelierCompetencesStore";
 import type { AtelierEntrepriseEvent } from "@/lib/atelierEventsStore";
 import { eventsFileLabel } from "@/lib/atelierEventsStore";
+import {
+  emptyOrdinateurStructure,
+  normalizeScenarioParamFile,
+} from "@/lib/scenarioParamSchema";
 
 export function contexteFileLabel(entrepriseNom: string): string {
   const nom = entrepriseNom.trim() || "Entreprise";
@@ -143,9 +147,36 @@ export function evaluateBookGeneration(args: {
   };
 }
 
+/** Blocs obligatoires du fichier de paramétrage (Étape 21–23). */
+export const BOOK_PARAM_STRUCTURE_BLOCKS = [
+  "Nom",
+  "Version",
+  "Type",
+  "Mode",
+  "Rôle",
+  "Compétence",
+  "Secteur",
+  "Entreprise",
+  "Contexte",
+  "Événements entreprise",
+  "Rôles sélectionnés",
+  "Compétences sélectionnées",
+  "Décisions",
+  "Fins",
+  "Ordinateur",
+  "Jours",
+  "Interviews",
+  "Objectifs",
+  "Kpis",
+  "Conséquences",
+  "Intro",
+  "fichier",
+] as const;
+
 /**
  * Phrase exacte demandée — crochets remplacés, jamais laissés vides
  * (à n'appeler que si evaluateBookGeneration().allOk).
+ * Étape 23 : le prompt impose la structure complète des blocs (vides OK, pas d'invention).
  */
 export function buildBookGenerationPrompt(input: BookGenerationInput): string {
   const nom = input.creation.nom.trim();
@@ -170,9 +201,10 @@ export function buildBookGenerationPrompt(input: BookGenerationInput): string {
     })
     .join(", ");
   const eventsListe = eventNoms.join(", ");
+  const blocsListe = BOOK_PARAM_STRUCTURE_BLOCKS.join(", ");
 
   return [
-    `Tu es dans le contexte ${nom}. Utilise uniquement le fichier de contexte ${fichierContexte}, avec toutes ses données. N'utilise aucun autre contexte. Utilise uniquement les rôles sélectionnés : ${rolesListe}. N'utilise aucun autre rôle. Utilise uniquement les compétences sélectionnées : ${compsListe}, avec leurs Cours. N'utilise aucune autre compétence. Utilise automatiquement tous les événements de cette entreprise, qui sont dans le fichier ${fichierEvents}, dans le sous-onglet Événements, ligne ${nom}. C'est ${n} événements : ${eventsListe}. N'invente aucun nouvel événement. N'utilise pas les événements d'une autre entreprise. Génère-moi, en provisoire, pas encore en Live : 1 scénario d'entraînement par compétence cochée, en Mode Compétence, avec Cours + Scénario très précis, et 1 histoire, en Mode Histoire, avec le rôle ${rolePrincipal}, avec les événements de cette entreprise. Pour chaque scénario, crée aussi son fichier de paramétrage, 1 scénario = 1 fichier, avec tout concaténé dedans. Mets les scénarios dans le Book, en En cours de test, dans la bonne section.`,
+    `Tu es dans le contexte ${nom}. Utilise uniquement le fichier de contexte ${fichierContexte}, avec toutes ses données. N'utilise aucun autre contexte. Utilise uniquement les rôles sélectionnés : ${rolesListe}. N'utilise aucun autre rôle. Utilise uniquement les compétences sélectionnées : ${compsListe}, avec leurs Cours. N'utilise aucune autre compétence. Utilise automatiquement tous les événements de cette entreprise, qui sont dans le fichier ${fichierEvents}, dans le sous-onglet Événements, ligne ${nom}. C'est ${n} événements : ${eventsListe}. N'invente aucun nouvel événement. N'utilise pas les événements d'une autre entreprise. Génère-moi, en provisoire, pas encore en Live : 1 scénario d'entraînement par compétence cochée, en Mode Compétence, avec Cours + Scénario très précis, et 1 histoire, en Mode Histoire, avec le rôle ${rolePrincipal}, avec les événements de cette entreprise. Pour chaque scénario, crée aussi son fichier de paramétrage, 1 scénario = 1 fichier, avec tout concaténé dedans. Chaque fichier de paramétrage DOIT contenir TOUTES ces clés (blocs vides autorisés, tableaux [] ou objets {} selon le schéma) : ${blocsListe}. Le bloc Ordinateur doit exposer les clés structure (stock, commandes, production, employes, factures, machines, clients, fournisseurs, maintenance, emails, chatContacts, chatThreads, documents, browser, dashboardCards, dashboardSeries, interviews, objectifs, sensors) même si les tableaux sont vides. Remplis uniquement avec les données Atelier / Contexte / Événements fournis — n'invente aucun mail, dialogue, ligne ERP, objectif ou KPI. Mets les scénarios dans le Book, en En cours de test, dans la bonne section.`,
   ].join("");
 }
 
@@ -255,6 +287,50 @@ export type ScenarioParamFile = {
   Intro?: string[];
 };
 
+/** Mappe un event Atelier → entrée param (données fournies uniquement). */
+export function mapAtelierEventToParamEvent(e: AtelierEntrepriseEvent): {
+  nom: string;
+  type: string;
+  description: string;
+  id: string;
+  jour?: number;
+  heure?: string;
+  urgent?: boolean;
+  deadlineHeure?: string;
+} {
+  const fields = (e.fields || {}) as Record<string, string>;
+  const jourRaw = fields["jour"] || fields["Jour"] || "";
+  const jourN = Number.parseInt(String(jourRaw).trim(), 10);
+  const heure = (fields["heure"] || fields["Heure"] || "").trim();
+  const deadline = (
+    fields["deadlineHeure"] ||
+    fields["Deadline"] ||
+    fields["deadline"] ||
+    ""
+  ).trim();
+  const urgentRaw = (fields["urgent"] || fields["Urgent"] || "").trim().toLowerCase();
+  const urgent =
+    urgentRaw === "1" ||
+    urgentRaw === "true" ||
+    urgentRaw === "oui" ||
+    urgentRaw === "yes";
+
+  return {
+    id: e.id,
+    nom: e.nom,
+    type: e.type,
+    description: e.description,
+    ...(Number.isFinite(jourN) ? { jour: jourN } : {}),
+    ...(heure ? { heure } : {}),
+    ...(urgent ? { urgent: true } : {}),
+    ...(deadline ? { deadlineHeure: deadline } : {}),
+  };
+}
+
+/**
+ * Skeleton param complet (Étape 23) — structure feeling + données Atelier.
+ * Blocs vides OK ; normalize garantit toutes les clés schéma.
+ */
 export function buildSkeletonParamFile(args: {
   nom: string;
   version: number;
@@ -269,7 +345,7 @@ export function buildSkeletonParamFile(args: {
   competences: { nom: string; cours: string[] }[];
   fichier: string;
 }): ScenarioParamFile {
-  return {
+  const raw = {
     Nom: args.nom,
     Version: args.version,
     Type: args.mode === "competence" ? "Scénario" : "Histoire",
@@ -279,25 +355,7 @@ export function buildSkeletonParamFile(args: {
     Secteur: args.secteur,
     Entreprise: args.entrepriseNom,
     Contexte: args.contexte,
-    "Événements entreprise": args.events.map((e) => ({
-      nom: e.nom,
-      type: e.type,
-      description: e.description,
-      ...((e as { jour?: number }).jour != null
-        ? { jour: (e as { jour?: number }).jour }
-        : {}),
-      ...((e as { heure?: string }).heure
-        ? { heure: (e as { heure?: string }).heure }
-        : {}),
-      ...((e as { urgent?: boolean }).urgent
-        ? { urgent: true }
-        : {}),
-      ...((e as { deadlineHeure?: string }).deadlineHeure
-        ? {
-            deadlineHeure: (e as { deadlineHeure?: string }).deadlineHeure,
-          }
-        : {}),
-    })),
+    "Événements entreprise": args.events.map(mapAtelierEventToParamEvent),
     "Rôles sélectionnés": [...args.roleNames],
     "Compétences sélectionnées": args.competences.map((c) => ({
       nom: c.nom,
@@ -306,8 +364,7 @@ export function buildSkeletonParamFile(args: {
     Décisions: [],
     Fins: [],
     fichier: args.fichier,
-    /** Étape 21 — coquilles blocs POC (vides OK). */
-    Ordinateur: {},
+    Ordinateur: emptyOrdinateurStructure(),
     Jours: [],
     Interviews: [],
     Objectifs: [],
@@ -315,6 +372,8 @@ export function buildSkeletonParamFile(args: {
     Conséquences: [],
     Intro: [],
   };
+
+  return normalizeScenarioParamFile(raw) as ScenarioParamFile;
 }
 
 export function filledContexteRecord(

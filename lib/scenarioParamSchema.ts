@@ -230,13 +230,41 @@ function blockCount(def: ScenarioParamBlockDef, value: unknown): number | null {
   return null;
 }
 
+/**
+ * Structure Ordinateur complète (clés feeling) — tableaux vides, pas de métier inventé.
+ * Étape 23 : génération Book émet cette coquille.
+ */
+export function emptyOrdinateurStructure(): ScenarioParamOrdinateur {
+  return {
+    stock: [],
+    commandes: [],
+    production: [],
+    employes: [],
+    factures: [],
+    machines: [],
+    clients: [],
+    fournisseurs: [],
+    maintenance: [],
+    emails: [],
+    chatContacts: [],
+    chatThreads: [],
+    documents: [],
+    browser: [],
+    dashboardCards: [],
+    dashboardSeries: [],
+    interviews: [],
+    objectifs: [],
+    sensors: [],
+  };
+}
+
 /** Coquilles vides des blocs étendus (POC feeling). */
 export function emptyExtendedParamShells(): Pick<
   ScenarioParamFileExtended,
   ScenarioParamExtendedKey
 > {
   return {
-    Ordinateur: {},
+    Ordinateur: emptyOrdinateurStructure(),
     Jours: [],
     Interviews: [],
     Objectifs: [],
@@ -280,7 +308,12 @@ export function normalizeScenarioParamFile(
     }
   }
 
-  if (!isPlainObject(base.Ordinateur)) base.Ordinateur = {};
+  if (!isPlainObject(base.Ordinateur)) {
+    base.Ordinateur = emptyOrdinateurStructure();
+  } else {
+    const o = { ...emptyOrdinateurStructure(), ...(base.Ordinateur as object) };
+    base.Ordinateur = o;
+  }
   if (!Array.isArray(base.Jours)) base.Jours = [];
   if (!Array.isArray(base.Interviews)) base.Interviews = [];
   if (!Array.isArray(base.Objectifs)) base.Objectifs = [];

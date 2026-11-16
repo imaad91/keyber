@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Download, Upload } from "lucide-react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { AdminButton } from "@/components/admin/AdminPrimitives";
 import { ModeBadge } from "@/components/admin/BookEntryCard";
@@ -20,6 +21,15 @@ import {
   eventsFileLabel,
   useAtelierEventsStore,
 } from "@/lib/atelierEventsStore";
+import {
+  countOrdinateurPackRows,
+  downloadOrdinateurSheetTemplate,
+  downloadOrdinateurTemplate,
+  ORDINATEUR_SHEETS,
+  parseOrdinateurExcelDryRun,
+  type OrdinateurExcelPack,
+  type OrdinateurSheetParseSummary,
+} from "@/lib/atelierOrdinateurExcel";
 import { useAtelierRolesStore } from "@/lib/atelierRolesStore";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import { cn } from "@/lib/utils";
@@ -43,6 +53,7 @@ export default function AtelierCreationDetailPage() {
     getCreation,
     setRoleNames,
     setCompetenceNames,
+    setOrdinateurPack,
     addScenario,
     removeScenario,
     markPrototypeTested,
@@ -54,10 +65,19 @@ export default function AtelierCreationDetailPage() {
   const { roles } = useAtelierRolesStore();
   const { competences } = useAtelierCompetencesStore();
   const creation = getCreation(id);
+  const ordinateurFileRef = useRef<HTMLInputElement>(null);
 
   const [scenarioNom, setScenarioNom] = useState("");
   const [scenarioMode, setScenarioMode] =
     useState<AtelierScenarioMode>("histoire");
+  const [ordDryRun, setOrdDryRun] = useState<
+    OrdinateurSheetParseSummary[] | null
+  >(null);
+  const [ordError, setOrdError] = useState<string | null>(null);
+  const [ordBusy, setOrdBusy] = useState(false);
+  const [pendingPack, setPendingPack] = useState<OrdinateurExcelPack | null>(
+    null
+  );
 
   if (!creation) {
     return (
@@ -166,6 +186,119 @@ export default function AtelierCreationDetailPage() {
           </Link>
         </p>
       )}
+
+      {/* Étape 32 — Templates Excel Ordinateur */}
+      <section className="mb-8 rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">
+          Ordinateur — templates Excel (Étape 32)
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Stocks, commandes, mails, chat, docs, browser… Tu fournis le contenu ;
+          l&apos;OS n&apos;invente rien. Remplis pour{" "}
+          <strong>Lumière</strong> (pas Novacier) après download. Import =
+          dry-run puis enregistrement staging.
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Staging actuel :{" "}
+          {countOrdinateurPackRows(creation.ordinateurPack ?? {})} ligne(s)
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <AdminButton
+            type="button"
+            onClick={() => downloadOrdinateurTemplate()}
+          >
+            <Download className="h-4 w-4" />
+            Télécharger Template Ordinateur (tous onglets)
+          </AdminButton>
+          <AdminButton
+            type="button"
+            variant="secondary"
+            disabled={locked || ordBusy}
+            onClick={() => ordinateurFileRef.current?.click()}
+          >
+            <Upload className="h-4 w-4" />
+            Importer Excel (dry-run)
+          </AdminButton>
+          <input
+            ref={ordinateurFileRef}
+            type="file"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0] ?? null;
+              setOrdError(null);
+              setOrdDryRun(null);
+              setPendingPack(null);
+              if (!file) return;
+              setOrdBusy(true);
+              try {
+                const buf = await file.arrayBuffer();
+                const res = parseOrdinateurExcelDryRun(buf);
+                if (!res.ok) {
+                  setOrdError(res.error);
+                  return;
+                }
+                setOrdDryRun(res.sheets);
+                setPendingPack(res.pack);
+              } finally {
+                setOrdBusy(false);
+                if (ordinateurFileRef.current)
+                  ordinateurFileRef.current.value = "";
+              }
+            }}
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {ORDINATEUR_SHEETS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className="rounded-md border border-indigo-200 bg-white px-2 py-1 text-[10px] font-semibold text-indigo-900 hover:bg-indigo-50"
+              onClick={() => downloadOrdinateurSheetTemplate(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        {ordError ? (
+          <p className="mt-3 text-sm text-rose-600">{ordError}</p>
+        ) : null}
+        {ordDryRun ? (
+          <div className="mt-3 rounded-xl border border-indigo-100 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-800">
+              Dry-run — {ordDryRun.reduce((n, s) => n + s.rowCount, 0)} ligne(s)
+            </p>
+            <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-slate-600">
+              {ordDryRun.map((s) => (
+                <li key={s.sheetId}>
+                  {s.label} : {s.rowCount} ligne(s) · colonnes{" "}
+                  {s.recognizedColumns}/{s.expectedColumns}
+                  {s.warnings.length
+                    ? ` · ${s.warnings.join(" · ")}`
+                    : ""}
+                </li>
+              ))}
+            </ul>
+            {!locked && pendingPack ? (
+              <AdminButton
+                type="button"
+                className="mt-3"
+                onClick={() => {
+                  const res = setOrdinateurPack(creation.id, pendingPack);
+                  if (res.error) {
+                    setOrdError(res.error);
+                    return;
+                  }
+                  setOrdDryRun(null);
+                  setPendingPack(null);
+                }}
+              >
+                Enregistrer le staging Ordinateur
+              </AdminButton>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
 
       {/* Événements — auto-liés, source de vérité = Atelier → Événements */}
       <section className="mb-8 rounded-2xl border border-rose-200 bg-rose-50/40 p-5 shadow-sm">

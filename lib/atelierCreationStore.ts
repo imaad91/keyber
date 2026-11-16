@@ -11,6 +11,7 @@ import {
   emptyContexteFields,
   type ContexteExcelFields,
 } from "@/lib/atelierCreationExcel";
+import type { OrdinateurExcelPack } from "@/lib/atelierOrdinateurExcel";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import {
   useBookStore,
@@ -77,6 +78,11 @@ export type AtelierCreation = {
   nom: string;
   secteur: string;
   fields: ContexteExcelFields;
+  /**
+   * Étape 32 — staging Excel Ordinateur (satellites ERP/mail/…).
+   * Rempli via import template ; pas d'invention OS.
+   */
+  ordinateurPack: OrdinateurExcelPack;
   roleNames: string[];
   competenceNames: string[];
   scenarios: CreationScenarioDraft[];
@@ -112,6 +118,10 @@ function normalizeCreation(
     nom: c.nom ?? fields["Nom de l'entreprise"] ?? "",
     secteur: c.secteur ?? fields["Secteur d'activité"] ?? "",
     fields,
+    ordinateurPack:
+      c.ordinateurPack && typeof c.ordinateurPack === "object"
+        ? c.ordinateurPack
+        : {},
     roleNames: Array.isArray(c.roleNames) ? c.roleNames : [],
     competenceNames: Array.isArray(c.competenceNames)
       ? c.competenceNames
@@ -299,6 +309,7 @@ export function useAtelierCreationStore() {
         nom,
         secteur: fields["Secteur d'activité"]?.trim() ?? "",
         fields: { ...emptyContexteFields(), ...fields },
+        ordinateurPack: {},
         roleNames: [],
         competenceNames: [],
         scenarios: [],
@@ -362,6 +373,27 @@ export function useAtelierCreationStore() {
         ...state,
         creations: state.creations.map((x) => (x.id === id ? next : x)),
         toast: null,
+      });
+      return {};
+    },
+    /** Étape 32 — applique le staging Excel Ordinateur (après dry-run OK). */
+    setOrdinateurPack(
+      id: string,
+      pack: OrdinateurExcelPack
+    ): { error?: string } {
+      ensure();
+      const c = state.creations.find((x) => x.id === id);
+      if (!c) return { error: "Création introuvable" };
+      if (c.dansBook) return { error: "Déjà dans le Book — lecture seule" };
+      const next = {
+        ...c,
+        ordinateurPack: { ...pack },
+        updatedAt: now(),
+      };
+      persist({
+        ...state,
+        creations: state.creations.map((x) => (x.id === id ? next : x)),
+        toast: "Ordinateur Excel enregistré (staging)",
       });
       return {};
     },
@@ -508,6 +540,7 @@ export function useAtelierCreationStore() {
         nom: entry.entrepriseNom || entry.nom,
         secteur: entry.secteur,
         fields: { ...emptyContexteFields(), ...entry.fields },
+        ordinateurPack: {},
         roleNames: [...entry.roleNames],
         competenceNames: [...entry.competenceNames],
         scenarios: [

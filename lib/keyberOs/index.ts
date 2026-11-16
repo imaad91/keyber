@@ -50,7 +50,22 @@ export {
   osOrdinateurMarkEmailRead,
 } from "@/lib/keyberOs/ordinateur";
 
-export { osInterviewSelect } from "@/lib/keyberOs/interviews";
+export {
+  osApplyDialogueChoice,
+  osInterviewSelect,
+} from "@/lib/keyberOs/interviews";
+export {
+  osRelationGet,
+  osRelationSlots,
+  osRelationsDefaultTrust,
+  osRelationsInitFromInterviews,
+  osRelationApplyDelta,
+} from "@/lib/keyberOs/relations";
+export type { OsRelationSlot } from "@/lib/keyberOs/relations";
+export type {
+  OsDialogueChoice,
+  OsDialogueQuestion,
+} from "@/lib/keyberOs/types";
 export {
   formatOsClock,
   OS_ACTION_TIME_COST,

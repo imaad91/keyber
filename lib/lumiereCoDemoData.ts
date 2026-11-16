@@ -367,12 +367,131 @@ export type LumiereParamEvent = {
   consequencesDeadline?: LumiereEventPlay["consequencesDeadline"];
 };
 
+/** Interviews Book OS — preuves Lumière (Étape 16). */
+export function lumiereInterviews() {
+  return [
+    {
+      id: "iv-samir",
+      nom: "Samir",
+      role: "Logisticien (mentor)",
+      phrase: "Le quai ne ment jamais.",
+      bio: "Tu es Logisticien junior. Samir te coache sur les priorités d'expédition et le réappro MingLight.",
+      relationConfiance: 60,
+      lines: [
+        {
+          q: "Par où je commence ?",
+          a: "ERP stock Halo, puis le mail MingLight. Ensuite tu tranches.",
+        },
+      ],
+      questions: [
+        {
+          id: "samir-q1",
+          texte: "Par où je commence ce matin ?",
+          choices: [
+            {
+              id: "samir-q1-a",
+              texte: "Je croise stock ERP et mail fournisseur.",
+              reponse:
+                "Bien. Le stock Halo est tendu — note le seuil avant de décider.",
+              confianceDelta: 6,
+              xp: 8,
+              unlockInfo: "PRIORITE_ERP",
+            },
+            {
+              id: "samir-q1-b",
+              texte: "Je file direct au packing.",
+              reponse:
+                "Le packing attend une décision, pas un corps de plus. Passe par l'ERP.",
+              confianceDelta: -4,
+            },
+          ],
+        },
+        {
+          id: "samir-q2",
+          texte: "MingLight annonce un retard — je fais quoi ?",
+          choices: [
+            {
+              id: "samir-q2-a",
+              texte: "Je prépare un plan B VietGlow + air freight.",
+              reponse:
+                "Solide. Claire voudra les chiffres cash avant de signer l'air.",
+              confianceDelta: 5,
+              xp: 10,
+              consequences: [{ cible: "moral", valeur: 2 }],
+            },
+            {
+              id: "samir-q2-b",
+              texte: "On attend, ça se débloquera.",
+              reponse: "Risqué en Q4. Le pic Noël n'attendra pas MingLight.",
+              confianceDelta: -6,
+              consequences: [{ cible: "confianceClient", valeur: -3 }],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "iv-lea",
+      nom: "Léa",
+      role: "Responsable e-commerce",
+      phrase: "Le site vend — l'entrepôt doit suivre.",
+      bio: "Léa gère promos et SAV. Elle pousse le volume ; toi, tu tiens les délais J+2.",
+      relationConfiance: 50,
+      lines: [
+        {
+          q: "La promo Halo tient ?",
+          a: "Oui, mais le SAV flambe si on rate une expé.",
+        },
+      ],
+      questions: [
+        {
+          id: "lea-q1",
+          texte: "La promo Halo — on coupe ou on tient ?",
+          choices: [
+            {
+              id: "lea-q1-a",
+              texte: "On tient, mais je priorise les SKU top.",
+              reponse:
+                "OK pour moi si tu me confirms le stock demain matin.",
+              confianceDelta: 4,
+              xp: 6,
+            },
+            {
+              id: "lea-q1-b",
+              texte: "Coupe la promo, on sauve le service.",
+              reponse:
+                "Dur à digérer côté CA… mais le SAV te remerciera.",
+              confianceDelta: -2,
+              consequences: [{ cible: "commandes", valeur: -1 }],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
+function withLumiereOrdinateur(
+  param: ScenarioParamFile
+): ScenarioParamFile {
+  return {
+    ...param,
+    Ordinateur: {
+      interviews: lumiereInterviews(),
+      chatContacts: [
+        { id: "iv-samir", name: "Samir", role: "Logisticien" },
+        { id: "iv-lea", name: "Léa", role: "E-commerce" },
+      ],
+    },
+  } as ScenarioParamFile;
+}
+
 export function lumiereCompetenceParam(
   events: LumiereParamEvent[],
   contexte: Record<string, string>,
   fichier: string
 ): ScenarioParamFile {
-  return {
+  return withLumiereOrdinateur({
     Nom: `Entraînement — ${LUMIERE_COMPETENCE}`,
     Version: 1,
     Type: "Scénario",
@@ -443,7 +562,7 @@ export function lumiereCompetenceParam(
       { id: "fin-rupture", label: "Rupture Halo en pic" },
     ],
     fichier,
-  };
+  });
 }
 
 export function lumiereHistoireParam(
@@ -451,7 +570,7 @@ export function lumiereHistoireParam(
   contexte: Record<string, string>,
   fichier: string
 ): ScenarioParamFile {
-  return {
+  return withLumiereOrdinateur({
     Nom: `Histoire — ${LUMIERE_ROLE}`,
     Version: 1,
     Type: "Histoire",
@@ -580,5 +699,5 @@ export function lumiereHistoireParam(
       { id: "fin-chaos", label: "Retards massifs J+2" },
     ],
     fichier,
-  };
+  });
 }

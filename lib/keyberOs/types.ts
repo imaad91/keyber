@@ -173,11 +173,36 @@ export type OsChatMessage = {
   alert?: boolean;
 };
 
+/** Choix de dialogue interview (feeling POC DialogueChoice). */
+export type OsDialogueChoice = {
+  id: string;
+  texte: string;
+  reponse: string;
+  confianceDelta: number;
+  unlockInfo?: string;
+  xp?: number;
+  consequences?: OsConsequence[];
+};
+
+export type OsDialogueQuestion = {
+  id: string;
+  texte: string;
+  choices: OsDialogueChoice[];
+};
+
 export type OsInterview = {
   id: string;
   nom: string;
   role: string;
+  /** Phrase d'accroche sous le portrait. */
+  phrase?: string;
+  bio?: string;
+  /** Confiance initiale (slot relations[id]). */
+  relationConfiance?: number;
+  /** Lignes Q/A plates (compat / chat rapide). */
   lines: { q: string; a: string }[];
+  /** Questions à choix (Étape 16). */
+  questions?: OsDialogueQuestion[];
 };
 
 export type OsObjective = {
@@ -365,5 +390,6 @@ export type OsModuleId =
   | "cycle-vie"
   | "notifications"
   | "interviews"
+  | "relations"
   | "objectifs"
   | "visibilite";

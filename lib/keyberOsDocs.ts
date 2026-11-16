@@ -16,6 +16,7 @@ export type KeyberOsComposanteId =
   | "cycle-vie"
   | "notifications"
   | "interviews"
+  | "relations"
   | "objectifs"
   | "visibilite";
 
@@ -99,7 +100,13 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     id: "interviews",
     href: "/admin/systeme/interviews",
     label: "Interviews / PNJ",
-    blurb: "Dialogues avec les personnages du paramétrage.",
+    blurb: "Dialogues multi-lignes avec choix (feeling POC).",
+  },
+  {
+    id: "relations",
+    href: "/admin/systeme/relations",
+    label: "Relations",
+    blurb: "Jauges de confiance PNJ (slots génériques).",
   },
   {
     id: "objectifs",
@@ -499,17 +506,65 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       id: "interviews",
       title: "Interviews / PNJ",
       ceQueCaFait: [
-        "Propose des dialogues Q/R issus du paramétrage (ou synthèse générique).",
+        "Affiche l'InterviewView OS (portrait, questions, choix).",
+        "Applique confianceDelta / XP / conséquences sur un choix.",
       ],
-      deQuoiCompose: ["lib/keyberOs/interviews.ts"],
+      deQuoiCompose: [
+        "lib/keyberOs/interviews.ts — osInterviewSelect, osApplyDialogueChoice.",
+        "components/osPlay/OsInterviewView.tsx",
+        "Pack param Ordinateur.interviews (questions[].choices).",
+      ],
       commentCaMarche: [
-        "Action Interview → sélection PNJ → lignes de dialogue.",
+        "Action Interview → PNJ → question → choix → relation + journal.",
+        "Fallback : lines Q/A plates si pas de questions.",
       ],
-      workflowSteps: ["Interview", "Choix PNJ", "Dialogue", "Retour shell"],
-      ceQueCaNeFaitPas: ["Ne hardcode pas Karim/Marie Novacier."],
+      workflowSteps: [
+        "Interview",
+        "Choix PNJ",
+        "Question",
+        "Réponse",
+        "Relation / XP",
+      ],
+      ceQueCaNeFaitPas: [
+        "Ne hardcode pas Karim/Marie Novacier.",
+        "Contenu dialogues riches = Phase E / param entreprise.",
+      ],
       codeRefs: [
         "lib/keyberOs/interviews.ts",
+        "components/osPlay/OsInterviewView.tsx",
         "app/admin/systeme/interviews/page.tsx",
+      ],
+    },
+    relations: {
+      id: "relations",
+      title: "Relations",
+      ceQueCaFait: [
+        "Maintient les jauges relations.<slotId> (0–100).",
+        "Initialise depuis relationConfiance des interviews.",
+        "Affiche le panneau jauges dans Interview.",
+      ],
+      deQuoiCompose: [
+        "lib/keyberOs/relations.ts",
+        "components/osPlay/OsRelationsPanel.tsx",
+        "state.relations",
+      ],
+      commentCaMarche: [
+        "Boot scénario → osRelationsInitFromInterviews.",
+        "Choix dialogue → osRelationApplyDelta.",
+      ],
+      workflowSteps: [
+        "Boot slots",
+        "Choix dialogue",
+        "Delta confiance",
+        "Jauge UI",
+      ],
+      ceQueCaNeFaitPas: [
+        "N'invente pas de PNJ : les slots viennent du param / pack.",
+      ],
+      codeRefs: [
+        "lib/keyberOs/relations.ts",
+        "components/osPlay/OsRelationsPanel.tsx",
+        "app/admin/systeme/relations/page.tsx",
       ],
     },
     objectifs: {

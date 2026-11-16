@@ -6,7 +6,6 @@ import {
   formatOsClock,
   osCycleVieForceDayEnd,
   osEvenementsForceNext,
-  osInterviewSelect,
   osOpenDebrief,
   osOrdinateurSetAction,
   osPipelineBoot,
@@ -32,6 +31,7 @@ import { OsDayEndScreen } from "@/components/osPlay/OsDayEndScreen";
 import { OsDebriefView } from "@/components/osPlay/OsDebriefView";
 import { OsEventNotificationToast } from "@/components/osPlay/OsEventNotificationToast";
 import { OsGameClockBar } from "@/components/osPlay/OsGameClockBar";
+import { OsInterviewView } from "@/components/osPlay/OsInterviewView";
 import { OsIntroNarrative } from "@/components/osPlay/OsIntroNarrative";
 import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
 import { OsOnboardingCoach } from "@/components/osPlay/OsOnboardingCoach";
@@ -352,7 +352,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
               <OsDecide play={play} setPlay={setPlay} />
             ) : null}
             {play.activeAction === "interview" ? (
-              <OsInterviewPanel play={play} setPlay={setPlay} />
+              <OsInterviewView play={play} setPlay={setPlay} />
             ) : null}
             {play.activeAction === "atelier-live" ? (
               <OsAtelierLive play={play} fog={fog} />
@@ -525,58 +525,6 @@ function OsDecide({
           {play.feedback}
         </p>
       ) : null}
-    </div>
-  );
-}
-
-function OsInterviewPanel({
-  play,
-  setPlay,
-}: {
-  play: OsPlayState;
-  setPlay: (s: OsPlayState) => void;
-}) {
-  const current = play.interviews.find(
-    (i) => i.id === play.selectedInterviewId
-  );
-  return (
-    <div className="mt-4 space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {play.interviews.map((i) => (
-          <button
-            key={i.id}
-            type="button"
-            className={cn(
-              "rounded-lg px-3 py-1.5 text-sm",
-              play.selectedInterviewId === i.id
-                ? "bg-accent/20 text-accent ring-1 ring-accent/40"
-                : "bg-white/10 text-muted"
-            )}
-            onClick={() => setPlay(osInterviewSelect(play, i.id))}
-          >
-            {i.nom}
-          </button>
-        ))}
-      </div>
-      {current ? (
-        <div className="rounded-xl border border-white/10 bg-panel-2 p-4">
-          <p className="text-sm font-semibold">
-            {current.nom} · {current.role}
-          </p>
-          <ul className="mt-3 space-y-3">
-            {current.lines.map((l, idx) => (
-              <li key={idx} className="text-sm">
-                <p className="text-muted">Toi : {l.q}</p>
-                <p className="mt-1 text-foreground">
-                  {current.nom} : {l.a}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="text-sm text-muted">Choisis un interlocuteur.</p>
-      )}
     </div>
   );
 }

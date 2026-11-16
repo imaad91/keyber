@@ -17,6 +17,7 @@ import {
   createEmptyOsWorld,
 } from "@/lib/keyberOs/createRichDefaults";
 import { osOnboardingBootWorld } from "@/lib/keyberOs/onboarding";
+import { osRelationsInitFromInterviews } from "@/lib/keyberOs/relations";
 import { formatOsClock } from "@/lib/keyberOs/temps";
 import type {
   OsChoice,
@@ -201,7 +202,7 @@ export function osScenariosBoot(
     meta,
     finance,
     humain: createEmptyOsHumain(),
-    relations: {},
+    relations: osRelationsInitFromInterviews(pack.interviews),
     progression,
     visibilite,
     historique: createEmptyOsHistorique(),

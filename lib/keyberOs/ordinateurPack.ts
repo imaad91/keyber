@@ -217,10 +217,23 @@ export function buildComputerPackFromParam(
           {
             from: "them" as const,
             text: "Tu as vu le stock ce matin ?",
+            time: "08:05",
+            alert: true,
           },
           {
             from: "me" as const,
             text: "Je regarde l'ERP.",
+            time: "08:06",
+          },
+        ],
+      },
+      {
+        contactId: "c2",
+        messages: [
+          {
+            from: "them" as const,
+            text: "Dis-moi quand tu as une décision.",
+            time: "08:20",
           },
         ],
       },

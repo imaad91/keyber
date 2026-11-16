@@ -15,6 +15,7 @@ import {
 import { DAY_LABELS } from "@/lib/computerData";
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import { cn } from "@/lib/utils";
+import { OsComputerChat } from "@/components/osPlay/OsComputerChat";
 import { OsComputerErp } from "@/components/osPlay/OsComputerErp";
 import { OsComputerMail } from "@/components/osPlay/OsComputerMail";
 import {
@@ -212,7 +213,9 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
             </div>
             <div
               className={
-                computerApp === "erp" || computerApp === "mail"
+                computerApp === "erp" ||
+                computerApp === "mail" ||
+                computerApp === "chat"
                   ? "min-h-0 flex-1 overflow-hidden"
                   : "min-h-0 flex-1 overflow-auto p-3 text-sm"
               }
@@ -239,7 +242,9 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
                   ))}
                 </ul>
               ) : null}
-              {computerApp === "chat" ? <OsChatLite play={play} /> : null}
+              {computerApp === "chat" ? (
+                <OsComputerChat play={play} setPlay={setPlay} />
+              ) : null}
               {computerApp === "browser" ? (
                 <ul className="space-y-2">
                   {play.computer.browser.map((b) => (
@@ -259,7 +264,7 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
   );
 }
 
-/** Contenu apps temporaire (Étapes 6–8 : chat / dashboard / docs). */
+/** Contenu apps temporaire (Étapes 7–8 : dashboard / docs / browser). */
 function OsDashLite({ play, fog }: { play: OsPlayState; fog: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -269,35 +274,6 @@ function OsDashLite({ play, fog }: { play: OsPlayState; fog: boolean }) {
           <p className="text-lg font-semibold">{fog ? "???" : c.value}</p>
         </div>
       ))}
-    </div>
-  );
-}
-
-function OsChatLite({ play }: { play: OsPlayState }) {
-  const thread = play.computer.chatThreads[0];
-  const contact = play.computer.chatContacts.find(
-    (c) => c.id === thread?.contactId
-  );
-  return (
-    <div>
-      <p className="mb-2 text-xs text-slate-500">
-        {contact ? `${contact.name} · ${contact.role}` : "Chat"}
-      </p>
-      <div className="space-y-2">
-        {(thread?.messages || []).map((m, i) => (
-          <div
-            key={i}
-            className={cn(
-              "max-w-[80%] rounded-lg px-3 py-2 text-xs",
-              m.from === "me"
-                ? "ml-auto bg-sky-600 text-white"
-                : "bg-slate-100 text-slate-800"
-            )}
-          >
-            {m.text}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

@@ -109,6 +109,20 @@ export {
   osPiecesQualite,
 } from "@/lib/keyberOs/debrief";
 export {
+  emptyFinsStructure,
+  finsFromParam,
+  normalizeParamFin,
+  normalizeParamFins,
+  osApplyMatchedFin,
+  osEvaluateFin,
+  osFinsModuleEnabled,
+} from "@/lib/keyberOs/fins";
+export type {
+  OsFinCondition,
+  OsFinMatch,
+  ScenarioParamFin,
+} from "@/lib/keyberOs/fins";
+export {
   osApplyConsequence,
   osApplyConsequences,
 } from "@/lib/keyberOs/consequences";

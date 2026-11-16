@@ -27,6 +27,7 @@ export function OsDebriefView({ play, onReplay }: Props) {
   const target = OS_DEBRIEF_TARGET_PIECES;
   const contact = play.computer.chatContacts[0];
   const skillLines = play.world?.lastSkillDebrief ?? [];
+  const finLabel = play.world?.matchedFinLabel;
 
   const Icon =
     ending === "VICTOIRE"
@@ -35,18 +36,20 @@ export function OsDebriefView({ play, onReplay }: Props) {
         ? Scale
         : AlertTriangle;
   const title =
-    ending === "VICTOIRE"
+    finLabel ||
+    (ending === "VICTOIRE"
       ? "Victoire"
       : ending === "PARTIELLE"
         ? "Victoire partielle"
-        : "Échec";
+        : "Échec");
   const tone =
     ending === "VICTOIRE"
       ? "border-ok/50 bg-ok/10"
       : ending === "PARTIELLE"
         ? "border-accent-warm/50 bg-accent-warm/10"
         : "border-danger/50 bg-danger/10";
-  const blurb = osEndingNarration(ending, pieces, ethique);
+  const blurb =
+    play.feedback || osEndingNarration(ending, pieces, ethique);
 
   return (
     <section className="view-enter flex h-full min-h-[480px] items-center justify-center p-4">

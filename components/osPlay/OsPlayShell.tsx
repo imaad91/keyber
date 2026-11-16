@@ -443,9 +443,22 @@ function OsDecide({
 }) {
   const decision = play.decisions[play.stepIndex];
   if (play.finished) {
+    const finLabel = play.world?.matchedFinLabel;
+    const ending = play.world?.ending;
     return (
       <div className="mt-4 rounded-xl border border-white/10 bg-panel-2 p-4">
-        <h2 className="font-display text-lg font-semibold">Fin de scénario</h2>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-accent">
+          Fin de scénario
+          {ending ? ` · ${ending}` : ""}
+        </p>
+        <h2 className="mt-1 font-display text-lg font-semibold">
+          {finLabel || "Scénario terminé"}
+        </h2>
+        {play.feedback ? (
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            {play.feedback}
+          </p>
+        ) : null}
         <p className="mt-2 text-sm text-muted">
           Score {play.score} · XP {play.xp} · Niveau {play.niveau}
         </p>

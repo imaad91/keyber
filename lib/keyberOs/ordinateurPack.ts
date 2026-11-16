@@ -430,22 +430,51 @@ export function buildComputerPackFromParam(
       },
     ];
 
+  const stockCible = Math.max(80, Math.floor(stockQty * 0.9) + 10);
   const objectives: OsObjective[] =
     o?.objectifs ??
     [
       {
-        id: "obj-1",
+        id: "obj-stock",
         titre: "Stabiliser le stock",
         type: "JOURNALIER",
         status: "EN_COURS",
-        cible: `Stock ≥ ${Math.max(80, stockQty)}`,
+        description: "Remonter le stock au-dessus du seuil de sécurité.",
+        cible: `Stock ≥ ${stockCible}`,
+        cibleNombre: stockCible,
+        metric: "stock",
+        op: "gte",
+        progression: Math.min(stockCible, stockQty),
+        xp: 25,
+        failOnDayEnd: true,
       },
       {
-        id: "obj-2",
+        id: "obj-decide",
         titre: "Traiter la décision du scénario",
         type: "JOURNALIER",
         status: "EN_COURS",
-        cible: "1 décision minimale",
+        description: "Valider au moins une décision aujourd'hui.",
+        cible: "1 décision",
+        cibleNombre: 1,
+        metric: "stepIndex",
+        op: "gte",
+        progression: 0,
+        xp: 20,
+        failOnDayEnd: true,
+      },
+      {
+        id: "obj-hebdo-pieces",
+        titre: "Tenir la qualité de la semaine",
+        type: "HEBDOMADAIRE",
+        status: "EN_COURS",
+        description: "Accumuler des pièces / qualité sur la semaine.",
+        cible: "Qualité ≥ 200",
+        cibleNombre: 200,
+        metric: "piecesBrutesSemaine",
+        op: "gte",
+        progression: 0,
+        xp: 40,
+        failOnDayEnd: false,
       },
     ];
 

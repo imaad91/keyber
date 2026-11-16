@@ -5,6 +5,7 @@
  */
 
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
+import { osObjectifsOnDayEnd } from "@/lib/keyberOs/objectifs";
 import type { OsPlayState } from "@/lib/keyberOs/types";
 
 /** Heure d'ouverture atelier (affichage horloge). */
@@ -148,6 +149,7 @@ export function osTempsAdvance(
             : []),
         ],
       };
+      next = osObjectifsOnDayEnd(next);
     } else {
       next = {
         ...next,

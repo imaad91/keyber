@@ -210,11 +210,23 @@ export type OsObjective = {
   titre: string;
   type: "JOURNALIER" | "HEBDOMADAIRE" | "ANNUEL" | string;
   status: "EN_COURS" | "COMPLETE" | "ECHOUE";
+  /** Libellé cible affiché (ex. « Stock ≥ 80 »). */
   cible: string;
   description?: string;
+  /** Progression numérique actuelle (barre). */
   progression?: number;
+  /** Seuil numérique pour COMPLETE. */
   cibleNombre?: number;
   xp?: number;
+  /**
+   * Métrique à évaluer : stock, stepIndex, emailsReadUrgent,
+   * piecesBrutesSemaine, moral, relations.<id>, flags.<k>…
+   */
+  metric?: string;
+  /** Comparaison vs cibleNombre (défaut gte). */
+  op?: "gte" | "lte" | "eq";
+  /** Si true, ECHOUE au DayEnd si encore EN_COURS. */
+  failOnDayEnd?: boolean;
 };
 
 export type OsBadge = {

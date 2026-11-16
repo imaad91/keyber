@@ -4,6 +4,7 @@
  */
 
 import { osApplyConsequences } from "@/lib/keyberOs/consequences";
+import { osObjectifsEvaluate } from "@/lib/keyberOs/objectifs";
 import {
   osRelationApplyDelta,
   osRelationGet,
@@ -112,5 +113,5 @@ export function osApplyDialogueChoice(
     ],
   };
 
-  return next;
+  return osObjectifsEvaluate(next);
 }

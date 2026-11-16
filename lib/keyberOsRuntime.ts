@@ -125,6 +125,12 @@ export type KeyberOsRuntimeConfig = {
   };
   objectifs: {
     enabled: boolean;
+    /** XP automatique à la complétion. */
+    awardXp: boolean;
+    /** XP par défaut si l'objectif n'a pas de champ xp. */
+    xpOnComplete: number;
+    /** Journaliers EN_COURS → ECHOUE au DayEnd. */
+    failJournalierOnDayEnd: boolean;
   };
   visibilite: {
     enabled: boolean;
@@ -222,7 +228,12 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     defaultTrust: 55,
     showGauges: true,
   },
-  objectifs: { enabled: true },
+  objectifs: {
+    enabled: true,
+    awardXp: true,
+    xpOnComplete: 20,
+    failJournalierOnDayEnd: true,
+  },
   visibilite: {
     enabled: true,
     fogEnabled: true,
@@ -469,6 +480,15 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
     },
     objectifs: {
       enabled: raw.objectifs?.enabled ?? d.objectifs.enabled,
+      awardXp: raw.objectifs?.awardXp ?? d.objectifs.awardXp,
+      xpOnComplete: clamp(
+        Number(raw.objectifs?.xpOnComplete ?? d.objectifs.xpOnComplete),
+        0,
+        500
+      ),
+      failJournalierOnDayEnd:
+        raw.objectifs?.failJournalierOnDayEnd ??
+        d.objectifs.failJournalierOnDayEnd,
     },
     visibilite: {
       enabled: raw.visibilite?.enabled ?? d.visibilite.enabled,

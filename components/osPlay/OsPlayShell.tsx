@@ -34,6 +34,7 @@ import { OsGameClockBar } from "@/components/osPlay/OsGameClockBar";
 import { OsInterviewView } from "@/components/osPlay/OsInterviewView";
 import { OsIntroNarrative } from "@/components/osPlay/OsIntroNarrative";
 import { OsKpiBar } from "@/components/osPlay/OsKpiBar";
+import { OsObjectivePanel } from "@/components/osPlay/OsObjectivePanel";
 import { OsOnboardingCoach } from "@/components/osPlay/OsOnboardingCoach";
 import { OsUrgentEventBanner } from "@/components/osPlay/OsUrgentEventBanner";
 import {
@@ -385,30 +386,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
 
           {showAside ? (
             <aside className="hidden min-h-0 space-y-6 overflow-y-auto border-l border-white/10 bg-panel/60 p-4 lg:block">
-              {ui.showObjectives ? (
-                <section>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-                    Objectifs
-                  </p>
-                  <ul className="mt-3 space-y-2">
-                    {play.objectives.map((o) => (
-                      <li
-                        key={o.id}
-                        className="rounded-xl border border-white/10 bg-panel-2 px-3 py-2"
-                      >
-                        <p className="text-sm font-semibold text-foreground">
-                          {o.status === "COMPLETE" ? "✓ " : ""}
-                          {o.titre}
-                        </p>
-                        <p className="text-[11px] text-muted">
-                          {o.type} · {o.status}
-                          {o.cible ? ` · ${o.cible}` : ""}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
+              {ui.showObjectives ? <OsObjectivePanel play={play} /> : null}
               <section>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                   Fil d&apos;événements

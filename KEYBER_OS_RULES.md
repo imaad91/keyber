@@ -67,6 +67,10 @@ Histoire = rôle (Admin → Atelier → Rôles) → secteur (Création, obligato
 « Jouer » ouvre `/jouer/book/[id]?new=1` (partie neuve + narration si Intro / Histoire).
 Live Book = **une version figée** par lignée (passer en Live rétrograde les autres Live de la famille en test).
 
+**Gel V1 (Étape 40)** : contrat OS/Book/Atelier figé — Admin → Keyber OS → Vue Globale (« Gel V1 »).
+Preuve Contrôle : `/admin/controle/rapports/v1-lumiere` (« système prouvé avec Lumière ») — VERT / JAUNE / ROUGE.
+Go / no-go V1 = validation humaine. Novacier + retrait `/play` = étapes 41–42 uniquement.
+
 **Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
 Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Cycle de vie** · **Notifications** · **Interviews** · **Relations** · **Objectifs** · **Visibilité** · Données & Sauvegarde.
 Pack Ordinateur synthétisé depuis le param (`Ordinateur` optionnel) via `ordinateurPack.ts` — aucun nom d'entreprise dans le moteur.

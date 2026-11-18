@@ -157,6 +157,15 @@ export {
 } from "@/lib/keyberOs/bookBridge";
 export type { OsBookBridgeInfo } from "@/lib/keyberOs/bookBridge";
 export {
+  V1_GEL,
+  V1_PROOF_ENTREPRISE,
+  buildV1LumiereProofReport,
+} from "@/lib/keyberOs/v1Gel";
+export type {
+  V1LumiereProofReport,
+  V1ProofCheck,
+} from "@/lib/keyberOs/v1Gel";
+export {
   osClearUrgentBanner,
   osDismissEventNotification,
   osEvenementsForceNext,

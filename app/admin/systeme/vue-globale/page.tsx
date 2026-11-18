@@ -6,8 +6,10 @@ import { KeyberOsFluxGraph } from "@/components/admin/KeyberOsFluxGraph";
 import { KeyberOsSubNav } from "@/components/admin/KeyberOsSubNav";
 import { KEYBER_OS_NAV } from "@/lib/keyberOsDocs";
 import { osBookBridgeInfo } from "@/lib/keyberOs/bookBridge";
+import { V1_GEL } from "@/lib/keyberOs/v1Gel";
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import type { OsModuleId } from "@/lib/keyberOs/types";
+import { SCENARIO_FILE_CONTRACT } from "@/lib/scenarioFileContract";
 
 function moduleEnabled(
   id: string,
@@ -57,6 +59,37 @@ export default function KeyberOsVueGlobalePage() {
         Keyber OS, c&apos;est le moteur. Chaque composante ci-dessous est un
         module runtime branché au Front-End (réglages dans son sous-onglet).
       </p>
+
+      <section className="mb-6 rounded-2xl border border-emerald-300 bg-emerald-50/80 p-5 text-sm text-emerald-950 shadow-sm">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">
+          Étape 40
+        </p>
+        <h2 className="mt-1 text-sm font-semibold uppercase tracking-wide text-emerald-900">
+          {V1_GEL.title}
+        </h2>
+        <p className="mt-2 max-w-3xl text-emerald-900/90">
+          Contrat OS / Book / Atelier figé pour la V1. Preuve runtime :{" "}
+          <Link
+            href="/admin/controle/rapports/v1-lumiere"
+            className="font-semibold underline-offset-2 hover:underline"
+          >
+            Contrôle → système prouvé avec Lumière
+          </Link>
+          . Go / no-go V1 = validation humaine.
+        </p>
+        <ul className="mt-3 list-inside list-disc space-y-1 text-xs text-emerald-950/90">
+          {V1_GEL.guarantees.map((g) => (
+            <li key={g}>{g}</li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-emerald-800">
+          Contrat fichier :{" "}
+          <code className="rounded bg-white/80 px-1">
+            {SCENARIO_FILE_CONTRACT.id}
+          </code>
+          . Différé : {V1_GEL.deferred.join(" · ")}
+        </p>
+      </section>
 
       <section className="mb-6 rounded-2xl border border-violet-200 bg-violet-50/70 p-5 text-sm text-violet-950 shadow-sm">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-violet-800">

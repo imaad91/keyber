@@ -75,6 +75,12 @@ export {
 } from "@/lib/keyberOs/erpFeeling";
 
 export {
+  buildErpAnalyticsSeries,
+  buildErpAnalyticsKpis,
+  ERP_ANALYTICS_PRESETS,
+} from "@/lib/keyberOs/erpAnalytics";
+
+export {
   osApplyDialogueChoice,
   osInterviewSelect,
 } from "@/lib/keyberOs/interviews";

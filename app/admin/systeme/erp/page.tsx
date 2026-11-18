@@ -27,11 +27,10 @@ export default function Page() {
       <section className="mt-6 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-950">
         <p className="font-semibold">ERP Ordinateur — feeling pilotage</p>
         <p className="mt-1 text-sky-900/80">
-          Book → Accès Ordinateur → ERP : 10 modules, alertes (ruptures /
-          retards / pannes), fiche détail + liens croisés, export CSV, filtres
-          dynamiques. Fog via <strong>Visibilité</strong>. Tables syncées après
-          chaque décision (toutes les lignes, pas seulement la 1ʳᵉ). Pack vide →
-          synthèse automatique.
+          Book → Accès Ordinateur → ERP : modules + <strong>Analyse &amp;
+          graphes</strong> (presets, métriques, axes, bar/line/area/pie).
+          Alertes, fiche, liens, export CSV. Fog via{" "}
+          <strong>Visibilité</strong>. Sync multi-lignes après décision.
         </p>
         <p className="mt-2 text-xs text-sky-800">
           KPI bar (Étape 9) — définitions génériques dans{" "}

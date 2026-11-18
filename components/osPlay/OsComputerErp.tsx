@@ -25,11 +25,24 @@ import {
   erpRowsAsRecords,
   type ErpAlert,
 } from "@/lib/keyberOs/erpFeeling";
+import { buildErpAnalyticsKpis } from "@/lib/keyberOs/erpAnalytics";
+import { OsErpAnalytics } from "@/components/osPlay/OsErpAnalytics";
 import type { OsComputerPack, OsPlayState } from "@/lib/keyberOs/types";
 import { cn } from "@/lib/utils";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-type ModuleId = ErpModuleId;
-type TableModule = Exclude<ModuleId, "dashboard">;
+type ModuleId = ErpModuleId | "analyse";
+type TableModule = Exclude<ErpModuleId, "dashboard">;
 
 type Props = {
   play: OsPlayState;
@@ -38,6 +51,7 @@ type Props = {
 
 const MODULE_LABELS: { id: ModuleId; label: string }[] = [
   { id: "dashboard", label: "Tableau de bord ERP" },
+  { id: "analyse", label: "Analyse & graphes" },
   { id: "stock", label: "Stock" },
   { id: "commandes", label: "Commandes" },
   { id: "production", label: "Production" },
@@ -95,6 +109,13 @@ function osErpModuleList(pack: OsComputerPack) {
   );
 }
 
+function moduleRowCount(pack: OsComputerPack, id: ModuleId, alertsLen: number) {
+  if (id === "dashboard") return alertsLen;
+  if (id === "analyse") return buildErpAnalyticsKpis(pack, false).length;
+  if (id === "maintenance") return pack.maintenance?.length ?? 0;
+  return erpRowsAsRecords(pack, id).length;
+}
+
 export function OsComputerErp({ play, fog }: Props) {
   const pack = play.computer;
   const modules = osErpModuleList(pack);
@@ -126,7 +147,7 @@ export function OsComputerErp({ play, fog }: Props) {
   }, [module]);
 
   const statutOptions = useMemo(() => {
-    if (module === "dashboard") return [] as string[];
+    if (module === "dashboard" || module === "analyse") return [] as string[];
     const rows = erpRowsAsRecords(pack, module as TableModule);
     const set = new Set<string>();
     for (const r of rows) {
@@ -159,12 +180,7 @@ export function OsComputerErp({ play, fog }: Props) {
         </p>
         <nav className="flex flex-col gap-0.5 px-2 pb-3">
           {modules.map((m) => {
-            const count =
-              m.id === "dashboard"
-                ? alerts.length
-                : m.id === "maintenance"
-                  ? pack.maintenance?.length ?? 0
-                  : erpRowsAsRecords(pack, m.id).length;
+            const count = moduleRowCount(pack, m.id, alerts.length);
             return (
               <button
                 key={m.id}
@@ -223,7 +239,7 @@ export function OsComputerErp({ play, fog }: Props) {
               ))}
             </select>
           ) : null}
-          {module !== "dashboard" ? (
+          {module !== "dashboard" && module !== "analyse" ? (
             <button
               type="button"
               onClick={() => downloadErpCsv(pack, module as TableModule)}
@@ -289,7 +305,10 @@ export function OsComputerErp({ play, fog }: Props) {
               fog={fog}
               alerts={alerts}
               onAlert={openAlert}
+              onOpenAnalyse={() => setModule("analyse")}
             />
+          ) : module === "analyse" ? (
+            <OsErpAnalytics pack={pack} fog={fog} />
           ) : (
             <ErpModuleTable
               pack={pack}
@@ -311,7 +330,7 @@ export function OsComputerErp({ play, fog }: Props) {
             />
           )}
 
-          {selectedKey && module !== "dashboard" ? (
+          {selectedKey && module !== "dashboard" && module !== "analyse" ? (
             <ErpDetailDrawer
               pack={pack}
               module={module as TableModule}
@@ -332,29 +351,146 @@ function ErpDashboard({
   fog,
   alerts,
   onAlert,
+  onOpenAnalyse,
 }: {
   pack: OsComputerPack;
   fog: boolean;
   alerts: ErpAlert[];
   onAlert: (a: ErpAlert) => void;
+  onOpenAnalyse: () => void;
 }) {
+  const kpis = buildErpAnalyticsKpis(pack, fog);
+  const series = fog
+    ? []
+    : (pack.dashboardSeries ?? []).map((d) => ({
+        name: d.name,
+        prod: d.prod,
+        panne: d.panne,
+      }));
+  const stockBars = fog
+    ? []
+    : pack.stock.slice(0, 8).map((r) => ({
+        name: r.ref,
+        qte: r.qte,
+        seuil: r.seuil,
+      }));
+
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {pack.dashboardCards.map((c) => (
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Pilotage
+          </p>
+          <h3 className="text-lg font-semibold text-slate-900">
+            Vue d&apos;ensemble
+          </h3>
+        </div>
+        <button
+          type="button"
+          onClick={onOpenAnalyse}
+          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+        >
+          Ouvrir Analyse &amp; graphes
+        </button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {kpis.map((c) => (
           <div
-            key={c.label}
+            key={c.id}
             className="rounded-lg border border-slate-200 bg-slate-50 p-4"
           >
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
               {c.label}
             </p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">
+            <p className="mt-2 text-lg font-semibold tabular-nums text-slate-900">
+              {c.value}
+            </p>
+            {c.hint ? (
+              <p className="mt-0.5 text-[11px] text-slate-400">{c.hint}</p>
+            ) : null}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {pack.dashboardCards.map((c) => (
+          <div
+            key={c.label}
+            className="rounded-lg border border-slate-200 bg-white p-3"
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              {c.label}
+            </p>
+            <p className="mt-1 text-base font-semibold text-slate-900">
               {fog ? "???" : c.value}
             </p>
           </div>
         ))}
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-white p-3">
+          <p className="mb-2 text-sm font-medium text-slate-600">
+            Production &amp; pannes (série)
+          </p>
+          <div className="h-[200px]">
+            {fog || series.length === 0 ? (
+              <p className="flex h-full items-center justify-center text-sm text-slate-400">
+                {fog ? "???" : "Pas de série temporelle"}
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={series}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="prod"
+                    name="Production"
+                    stroke="#0f766e"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="panne"
+                    name="Pannes"
+                    stroke="#be123c"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-3">
+          <p className="mb-2 text-sm font-medium text-slate-600">
+            Stock vs seuil
+          </p>
+          <div className="h-[200px]">
+            {fog || stockBars.length === 0 ? (
+              <p className="flex h-full items-center justify-center text-sm text-slate-400">
+                {fog ? "???" : "Pas de stock"}
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stockBars}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="qte" name="Qté" fill="#0f766e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="seuil" name="Seuil" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-lg border border-slate-200 bg-white p-4">
         <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
           Exceptions à traiter

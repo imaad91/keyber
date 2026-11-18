@@ -8,7 +8,8 @@
     "start": "next start",
     "preview": "next build && next start -H 127.0.0.1 -p 3000",
     "lint": "next lint",
-    "e2e:lumiere": "npx --yes tsx scripts/e2e-lumiere-test.ts"
+    "e2e:lumiere": "npx --yes tsx scripts/e2e-lumiere-test.ts",
+    "write:novacier": "npx --yes tsx scripts/write-novacier-scenario.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

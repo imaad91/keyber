@@ -71,6 +71,10 @@ Live Book = **une version figée** par lignée (passer en Live rétrograde les a
 Preuve Contrôle : `/admin/controle/rapports/v1-lumiere` (« système prouvé avec Lumière ») — VERT / JAUNE / ROUGE.
 Go / no-go V1 = validation humaine. Novacier + retrait `/play` = étapes 41–42 uniquement.
 
+**Pack Novacier (Étape 41 — exemple)** : `data/scenarios/novacier/*.json` (extraction `data/contextes/novacier`).
+Seed Admin : `/admin/book/demo-novacier`. Jouer via Book `/jouer/book/[id]`. **Aucun** nom Novacier dans `lib/keyberOs/*`.
+`/play` reste intact jusqu’à l’Étape 42.
+
 **Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
 Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Cycle de vie** · **Notifications** · **Interviews** · **Relations** · **Objectifs** · **Visibilité** · Données & Sauvegarde.
 Pack Ordinateur synthétisé depuis le param (`Ordinateur` optionnel) via `ordinateurPack.ts` — aucun nom d'entreprise dans le moteur.

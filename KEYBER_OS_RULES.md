@@ -76,6 +76,9 @@ Seed Admin : `/admin/book/demo-novacier`. Jouer via Book `/jouer/book/[id]`. **A
 **Porte unique joueur (Étape 42)** : Accueil / liens → `/jouer/live` uniquement.
 `/play` **redirige** vers `/jouer/live`. POC archivé : `/play?archive=1` (hors catalogue).
 Code `app/play` conservé comme archive, plus d’entrée produit.
+**Fence legacy** : `/jouer/histoire`, `/jouer/competence*`, `/story`, `/skills`, `/jouer` (slots) → Live.
+Journal / Livre / Profil / ERP hors session Book → CTA Live (plus de fallback Novacier).
+Accueil « Reprendre » = saves Book OS (`keyber-os-play-saves-v1`).
 
 **Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
 Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Cycle de vie** · **Notifications** · **Interviews** · **Relations** · **Objectifs** · **Visibilité** · Données & Sauvegarde.

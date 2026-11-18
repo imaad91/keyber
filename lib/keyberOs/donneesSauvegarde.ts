@@ -157,3 +157,44 @@ export function osDonneesClearProgress(sessionId: string) {
   delete bag[sessionId];
   writeBag(bag);
 }
+
+/** Entrées Book OS sauvegardées (Accueil « Reprendre »). */
+export type OsBookSaveSummary = {
+  sessionId: string;
+  title: string;
+  jourActuel: number;
+  finished: boolean;
+  niveau: number;
+  xp: number;
+};
+
+/** Liste les progressions Book OS (clé = bookEntryId / sessionId). */
+export function osDonneesListSaves(): OsBookSaveSummary[] {
+  const bag = readBag();
+  return Object.entries(bag).map(([sessionId, raw]) => {
+    const state = ensureOsRichState(raw);
+    const nom =
+      typeof state.param?.Nom === "string" ? state.param.Nom.trim() : "";
+    const entreprise =
+      typeof state.param?.Entreprise === "string"
+        ? state.param.Entreprise.trim()
+        : "";
+    return {
+      sessionId,
+      title: nom || entreprise || sessionId,
+      jourActuel: state.meta?.jourActuel ?? state.day ?? 1,
+      finished: Boolean(state.finished),
+      niveau: state.progression?.niveau ?? state.niveau ?? 1,
+      xp: state.progression?.xp ?? state.xp ?? 0,
+    };
+  });
+}
+
+/** Dernière partie Book non terminée, sinon la plus avancée. */
+export function osDonneesMostRecentSave(): OsBookSaveSummary | null {
+  const list = osDonneesListSaves();
+  if (!list.length) return null;
+  const open = list.filter((s) => !s.finished);
+  const pool = open.length ? open : list;
+  return [...pool].sort((a, b) => b.jourActuel - a.jourActuel)[0] ?? null;
+}

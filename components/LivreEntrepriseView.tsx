@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -11,7 +11,7 @@ import {
   HeartHandshake,
   Network,
 } from "lucide-react";
-import { Organigramme } from "@/components/Organigramme";
+import { NoOsSessionGate } from "@/components/NoOsSessionGate";
 import { isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 import {
   livreFromParam,
@@ -19,8 +19,6 @@ import {
   type ScenarioParamLivre,
 } from "@/lib/osLivre";
 import { useOsActivePlay } from "@/lib/osActivePlayStore";
-import { getLivreActif } from "@/lib/scenario";
-import { markLivreOpened } from "@/lib/store";
 import type { LivreEntreprise } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -212,41 +210,27 @@ function LivreBody({
 
         {tab === "organigramme" ? (
           <section className="view-enter">
-            {organigrammeOs !== undefined ? (
-              <>
-                {emptyHint(organigrammeOs.length > 0)}
-                {organigrammeOs.length === 0 ? (
-                  <p className="text-sm text-slate-500">
-                    Organigramme vide dans le param Livre.
-                  </p>
-                ) : (
-                  <ul className="grid gap-2 sm:grid-cols-2">
-                    {organigrammeOs.map((n) => (
-                      <li
-                        key={n.personnageId || n.label}
-                        className="rounded-xl border border-emerald-100 bg-white px-4 py-3 text-sm"
-                      >
-                        <p className="font-semibold text-[#0C3B38]">
-                          {n.label || n.personnageId || "—"}
-                        </p>
-                        {n.label && n.personnageId ? (
-                          <p className="text-xs text-slate-400">
-                            {n.personnageId}
-                          </p>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
+            {emptyHint((organigrammeOs ?? []).length > 0)}
+            {(organigrammeOs ?? []).length === 0 ? (
+              <p className="text-sm text-slate-500">
+                Organigramme vide dans le param Livre.
+              </p>
             ) : (
-              <>
-                <p className="mb-6 text-sm text-slate-600">
-                  Clique sur un collaborateur pour l&apos;interviewer dans le
-                  jeu.
-                </p>
-                <Organigramme paper />
-              </>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {(organigrammeOs ?? []).map((n) => (
+                  <li
+                    key={n.personnageId || n.label}
+                    className="rounded-xl border border-emerald-100 bg-white px-4 py-3 text-sm"
+                  >
+                    <p className="font-semibold text-[#0C3B38]">
+                      {n.label || n.personnageId || "—"}
+                    </p>
+                    {n.label && n.personnageId ? (
+                      <p className="text-xs text-slate-400">{n.personnageId}</p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
         ) : null}
@@ -320,16 +304,11 @@ function LivreBody({
 }
 
 /**
- * Étape 28 — même UI Livre.
- * Session Book OS → param.Livre ; sinon POC getLivreActif().
+ * Étape 28 — Livre Book OS uniquement.
+ * Sans session active → CTA Live (plus de fallback Novacier).
  */
 export function LivreEntrepriseView() {
   const active = useOsActivePlay();
-  const pocLivre = getLivreActif();
-
-  useEffect(() => {
-    if (!active.play) markLivreOpened();
-  }, [active.play]);
 
   if (active.play && active.meta) {
     const returnHref =
@@ -371,17 +350,9 @@ export function LivreEntrepriseView() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a2a27] px-4 py-8 text-[#0C3B38] md:px-8">
-      <div className="mx-auto max-w-5xl">
-        <Link
-          href="/jouer/live"
-          className="mb-4 inline-flex items-center gap-1 text-sm text-[#9bc4bb] hover:text-[#2FD67E]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Retour au jeu
-        </Link>
-        <LivreBody livre={pocLivre} />
-      </div>
-    </div>
+    <NoOsSessionGate
+      title="Livre de l'entreprise"
+      blurb="Aucune session Book active. Lance une partie Live pour ouvrir le Livre du scénario."
+    />
   );
 }

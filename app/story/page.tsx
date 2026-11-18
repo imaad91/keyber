@@ -2,12 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { OS_LIVE_HISTOIRE_PATH } from "@/lib/keyberOs/bookBridge";
 
-/** Legacy route → /jouer/histoire */
+/** Legacy → /jouer/live/histoire */
 export default function StoryRedirect() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/jouer/histoire");
+    router.replace(OS_LIVE_HISTOIRE_PATH);
   }, [router]);
-  return <p className="p-8 text-sm text-muted">Redirection Mode Histoire…</p>;
+  return (
+    <p className="p-8 text-sm text-muted">Redirection Mode Histoire Live…</p>
+  );
 }

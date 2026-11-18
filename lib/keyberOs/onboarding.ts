@@ -246,22 +246,39 @@ export function osOnboardingBootWorld(param: ScenarioParamFile): {
 } {
   const histoire = osIsHistoireMode(param);
   const cfg = getOsRuntimeConfig().cycleVie;
-  const enabled =
-    histoire && cfg.enabled && cfg.onboardingEnabled !== false;
-  if (!enabled) {
+  const custom = (param as ScenarioParamFile & { Intro?: string[] }).Intro;
+  const hasIntroLines =
+    Array.isArray(custom) &&
+    custom.some((l) => typeof l === "string" && l.trim().length > 0);
+  const cycleOk = cfg.enabled && cfg.onboardingEnabled !== false;
+
+  // Mode Histoire → intro + coach Jour 0.
+  if (histoire && cycleOk) {
     return {
-      introSeen: true,
+      introSeen: false,
+      onboardingDone: false,
+      onboardingStep: 1,
+      unlockedActions: ["atelier-live"],
+      phase: "INTRO",
+    };
+  }
+
+  // Compétence (ou autre) avec bloc Intro[] → page narration puis jeu libre.
+  if (hasIntroLines && cycleOk) {
+    return {
+      introSeen: false,
       onboardingDone: true,
       onboardingStep: 5,
       unlockedActions: [...OS_ALL_ACTIONS],
-      phase: "JOUR",
+      phase: "INTRO",
     };
   }
+
   return {
-    introSeen: false,
-    onboardingDone: false,
-    onboardingStep: 1,
-    unlockedActions: ["atelier-live"],
-    phase: "INTRO",
+    introSeen: true,
+    onboardingDone: true,
+    onboardingStep: 5,
+    unlockedActions: [...OS_ALL_ACTIONS],
+    phase: "JOUR",
   };
 }

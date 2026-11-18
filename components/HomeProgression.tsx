@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, Brain, Save } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getContexteActif } from "@/data/registry";
 import { skills } from "@/lib/mock";
@@ -154,24 +154,11 @@ export function HomeProgression() {
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <Button asChild variant="default" size="lg" className="cta-pulse">
-          <Link href="/jouer" onClick={() => ensureActiveSlot()}>
-            <Save className="h-4 w-4" />
-            Slots / Jouer
+      <div className="mt-8">
+        <Button asChild variant="accent" size="lg" className="cta-pulse">
+          <Link href="/jouer/live" onClick={() => ensureActiveSlot()}>
+            C&apos;est parti
             <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href="/jouer/live" onClick={() => ensureActiveSlot()}>
-            <Brain className="h-4 w-4" />
-            S&apos;entraîner — Mode Compétence
-          </Link>
-        </Button>
-        <Button asChild variant="accent" size="lg">
-          <Link href="/jouer/live" onClick={() => ensureActiveSlot()}>
-            <BookOpen className="h-4 w-4" />
-            Jouer une histoire — Mode Histoire
           </Link>
         </Button>
       </div>

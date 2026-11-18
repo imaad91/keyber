@@ -61,6 +61,12 @@ Shell : `components/osPlay/OsPlayShell.tsx` ← pipeline `lib/keyberOs/pipeline.
 **`/play`** = POC Novacier legacy (`useGameStore`) — **intact, non branché sur le Book**.
 Démo optionnelle seed Studio localStorage uniquement (données sous `data/scenarios/<id>/`, jamais dans le code OS).
 
+**Catalogue Live (Étape 39)** : Accueil « C'est parti » → `/jouer/live`.
+Portes séparées `/jouer/live/competence` et `/jouer/live/histoire`.
+Histoire = rôle (Admin → Atelier → Rôles) → secteur (Création, obligatoire) → entreprise → histoire.
+« Jouer » ouvre `/jouer/book/[id]?new=1` (partie neuve + narration si Intro / Histoire).
+Live Book = **une version figée** par lignée (passer en Live rétrograde les autres Live de la famille en test).
+
 **Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
 Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Cycle de vie** · **Notifications** · **Interviews** · **Relations** · **Objectifs** · **Visibilité** · Données & Sauvegarde.
 Pack Ordinateur synthétisé depuis le param (`Ordinateur` optionnel) via `ordinateurPack.ts` — aucun nom d'entreprise dans le moteur.

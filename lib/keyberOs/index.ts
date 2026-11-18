@@ -44,7 +44,10 @@ export {
 export {
   osDonneesLoadProgress,
   osDonneesClearProgress,
+  osDonneesListSaves,
+  osDonneesMostRecentSave,
 } from "@/lib/keyberOs/donneesSauvegarde";
+export type { OsBookSaveSummary } from "@/lib/keyberOs/donneesSauvegarde";
 
 export {
   OS_PARAM_LOADER_RULES,

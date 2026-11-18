@@ -2,12 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { OS_LIVE_COMPETENCE_PATH } from "@/lib/keyberOs/bookBridge";
 
-/** Legacy route → /jouer/competence */
+/** Legacy → /jouer/live/competence */
 export default function SkillsRedirect() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/jouer/competence");
+    router.replace(OS_LIVE_COMPETENCE_PATH);
   }, [router]);
-  return <p className="p-8 text-sm text-muted">Redirection Mode Compétence…</p>;
+  return (
+    <p className="p-8 text-sm text-muted">Redirection Mode Compétence Live…</p>
+  );
 }

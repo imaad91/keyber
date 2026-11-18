@@ -68,6 +68,13 @@ export {
 } from "@/lib/keyberOs/ordinateur";
 
 export {
+  syncErpTablesFromScalars,
+  collectErpAlerts,
+  ensureErpTablesNonEmpty,
+  normalizeCommandeStatut,
+} from "@/lib/keyberOs/erpFeeling";
+
+export {
   osApplyDialogueChoice,
   osInterviewSelect,
 } from "@/lib/keyberOs/interviews";

@@ -1,17 +1,35 @@
 "use client";
 
 /**
- * ERP Ordinateur OS — 10 modules exacts ComputerErp (Étape 4).
+ * ERP Ordinateur OS — feeling plant-manager (tables vivantes).
+ * Alertes · fiche détail · liens croisés · export CSV · filtres dynamiques.
  * Données = play.computer. Fog = Visibilité OS. Aucun useGameStore.
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { Download, Filter, Search, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Download,
+  Filter,
+  Link2,
+  Search,
+  Sparkles,
+  X,
+} from "lucide-react";
 import type { ErpModuleId } from "@/lib/computerTypes";
+import {
+  collectErpAlerts,
+  downloadErpCsv,
+  ERP_MODULE_HEADERS,
+  erpCrossLinks,
+  erpRowsAsRecords,
+  type ErpAlert,
+} from "@/lib/keyberOs/erpFeeling";
 import type { OsComputerPack, OsPlayState } from "@/lib/keyberOs/types";
 import { cn } from "@/lib/utils";
 
 type ModuleId = ErpModuleId;
+type TableModule = Exclude<ModuleId, "dashboard">;
 
 type Props = {
   play: OsPlayState;
@@ -60,6 +78,17 @@ function shouldFogColumn(module: ModuleId, col: number) {
   return true;
 }
 
+function statusTone(statut: string | undefined) {
+  if (!statut) return "bg-slate-100 text-slate-700";
+  if (/rupture|panne|critique|retard/i.test(statut))
+    return "bg-rose-100 text-rose-800";
+  if (/bas|attente|tendu|haute|arr[eê]t/i.test(statut))
+    return "bg-amber-100 text-amber-900";
+  if (/ok|livr|pay|marche|pr[eé]sent|bon|termin/i.test(statut))
+    return "bg-emerald-100 text-emerald-800";
+  return "bg-slate-100 text-slate-700";
+}
+
 function osErpModuleList(pack: OsComputerPack) {
   return MODULE_LABELS.filter(
     (m) => m.id !== "maintenance" || (pack.maintenance?.length ?? 0) > 0
@@ -69,12 +98,14 @@ function osErpModuleList(pack: OsComputerPack) {
 export function OsComputerErp({ play, fog }: Props) {
   const pack = play.computer;
   const modules = osErpModuleList(pack);
+  const alerts = useMemo(() => collectErpAlerts(pack), [pack]);
   const [module, setModule] = useState<ModuleId>("stock");
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState(0);
   const [sortAsc, setSortAsc] = useState(true);
   const [unlockFlash, setUnlockFlash] = useState(false);
   const [filterStatut, setFilterStatut] = useState("all");
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   const sensorInstalled =
     play.visibilite?.sensorInstalled ?? play.sensorInstalled;
@@ -91,10 +122,34 @@ export function OsComputerErp({ play, fog }: Props) {
     setFilterStatut("all");
     setQuery("");
     setSortKey(0);
+    setSelectedKey(null);
   }, [module]);
 
-  const statutFilter =
-    module === "stock" || module === "commandes" || module === "factures";
+  const statutOptions = useMemo(() => {
+    if (module === "dashboard") return [] as string[];
+    const rows = erpRowsAsRecords(pack, module as TableModule);
+    const set = new Set<string>();
+    for (const r of rows) {
+      if (r.statut) set.add(r.statut);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [pack, module]);
+
+  const statutFilter = statutOptions.length > 0;
+
+  function openAlert(a: ErpAlert) {
+    setModule(a.module);
+    setSelectedKey(a.rowKey);
+    setFilterStatut("all");
+    setQuery("");
+  }
+
+  function jumpLink(targetModule: ErpModuleId, rowKey: string) {
+    setModule(targetModule);
+    setSelectedKey(rowKey);
+    setFilterStatut("all");
+    setQuery("");
+  }
 
   return (
     <div className="flex h-full min-h-[480px] bg-white text-slate-900">
@@ -103,21 +158,39 @@ export function OsComputerErp({ play, fog }: Props) {
           Modules
         </p>
         <nav className="flex flex-col gap-0.5 px-2 pb-3">
-          {modules.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setModule(m.id)}
-              className={cn(
-                "rounded-md px-2.5 py-2 text-left text-xs font-medium transition",
-                module === m.id
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-600 hover:bg-slate-200/70"
-              )}
-            >
-              {m.label}
-            </button>
-          ))}
+          {modules.map((m) => {
+            const count =
+              m.id === "dashboard"
+                ? alerts.length
+                : m.id === "maintenance"
+                  ? pack.maintenance?.length ?? 0
+                  : erpRowsAsRecords(pack, m.id).length;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setModule(m.id)}
+                className={cn(
+                  "flex items-center justify-between rounded-md px-2.5 py-2 text-left text-xs font-medium transition",
+                  module === m.id
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-200/70"
+                )}
+              >
+                <span>{m.label}</span>
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 py-0.5 text-[10px] tabular-nums",
+                    module === m.id
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-200 text-slate-600"
+                  )}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
@@ -143,38 +216,57 @@ export function OsComputerErp({ play, fog }: Props) {
               onChange={(e) => setFilterStatut(e.target.value)}
             >
               <option value="all">Tous les statuts</option>
-              {module === "stock" ? (
-                <>
-                  <option value="OK">OK</option>
-                  <option value="Stock bas">Stock bas</option>
-                  <option value="Rupture">Rupture</option>
-                </>
-              ) : null}
-              {module === "commandes" ? (
-                <>
-                  <option value="En cours">En cours</option>
-                  <option value="En retard">En retard</option>
-                  <option value="Livrée">Livrée</option>
-                  <option value="Annulée">Annulée</option>
-                </>
-              ) : null}
-              {module === "factures" ? (
-                <>
-                  <option value="Payée">Payée</option>
-                  <option value="En attente">En attente</option>
-                  <option value="En retard">En retard</option>
-                </>
-              ) : null}
+              {statutOptions.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
           ) : null}
-          <button
-            type="button"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Exporter
-          </button>
+          {module !== "dashboard" ? (
+            <button
+              type="button"
+              onClick={() => downloadErpCsv(pack, module as TableModule)}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Exporter
+            </button>
+          ) : null}
         </div>
+
+        {alerts.length > 0 ? (
+          <div className="border-b border-rose-200 bg-rose-50 px-4 py-2">
+            <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-rose-800">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Alertes ERP · {alerts.length}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {alerts.slice(0, 6).map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => openAlert(a)}
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[11px] font-semibold transition hover:opacity-90",
+                    a.severity === "critique"
+                      ? "bg-rose-600 text-white"
+                      : a.severity === "haute"
+                        ? "bg-amber-500 text-white"
+                        : "bg-slate-600 text-white"
+                  )}
+                >
+                  {a.label}
+                </button>
+              ))}
+              {alerts.length > 6 ? (
+                <span className="px-2 py-1 text-[11px] text-rose-700">
+                  +{alerts.length - 6}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
 
         {unlockFlash ? (
           <div className="flex items-center gap-2 border-b border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800">
@@ -190,18 +282,25 @@ export function OsComputerErp({ play, fog }: Props) {
           </div>
         ) : null}
 
-        <div className="min-h-0 flex-1 overflow-auto p-4">
+        <div className="relative min-h-0 flex-1 overflow-auto p-4">
           {module === "dashboard" ? (
-            <ErpDashboard pack={pack} fog={fog} />
+            <ErpDashboard
+              pack={pack}
+              fog={fog}
+              alerts={alerts}
+              onAlert={openAlert}
+            />
           ) : (
             <ErpModuleTable
               pack={pack}
-              module={module}
+              module={module as TableModule}
               fog={fog}
               query={query}
               filterStatut={filterStatut}
               sortKey={sortKey}
               sortAsc={sortAsc}
+              selectedKey={selectedKey}
+              onSelect={setSelectedKey}
               onSort={(k) => {
                 if (k === sortKey) setSortAsc(!sortAsc);
                 else {
@@ -211,6 +310,17 @@ export function OsComputerErp({ play, fog }: Props) {
               }}
             />
           )}
+
+          {selectedKey && module !== "dashboard" ? (
+            <ErpDetailDrawer
+              pack={pack}
+              module={module as TableModule}
+              rowKey={selectedKey}
+              fog={fog}
+              onClose={() => setSelectedKey(null)}
+              onJump={jumpLink}
+            />
+          ) : null}
         </div>
       </div>
     </div>
@@ -220,25 +330,55 @@ export function OsComputerErp({ play, fog }: Props) {
 function ErpDashboard({
   pack,
   fog,
+  alerts,
+  onAlert,
 }: {
   pack: OsComputerPack;
   fog: boolean;
+  alerts: ErpAlert[];
+  onAlert: (a: ErpAlert) => void;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {pack.dashboardCards.map((c) => (
-        <div
-          key={c.label}
-          className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-            {c.label}
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {pack.dashboardCards.map((c) => (
+          <div
+            key={c.label}
+            className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              {c.label}
+            </p>
+            <p className="mt-2 text-lg font-semibold text-slate-900">
+              {fog ? "???" : c.value}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+          Exceptions à traiter
+        </p>
+        {alerts.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">
+            Aucune alerte — stocks, commandes et lignes stables.
           </p>
-          <p className="mt-2 text-lg font-semibold text-slate-900">
-            {fog ? "???" : c.value}
-          </p>
-        </div>
-      ))}
+        ) : (
+          <ul className="mt-2 space-y-1.5">
+            {alerts.map((a) => (
+              <li key={a.id}>
+                <button
+                  type="button"
+                  onClick={() => onAlert(a)}
+                  className="text-left text-sm font-medium text-slate-800 underline-offset-2 hover:underline"
+                >
+                  {a.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
@@ -251,270 +391,47 @@ function ErpModuleTable({
   filterStatut,
   sortKey,
   sortAsc,
+  selectedKey,
+  onSelect,
   onSort,
 }: {
   pack: OsComputerPack;
-  module: ModuleId;
+  module: TableModule;
   fog: boolean;
   query: string;
   filterStatut: string;
   sortKey: number;
   sortAsc: boolean;
+  selectedKey: string | null;
+  onSelect: (key: string) => void;
   onSort: (k: number) => void;
 }) {
   const q = query.trim().toLowerCase();
+  const headers = ERP_MODULE_HEADERS[module];
 
-  const table = useMemo(() => {
-    const matchQ = (r: object) =>
-      Object.values(r).some((v) => String(v).toLowerCase().includes(q));
-
-    if (module === "stock") {
-      let rows = pack.stock.filter(
-        (r) =>
-          (filterStatut === "all" || r.statut === filterStatut) && matchQ(r)
-      );
-      const keys: (keyof (typeof rows)[0])[] = [
-        "ref",
-        "nom",
-        "qte",
-        "seuil",
-        "emplacement",
-        "fournisseur",
-        "prixUnitaire",
-        "derniereEntree",
-        "statut",
-      ];
-      const k = keys[sortKey] ?? "ref";
-      rows = [...rows].sort((a, b) => {
-        const av = a[k];
-        const bv = b[k];
-        if (typeof av === "number" && typeof bv === "number")
-          return sortAsc ? av - bv : bv - av;
-        return sortAsc
-          ? String(av).localeCompare(String(bv))
-          : String(bv).localeCompare(String(av));
-      });
-      return {
-        headers: [
-          "Référence",
-          "Nom pièce",
-          "Quantité",
-          "Seuil d'alerte",
-          "Emplacement",
-          "Fournisseur",
-          "Prix unitaire €",
-          "Dernière entrée",
-          "Statut",
-        ],
-        rows: rows.map((r) => [
-          r.ref,
-          r.nom,
-          r.qte,
-          r.seuil,
-          r.emplacement,
-          r.fournisseur,
-          r.prixUnitaire,
-          r.derniereEntree,
-          r.statut,
-        ]),
-      };
+  const rows = useMemo(() => {
+    let list = erpRowsAsRecords(pack, module);
+    if (filterStatut !== "all") {
+      list = list.filter((r) => r.statut === filterStatut);
     }
-    if (module === "commandes") {
-      let rows = pack.commandes.filter(
-        (r) =>
-          (filterStatut === "all" || r.statut === filterStatut) && matchQ(r)
+    if (q) {
+      list = list.filter((r) =>
+        Object.values(r.record).some((v) =>
+          String(v).toLowerCase().includes(q)
+        )
       );
-      rows = [...rows].sort((a, b) =>
-        sortAsc
-          ? a.numero.localeCompare(b.numero)
-          : b.numero.localeCompare(a.numero)
-      );
-      return {
-        headers: [
-          "N° commande",
-          "Client",
-          "Pièce",
-          "Qté commandée",
-          "Qté produite",
-          "Date limite",
-          "Statut",
-          "Montant €",
-        ],
-        rows: rows.map((r) => [
-          r.numero,
-          r.client,
-          r.piece,
-          r.qteCommandee,
-          r.qteProduite,
-          r.dateLimite,
-          r.statut,
-          r.montant,
-        ]),
-      };
     }
-    if (module === "production") {
-      let rows = pack.production.filter(matchQ);
-      rows = [...rows].sort((a, b) =>
-        sortAsc ? a.ligne.localeCompare(b.ligne) : b.ligne.localeCompare(a.ligne)
-      );
-      return {
-        headers: [
-          "Ligne/Machine",
-          "Pièce en cours",
-          "Objectif jour",
-          "Produit aujourd'hui",
-          "Taux rebut %",
-          "Vitesse",
-          "État",
-        ],
-        rows: rows.map((r) => [
-          r.ligne,
-          r.piece,
-          r.objectifJour,
-          r.produitAujourdhui,
-          r.tauxRebut,
-          r.vitesse,
-          r.etat,
-        ]),
-      };
-    }
-    if (module === "employes") {
-      let rows = pack.employes.filter(matchQ);
-      rows = [...rows].sort((a, b) =>
-        sortAsc ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom)
-      );
-      return {
-        headers: [
-          "Nom",
-          "Poste",
-          "Équipe",
-          "Ancienneté",
-          "Heures sup semaine",
-          "Taux absence",
-          "Statut",
-        ],
-        rows: rows.map((r) => [
-          r.nom,
-          r.poste,
-          r.equipe,
-          r.anciennete,
-          r.heuresSup,
-          r.tauxAbsence,
-          r.statut,
-        ]),
-      };
-    }
-    if (module === "factures") {
-      let rows = pack.factures.filter(
-        (r) =>
-          (filterStatut === "all" || r.statut === filterStatut) && matchQ(r)
-      );
-      rows = [...rows].sort((a, b) =>
-        sortAsc
-          ? a.numero.localeCompare(b.numero)
-          : b.numero.localeCompare(a.numero)
-      );
-      return {
-        headers: [
-          "N° facture",
-          "Client",
-          "Montant €",
-          "Date émission",
-          "Date échéance",
-          "Statut",
-        ],
-        rows: rows.map((r) => [
-          r.numero,
-          r.client,
-          r.montant,
-          r.emission,
-          r.echeance,
-          r.statut,
-        ]),
-      };
-    }
-    if (module === "machines") {
-      let rows = pack.machines.filter(matchQ);
-      rows = [...rows].sort((a, b) =>
-        sortAsc ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom)
-      );
-      return {
-        headers: [
-          "Nom",
-          "Type",
-          "État",
-          "Vitesse actuelle",
-          "Taux rebut %",
-          "Dernière maintenance",
-          "Prochaine maintenance",
-        ],
-        rows: rows.map((r) => [
-          r.nom,
-          r.type,
-          r.etat,
-          r.vitesse,
-          r.tauxRebut,
-          r.derniereMaint,
-          r.prochaineMaint,
-        ]),
-      };
-    }
-    if (module === "clients") {
-      let rows = pack.clients.filter(matchQ);
-      rows = [...rows].sort((a, b) =>
-        sortAsc ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom)
-      );
-      return {
-        headers: [
-          "Nom",
-          "% du CA",
-          "Dernière commande",
-          "Statut relation",
-          "Contact",
-        ],
-        rows: rows.map((r) => [
-          r.nom,
-          r.pctCa,
-          r.derniereCommande,
-          r.relation,
-          r.contact,
-        ]),
-      };
-    }
-    if (module === "maintenance") {
-      let rows = (pack.maintenance ?? []).filter(matchQ);
-      rows = [...rows].sort((a, b) =>
-        sortAsc
-          ? a.equipement.localeCompare(b.equipement)
-          : b.equipement.localeCompare(a.equipement)
-      );
-      return {
-        headers: [
-          "Équipement",
-          "Type",
-          "Échéance",
-          "Technicien",
-          "Statut",
-          "Priorité",
-        ],
-        rows: rows.map((r) => [
-          r.equipement,
-          r.type,
-          r.echeance,
-          r.technicien,
-          r.statut,
-          r.priorite,
-        ]),
-      };
-    }
-    let rows = pack.fournisseurs.filter(matchQ);
-    rows = [...rows].sort((a, b) =>
-      sortAsc ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom)
-    );
-    return {
-      headers: ["Nom", "Pièce fournie", "Délai livraison", "Prix", "Fiabilité"],
-      rows: rows.map((r) => [r.nom, r.piece, r.delai, r.prix, r.fiabilite]),
-    };
+    list = [...list].sort((a, b) => {
+      const av = a.cells[sortKey] ?? "";
+      const bv = b.cells[sortKey] ?? "";
+      if (typeof av === "number" && typeof bv === "number") {
+        return sortAsc ? av - bv : bv - av;
+      }
+      return sortAsc
+        ? String(av).localeCompare(String(bv), "fr")
+        : String(bv).localeCompare(String(av), "fr");
+    });
+    return list;
   }, [pack, module, filterStatut, sortKey, sortAsc, q]);
 
   return (
@@ -522,7 +439,7 @@ function ErpModuleTable({
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
-            {table.headers.map((h, i) => (
+            {headers.map((h, i) => (
               <th key={h} className="px-3 py-2.5 font-semibold">
                 <button
                   type="button"
@@ -537,26 +454,44 @@ function ErpModuleTable({
           </tr>
         </thead>
         <tbody>
-          {table.rows.map((row, ri) => (
+          {rows.map((row) => (
             <tr
-              key={ri}
-              className="border-t border-slate-100 hover:bg-slate-50/80"
+              key={row.key}
+              onClick={() => onSelect(row.key)}
+              className={cn(
+                "cursor-pointer border-t border-slate-100 transition hover:bg-sky-50/80",
+                selectedKey === row.key && "bg-sky-50"
+              )}
             >
-              {row.map((cell, ci) => (
-                <td key={ci} className="px-3 py-2.5 text-slate-800">
-                  {fog && shouldFogColumn(module, ci) ? (
-                    <FogCell fog value={cell} />
-                  ) : (
-                    formatCell(cell)
-                  )}
-                </td>
-              ))}
+              {row.cells.map((cell, ci) => {
+                const isStatus =
+                  headers[ci]?.toLowerCase().includes("statut") ||
+                  headers[ci]?.toLowerCase() === "état";
+                return (
+                  <td key={ci} className="px-3 py-2.5 text-slate-800">
+                    {fog && shouldFogColumn(module, ci) ? (
+                      <FogCell fog value={cell} />
+                    ) : isStatus ? (
+                      <span
+                        className={cn(
+                          "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                          statusTone(String(cell))
+                        )}
+                      >
+                        {formatCell(cell)}
+                      </span>
+                    ) : (
+                      formatCell(cell)
+                    )}
+                  </td>
+                );
+              })}
             </tr>
           ))}
-          {table.rows.length === 0 ? (
+          {rows.length === 0 ? (
             <tr>
               <td
-                colSpan={table.headers.length}
+                colSpan={headers.length}
                 className="px-3 py-8 text-center text-slate-500"
               >
                 Aucune ligne
@@ -565,11 +500,118 @@ function ErpModuleTable({
           ) : null}
         </tbody>
       </table>
-      {fog ? (
-        <p className="border-t border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-          Données indisponibles — Visibilité : brouillard actif
-        </p>
-      ) : null}
+      <p className="border-t border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+        {rows.length} ligne{rows.length > 1 ? "s" : ""} · clique pour ouvrir la
+        fiche
+        {fog ? " · brouillard actif" : ""}
+      </p>
+    </div>
+  );
+}
+
+function ErpDetailDrawer({
+  pack,
+  module,
+  rowKey,
+  fog,
+  onClose,
+  onJump,
+}: {
+  pack: OsComputerPack;
+  module: TableModule;
+  rowKey: string;
+  fog: boolean;
+  onClose: () => void;
+  onJump: (module: ErpModuleId, rowKey: string) => void;
+}) {
+  const rows = erpRowsAsRecords(pack, module);
+  const row = rows.find((r) => r.key === rowKey) ?? rows[0];
+  const headers = ERP_MODULE_HEADERS[module];
+  const links = row
+    ? erpCrossLinks(pack, module, row.record).filter(
+        (l) => !(l.module === module && l.rowKey === row.key)
+      )
+    : [];
+
+  if (!row) return null;
+
+  return (
+    <div className="absolute inset-y-0 right-0 z-20 flex w-full max-w-md flex-col border-l border-slate-200 bg-white shadow-xl">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+            Fiche · {MODULE_LABELS.find((m) => m.id === module)?.label}
+          </p>
+          <h2 className="mt-1 font-display text-lg font-semibold text-slate-900">
+            {row.label}
+          </h2>
+          {row.statut ? (
+            <span
+              className={cn(
+                "mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                statusTone(row.statut)
+              )}
+            >
+              {row.statut}
+            </span>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
+          aria-label="Fermer"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
+        <dl className="space-y-2.5">
+          {headers.map((h, i) => (
+            <div
+              key={h}
+              className="grid grid-cols-[7.5rem_1fr] gap-2 border-b border-slate-100 pb-2 text-sm"
+            >
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                {h}
+              </dt>
+              <dd className="font-medium text-slate-800">
+                {fog && shouldFogColumn(module, i) ? (
+                  <FogCell fog value={row.cells[i] ?? "—"} />
+                ) : (
+                  formatCell(row.cells[i] ?? "—")
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-5">
+          <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+            <Link2 className="h-3.5 w-3.5" />
+            Liens ERP
+          </p>
+          {links.length === 0 ? (
+            <p className="text-xs text-slate-500">
+              Aucun lien croisé détecté pour cette fiche.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {links.map((l) => (
+                <button
+                  key={`${l.module}-${l.rowKey}`}
+                  type="button"
+                  onClick={() => onJump(l.module, l.rowKey)}
+                  className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-900 hover:bg-sky-100"
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

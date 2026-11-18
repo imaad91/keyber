@@ -25,12 +25,13 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["erp"]} />
 
       <section className="mt-6 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-950">
-        <p className="font-semibold">Tables Ordinateur ERP (Étape 4)</p>
+        <p className="font-semibold">ERP Ordinateur — feeling pilotage</p>
         <p className="mt-1 text-sky-900/80">
-          Dans le jeu Book → Accès Ordinateur → ERP : 10 modules (dashboard,
-          stock, commandes, production, employés, factures, machines, clients,
-          fournisseurs, maintenance). Fog colonnes via{" "}
-          <strong>Visibilité</strong>. Données = pack param / synthèse OS.
+          Book → Accès Ordinateur → ERP : 10 modules, alertes (ruptures /
+          retards / pannes), fiche détail + liens croisés, export CSV, filtres
+          dynamiques. Fog via <strong>Visibilité</strong>. Tables syncées après
+          chaque décision (toutes les lignes, pas seulement la 1ʳᵉ). Pack vide →
+          synthèse automatique.
         </p>
         <p className="mt-2 text-xs text-sky-800">
           KPI bar (Étape 9) — définitions génériques dans{" "}

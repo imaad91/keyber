@@ -83,6 +83,7 @@ Accueil « Reprendre » = saves Book OS (`keyber-os-play-saves-v1`).
 **Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
 Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Cycle de vie** · **Notifications** · **Interviews** · **Relations** · **Objectifs** · **Visibilité** · Données & Sauvegarde.
 Pack Ordinateur synthétisé depuis le param (`Ordinateur` optionnel) via `ordinateurPack.ts` — aucun nom d'entreprise dans le moteur.
+ERP feeling : alertes + fiche + liens + export CSV + sync toutes lignes (`lib/keyberOs/erpFeeling.ts`) ; tableaux vides → synthèse.
 Aucun contenu métier inventé — le moteur lit les fichiers de paramétrage.
 Config runtime OS : `keyber-os-runtime-v1` (une section par composante) — Admin et Front-End partagent la même source. Progression jeu : `keyber-os-play-saves-v1`.
 Pont Book → Front-End : `keyber-play-catalog-v1` (Live) + cartes Admin Tester → `/jouer/book/[id]`. Doc : Vue Globale « Pont Book ». Le jeu ne lit pas `keyber-studio-*` (Atelier).

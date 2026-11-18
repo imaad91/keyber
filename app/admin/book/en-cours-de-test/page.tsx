@@ -63,6 +63,11 @@ export default function BookEnCoursDeTestPage() {
             Démo Lumière & Co
           </AdminButton>
         </Link>
+        <Link href="/admin/book/demo-novacier">
+          <AdminButton type="button" variant="secondary">
+            Pack Novacier (Étape 41)
+          </AdminButton>
+        </Link>
       </div>
 
       <BookTabs />

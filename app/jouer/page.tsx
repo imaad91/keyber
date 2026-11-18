@@ -50,13 +50,11 @@ export default function JouerSlotsPage() {
   function resume(save: Sauvegarde) {
     ensureActiveSlot(save.slot);
     loadGameFromSave(save.gameState, save.slot);
-    const dest =
+    router.push(
       save.mode === "competence"
-        ? "/jouer/competence"
-        : save.gameState.world?.introSeen
-          ? "/play"
-          : "/intro";
-    router.push(dest);
+        ? "/jouer/live/competence"
+        : "/jouer/live/histoire"
+    );
   }
 
   function startNew(slot: SlotNumber) {

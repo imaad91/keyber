@@ -38,7 +38,7 @@ export function Organigramme({ paper = false }: { paper?: boolean }) {
                 className="w-full"
                 onClick={() => {
                   setSelectedPersonnageId(p.id);
-                  router.push("/play?action=interview");
+                  router.push("/jouer/live");
                 }}
               >
                 <MessagesSquare className="h-3.5 w-3.5" />

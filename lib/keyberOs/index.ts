@@ -151,9 +151,14 @@ export {
 export {
   OS_BOOK_PLAY_PATH,
   OS_LEGACY_PLAY_PATH,
+  OS_LEGACY_PLAY_RETIRED,
   OS_LIVE_CATALOG_PATH,
+  OS_LIVE_COMPETENCE_PATH,
+  OS_LIVE_HISTOIRE_PATH,
   osBookBridgeInfo,
   osBookPlayHref,
+  osLegacyPlayArchiveHref,
+  osLegacyPlayRedirectHref,
 } from "@/lib/keyberOs/bookBridge";
 export type { OsBookBridgeInfo } from "@/lib/keyberOs/bookBridge";
 export {

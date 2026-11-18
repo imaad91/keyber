@@ -63,7 +63,7 @@ function PocProfilPage() {
             </div>
           </div>
           <Button asChild variant="outline">
-            <Link href="/play">Retour au jeu</Link>
+            <Link href="/jouer/live">Retour au jeu</Link>
           </Button>
         </div>
 

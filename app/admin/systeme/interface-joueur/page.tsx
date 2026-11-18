@@ -21,7 +21,7 @@ export default function Page() {
 
       <KeyberOsRuntimePanel
         title="Interface Joueur — shell chrome Book OS (Étape 2 → 20)"
-        description="Shell OsPlayShell sur /jouer/book/[id]. /play = POC Novacier séparé. Toggles pour vérifier chaque zone."
+        description="Shell OsPlayShell sur /jouer/book/[id]. Porte joueur /jouer/live (Étape 42). Toggles pour vérifier chaque zone."
         onReset={() =>
           setConfig({
             interfaceJoueur: { ...OS_RUNTIME_DEFAULTS.interfaceJoueur },
@@ -43,7 +43,7 @@ export default function Page() {
           }
         />
         <OsToggle
-          label="Plein écran (full-bleed comme /play)"
+          label="Plein écran (full-bleed shell)"
           checked={mod.fullBleedShell}
           onChange={(fullBleedShell) =>
             setConfig({ interfaceJoueur: { ...mod, fullBleedShell } })

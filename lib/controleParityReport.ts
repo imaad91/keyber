@@ -98,14 +98,14 @@ export function buildControleParityReport(
   const findings: ControleParityFinding[] = [];
   const books: ControleParityBookRow[] = [];
 
-  // —— Double moteur ——
+  // —— Double moteur (Étape 42 : /play redirigé) ——
   findings.push({
-    severity: "majeure",
-    area: "Double moteur",
-    title: "Deux entrées joueur coexistent",
-    detail: `Chemin officiel Book OS : ${OS_BOOK_PLAY_PATH}/[id]. Legacy POC Novacier : ${OS_LEGACY_PLAY_PATH} (useGameStore).`,
+    severity: "info",
+    area: "Entrée joueur",
+    title: "Porte unique Book Live (Étape 42)",
+    detail: `Catalogue officiel : /jouer/live → ${OS_BOOK_PLAY_PATH}/[id]. Ancien ${OS_LEGACY_PLAY_PATH} redirige vers le Live (POC archivé ?archive=1).`,
     proposal:
-      "Garder /play intact jusqu'à la migration Novacier (étapes 41–42). Documenter clairement le pont Book ; ne pas brancher le Book sur /play.",
+      "Ne plus lier le produit à /play. Archive debug uniquement via /play?archive=1.",
   });
 
   // —— Modules OS OFF ——
@@ -235,7 +235,7 @@ export function buildControleParityReport(
   const summaryLines = [
     `Rapport parité feeling — ${new Date(generatedAt).toLocaleString("fr-FR", { timeZone: "Europe/Paris" })} (Europe/Paris)`,
     `Score synthétique : ${score}/100 · Book moy. ${avgBook}% · ${critiques} critique(s) · ${majeures} majeure(s) · ${osModulesOff.length} module(s) OS OFF`,
-    `Double moteur : ${OS_BOOK_PLAY_PATH}/[id] officiel vs ${OS_LEGACY_PLAY_PATH} legacy`,
+    `Entrée joueur : /jouer/live → ${OS_BOOK_PLAY_PATH}/[id] · ${OS_LEGACY_PLAY_PATH} redirigé (Étape 42)`,
     books.length
       ? `Cartes analysées (dernière version / famille) : ${books.map((b) => `${b.label} ${b.scorePct}%`).join(" · ")}`
       : "Aucune carte Book à analyser",
@@ -281,7 +281,7 @@ export function buildControleParityReport(
     dualEngine: {
       officialPath: `${OS_BOOK_PLAY_PATH}/[id]`,
       legacyPath: OS_LEGACY_PLAY_PATH,
-      note: "Book OS vs POC Novacier — ne pas fusionner tant que migration non faite.",
+      note: "Étape 42 — /play redirige vers /jouer/live ; POC archivé ?archive=1.",
     },
     summaryLines,
     texte,

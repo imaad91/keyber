@@ -47,7 +47,7 @@ export function IntroNarrative() {
             className="cta-pulse"
             onClick={() => {
               markIntroSeen();
-              router.push("/play");
+              router.push("/jouer/live");
             }}
           >
             Commencer mon premier jour

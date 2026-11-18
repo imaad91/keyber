@@ -38,7 +38,7 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/vue-globale",
     label: "Vue Globale",
     blurb:
-      "Flux moteur + pont Book → /jouer/book/[id] (officiel) ; /play = POC legacy.",
+      "Flux moteur + pont Book → /jouer/book/[id] ; porte joueur /jouer/live (Étape 42).",
   },
   {
     id: "erp",
@@ -404,8 +404,8 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       deQuoiCompose: [
         "app/jouer/book/[id]/page.tsx — pont Book officiel (OsPlayShell).",
         "components/osPlay/OsPlayShell.tsx — chrome joueur générique.",
-        "lib/keyberOs/bookBridge.ts — href / chemins Book vs /play legacy.",
-        "app/play/page.tsx — POC Novacier (hors Book, intact).",
+        "lib/keyberOs/bookBridge.ts — href Live / Book ; /play redirigé (Étape 42).",
+        "app/play/page.tsx — redirect `/jouer/live` ; archive `?archive=1`.",
       ],
       commentCaMarche: [
         "Accueil « C'est parti » → `/jouer/live` (hub Étape 39).",
@@ -413,7 +413,7 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Histoire : rôle (Atelier Rôles) → secteur (Création) → entreprise → histoire → `/jouer/book/[id]?new=1`.",
         "Admin Tester / Live → `/jouer/book/[id]` charge le param Book.",
         "OsPlayShell affiche l’état (jauges) et la décision en cours.",
-        "/play reste séparé (useGameStore) — non branché sur le Book.",
+        "`/play` redirige vers `/jouer/live` (POC archivé `?archive=1`).",
       ],
       workflowSteps: [
         "Hub Live → Compétence ou Histoire",
@@ -423,7 +423,7 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "OsPlayShell + pipeline",
       ],
       ceQueCaNeFaitPas: [
-        "Ne remplace pas `/play` (POC Novacier).",
+        "N’utilise plus `/play` comme entrée produit (redirigé Étape 42).",
         "N’écrit pas dans keyber-studio-*.",
         "N’invente pas rôles/secteurs : catalogue Live + Admin/Création.",
       ],
@@ -1034,7 +1034,7 @@ export const OS_FLUX_NODES: {
   },
   {
     id: "legacy-play",
-    label: "/play (POC Novacier — hors Book)",
+    label: "/play → /jouer/live (Étape 42)",
     x: 340,
     y: 840,
     w: 260,
@@ -1062,5 +1062,5 @@ export const OS_FLUX_EDGES: { from: string; to: string; label: string }[] = [
   { from: "donnees-sauvegarde", to: "save-loop", label: "" },
   { from: "save-loop", to: "etape", label: "sauvegarde" },
   { from: "interface-joueur", to: "book-pont", label: "shell Book" },
-  { from: "book-pont", to: "legacy-play", label: "séparé" },
+  { from: "book-pont", to: "legacy-play", label: "redirige" },
 ];

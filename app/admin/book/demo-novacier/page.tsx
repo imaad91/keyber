@@ -15,7 +15,7 @@ import {
 
 /**
  * Étape 41 — seed Book Novacier (exemple) depuis le pack scénario.
- * Ne touche pas au moteur OS. /play legacy reste intact.
+ * Ne touche pas au moteur OS. Jouer via Book Live (Étape 42 : /play redirigé).
  */
 export default function DemoNovacierPage() {
   const [msg, setMsg] = useState<string | null>(null);
@@ -63,8 +63,8 @@ export default function DemoNovacierPage() {
         <code className="rounded bg-slate-100 px-1">
           data/scenarios/novacier/
         </code>
-        . <strong>Ne modifie pas</strong> Keyber OS ni{" "}
-        <code className="rounded bg-slate-100 px-1">/play</code>.
+        . <strong>Ne modifie pas</strong> Keyber OS. Jouer via{" "}
+        <code className="rounded bg-slate-100 px-1">/jouer/live</code>.
       </p>
 
       {already ? (

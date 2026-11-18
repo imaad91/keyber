@@ -76,9 +76,10 @@ export default function ControleV1LumierePage() {
       <p className="mb-4 max-w-3xl text-sm text-slate-600">
         Étape 40 — preuve gel V1 via{" "}
         <strong>{view.entreprise}</strong> Live (Histoire + Compétence).{" "}
-        <strong>Propose, ne patche pas.</strong> Novacier /{" "}
-        <code className="rounded bg-slate-100 px-1">/play</code> restent hors
-        scope jusqu&apos;aux étapes 41–42.
+        <strong>Propose, ne patche pas.</strong> Étapes 41–42 : pack Novacier
+        Book + porte unique{" "}
+        <code className="rounded bg-slate-100 px-1">/jouer/live</code> (
+        <code className="rounded bg-slate-100 px-1">/play</code> redirigé).
       </p>
 
       {toast ? (

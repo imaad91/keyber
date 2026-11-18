@@ -44,10 +44,8 @@ export function HomeProgression() {
     loadGameFromSave(resume.gameState, resume.slot);
     router.push(
       resume.mode === "competence"
-        ? "/jouer/competence"
-        : resume.gameState.world?.introSeen
-          ? "/play"
-          : "/intro"
+        ? "/jouer/live/competence"
+        : "/jouer/live/histoire"
     );
   }
 

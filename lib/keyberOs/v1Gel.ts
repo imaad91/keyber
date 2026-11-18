@@ -39,10 +39,10 @@ export const V1_GEL = {
     "Studio (keyber-studio-*) ≠ jeu (keyber-os-* / keyber-play-catalog-v1).",
     "Live Book = une version figée par lignée.",
   ],
-  /** Hors scope V1 (étapes 41–42). */
+  /** Historique post-gel (étapes 41–42 livrées). */
   deferred: [
-    "Migration Novacier → pack scénario Book (Étape 41).",
-    "Retrait / désactivation entrée joueur legacy /play (Étape 42).",
+    "Étape 41 — Pack Novacier Book (exemple) : FAIT.",
+    "Étape 42 — /play redirigé vers /jouer/live (archive ?archive=1) : FAIT.",
   ],
   contractRefs: [
     SCENARIO_FILE_CONTRACT.id,
@@ -202,9 +202,9 @@ export function buildV1LumiereProofReport(
     },
     {
       id: "legacy-play",
-      label: "Legacy /play documenté (hors V1 gel)",
+      label: "Legacy /play retiré de l'entrée joueur (Étape 42)",
       ok: true,
-      detail: `${OS_LEGACY_PLAY_PATH} intact jusqu'aux étapes 41–42 — ne bloque pas le VERT V1.`,
+      detail: `${OS_LEGACY_PLAY_PATH} → /jouer/live ; archive ${OS_LEGACY_PLAY_PATH}?archive=1.`,
     },
   ];
 

@@ -83,7 +83,7 @@ const STEPS: {
   {
     n: 7,
     title: "Test — En cours de test → /jouer/book",
-    body: "Les cartes partent en Book → En cours de test (Admin seul). Tu lances « Tester » : shell Keyber OS officiel `/jouer/book/[id]` (pas le POC `/play` Novacier). Tu vérifies Ordinateur, mail, events, journal, livre, profil, fins. Droit « publier Live » visible dans Équipe (affichage V1).",
+    body: "Les cartes partent en Book → En cours de test (Admin seul). Tu lances « Tester » : shell Keyber OS officiel `/jouer/book/[id]`. Tu vérifies Ordinateur, mail, events, journal, livre, profil, fins. Droit « publier Live » visible dans Équipe (affichage V1).",
     accent: "bg-emerald-50 border-emerald-200",
     ring: "bg-emerald-600",
     badge: "text-emerald-950",
@@ -91,7 +91,7 @@ const STEPS: {
   {
     n: 8,
     title: "Live — joueurs",
-    body: "C'est bon ? « Passer en Live ». Les joueurs voient la carte et jouent le même shell OS. Pour modifier : « Retourner en Création » → V2 → re-test → Live. Historique V1, V2 conservé. `/play` reste le legacy Novacier jusqu'à migration.",
+    body: "C'est bon ? « Passer en Live ». Les joueurs voient la carte via `/jouer/live` et jouent le même shell OS. Pour modifier : « Retourner en Création » → V2 → re-test → Live. Historique V1, V2 conservé.",
     accent: "bg-teal-50 border-teal-200",
     ring: "bg-teal-600",
     badge: "text-teal-950",
@@ -152,9 +152,9 @@ export default function AtelierWorkflowPage() {
           ))}
         </ol>
         <p className="mt-2 text-[11px] text-violet-800/80">
-          Entrée joueur officielle :{" "}
-          <code className="rounded bg-white/80 px-1">/jouer/book/[id]</code> ·
-          Legacy : <code className="rounded bg-white/80 px-1">/play</code>
+          Entrée joueur :{" "}
+          <code className="rounded bg-white/80 px-1">/jouer/live</code> →{" "}
+          <code className="rounded bg-white/80 px-1">/jouer/book/[id]</code>
         </p>
       </section>
 

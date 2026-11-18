@@ -374,7 +374,7 @@ export function LivreEntrepriseView() {
     <div className="min-h-screen bg-[#0a2a27] px-4 py-8 text-[#0C3B38] md:px-8">
       <div className="mx-auto max-w-5xl">
         <Link
-          href="/play"
+          href="/jouer/live"
           className="mb-4 inline-flex items-center gap-1 text-sm text-[#9bc4bb] hover:text-[#2FD67E]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

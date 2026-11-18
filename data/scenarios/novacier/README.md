@@ -5,7 +5,7 @@ Contenu extrait de `data/contextes/novacier/` + `data/scenarioNovacier.ts` vers 
 - JSON : `novacier_responsable-de-production-histoire_v1.json`
 - Régénérer : `npx tsx scripts/write-novacier-scenario.ts`
 - Seed Admin : `/admin/book/demo-novacier`
-- Jouer : Book Live → `/jouer/book/[id]` (Keyber OS)
-- Legacy : `/play` reste intact jusqu’à l’Étape 42
+- Jouer : `/jouer/live` → Book → `/jouer/book/[id]` (Keyber OS)
+- Étape 42 : `/play` redirige vers `/jouer/live` (archive `?archive=1`)
 
 **Règle** : aucun nom Novacier dans `lib/keyberOs/*`.

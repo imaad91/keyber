@@ -7,7 +7,7 @@ export default function ErpPage() {
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto max-w-6xl px-6 py-8">
         <Link
-          href="/play"
+          href="/jouer/live"
           className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

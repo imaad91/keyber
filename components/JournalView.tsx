@@ -148,7 +148,7 @@ function PocJournalList({ entries }: { entries: DisplayEntry[] }) {
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <Link
-              href="/play"
+              href="/jouer/live"
               className="mb-3 inline-flex items-center gap-1 text-sm text-muted hover:text-accent"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -163,7 +163,7 @@ function PocJournalList({ entries }: { entries: DisplayEntry[] }) {
             </h1>
           </div>
           <Button asChild variant="outline">
-            <Link href="/play">Continuer</Link>
+            <Link href="/jouer/live">Continuer</Link>
           </Button>
         </div>
 

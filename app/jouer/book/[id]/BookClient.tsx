@@ -19,7 +19,6 @@ import {
   osDonneesLoadProgress,
 } from "@/lib/keyberOs/donneesSauvegarde";
 import {
-  OS_LEGACY_PLAY_PATH,
   OS_LIVE_CATALOG_PATH,
   osBookPlayHref,
 } from "@/lib/keyberOs/bookBridge";
@@ -42,7 +41,7 @@ import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 /**
  * Entrée joueur officielle Keyber OS (Étape 20).
  * Route : `/jouer/book/[id]` → OsPlayShell (pipeline lib/keyberOs).
- * Bandeaux Test / Live inchangés. `/play` = POC Novacier, hors de cette page.
+ * Bandeaux Test / Live inchangés. `/play` redirige vers Live (Étape 42).
  * Pas d'Atelier.
  */
 export default function BookClient() {
@@ -256,7 +255,7 @@ export default function BookClient() {
                 {meta.entrepriseNom} · V{meta.version}
               </span>
               <span className="ml-auto hidden text-[10px] uppercase tracking-wider text-muted sm:inline">
-                Keyber OS · hors {OS_LEGACY_PLAY_PATH}
+                Keyber OS · porte Live
               </span>
             </div>
           ) : (

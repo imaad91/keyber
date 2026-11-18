@@ -110,10 +110,14 @@ export default function KeyberOsVueGlobalePage() {
           </div>
           <div className="rounded-xl border border-violet-200/80 bg-white/80 px-3 py-2">
             <dt className="text-[10px] font-bold uppercase tracking-wider text-violet-600">
-              Catalogue joueur
+              Catalogue joueur (Étape 39)
             </dt>
             <dd className="mt-1 font-mono text-xs text-slate-900">
               {bridge.liveCatalog}
+            </dd>
+            <dd className="mt-1 space-y-0.5 font-mono text-[11px] text-slate-700">
+              <div>{bridge.liveCompetence}</div>
+              <div>{bridge.liveHistoire}</div>
             </dd>
             <dd className="mt-1 text-xs text-slate-600">
               Storage : {bridge.catalogStorage}
@@ -125,6 +129,7 @@ export default function KeyberOsVueGlobalePage() {
           <code className="rounded bg-white/80 px-1">BookPlayStatusBanner</code>
           . Pipeline :{" "}
           <code className="rounded bg-white/80 px-1">{bridge.pipeline}</code>.
+          Live = une version précise par lignée (les autres Live → En test).
         </p>
       </section>
 

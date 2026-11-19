@@ -120,7 +120,8 @@ export function OsComputerErp({ play, fog }: Props) {
   const pack = play.computer;
   const modules = osErpModuleList(pack);
   const alerts = useMemo(() => collectErpAlerts(pack), [pack]);
-  const [module, setModule] = useState<ModuleId>("stock");
+  /** Ouvre sur Analyse pour que graphes/stats soient visibles immédiatement. */
+  const [module, setModule] = useState<ModuleId>("analyse");
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState(0);
   const [sortAsc, setSortAsc] = useState(true);

@@ -640,6 +640,7 @@ export function setOsRuntimeConfig(
 ): KeyberOsRuntimeFlat {
   ensure();
   const b = bag();
+  const prev = b.config;
   const merged: Partial<KeyberOsRuntimeConfig> = {
     ...b.config,
     ...patch,
@@ -705,6 +706,10 @@ export function setOsRuntimeConfig(
       investments:
         patch.visibilite?.investments ?? b.config.visibilite.investments,
     },
+    journal: { ...b.config.journal, ...patch.journal },
+    livre: { ...b.config.livre, ...patch.livre },
+    profil: { ...b.config.profil, ...patch.profil },
+    fins: { ...b.config.fins, ...patch.fins },
   };
   const next = normalize(merged);
   next.updatedAt = new Date().toISOString();
@@ -712,6 +717,10 @@ export function setOsRuntimeConfig(
   b.flat = withFlat(next);
   if (typeof window !== "undefined") {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    // Fil court Admin — import dynamique pour éviter cycle SSR.
+    void import("@/lib/keyberOs/moduleChangeLog").then((m) => {
+      m.recordRuntimeConfigDiff(prev, next);
+    });
   }
   emit();
   return b.flat;

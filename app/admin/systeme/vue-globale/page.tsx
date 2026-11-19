@@ -1,11 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { KeyberOsFluxGraph } from "@/components/admin/KeyberOsFluxGraph";
 import { KeyberOsSubNav } from "@/components/admin/KeyberOsSubNav";
-import { KEYBER_OS_NAV } from "@/lib/keyberOsDocs";
+import { OsModuleHealthPill } from "@/components/admin/OsModuleDashboard";
+import { useBookStore } from "@/lib/bookStore";
+import {
+  KEYBER_OS_NAV,
+  type KeyberOsComposanteId,
+} from "@/lib/keyberOsDocs";
 import { osBookBridgeInfo } from "@/lib/keyberOs/bookBridge";
+import {
+  diagnoseOsModule,
+  formatRelativeFr,
+} from "@/lib/keyberOs/moduleDiagnostics";
+import { useOsModuleChangeLog } from "@/lib/keyberOs/moduleChangeLog";
 import { V1_GEL } from "@/lib/keyberOs/v1Gel";
 import { useKeyberOsRuntime } from "@/lib/keyberOsRuntime";
 import type { OsModuleId } from "@/lib/keyberOs/types";
@@ -31,6 +42,10 @@ function moduleEnabled(
     relations: config.relations.enabled,
     objectifs: config.objectifs.enabled,
     visibilite: config.visibilite.enabled,
+    journal: config.journal.enabled,
+    livre: config.livre.enabled,
+    profil: config.profil.enabled,
+    fins: config.fins.enabled,
   };
   if (id in map) return map[id as OsModuleId] ?? null;
   return null;
@@ -38,8 +53,23 @@ function moduleEnabled(
 
 export default function KeyberOsVueGlobalePage() {
   const { config } = useKeyberOsRuntime();
+  const book = useBookStore();
+  const live = book.entriesByStatus("live");
   const composantes = KEYBER_OS_NAV.filter((n) => n.id !== "vue-globale");
   const bridge = osBookBridgeInfo();
+  const recent = useOsModuleChangeLog(undefined, 8);
+
+  const pulse = useMemo(() => {
+    const diags = composantes.map((c) =>
+      diagnoseOsModule(c.id as KeyberOsComposanteId, config, live)
+    );
+    return {
+      green: diags.filter((d) => d.tone === "green").length,
+      yellow: diags.filter((d) => d.tone === "yellow").length,
+      red: diags.filter((d) => d.tone === "red").length,
+      total: diags.length,
+    };
+  }, [composantes, config, live]);
 
   return (
     <div>
@@ -59,6 +89,76 @@ export default function KeyberOsVueGlobalePage() {
         Keyber OS, c&apos;est le moteur. Chaque composante ci-dessous est un
         module runtime branché au Front-End (réglages dans son sous-onglet).
       </p>
+
+      <section className="mb-6 rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Pulse système
+            </h2>
+            <p className="mt-1 text-sm text-slate-700">
+              Santé calculée live depuis le runtime + Book Live. Ouvre un
+              module pour son schéma d&apos;architecture.
+            </p>
+          </div>
+          <p className="text-xs text-slate-500">
+            maj runtime {formatRelativeFr(config.updatedAt)}
+          </p>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center">
+            <p className="text-2xl font-bold text-emerald-900">{pulse.green}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+              Vert
+            </p>
+          </div>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center">
+            <p className="text-2xl font-bold text-amber-950">{pulse.yellow}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-amber-800">
+              Jaune
+            </p>
+          </div>
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-center">
+            <p className="text-2xl font-bold text-rose-950">{pulse.red}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-rose-800">
+              Rouge
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
+            <p className="text-2xl font-bold text-slate-900">{pulse.total}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-600">
+              Modules
+            </p>
+          </div>
+        </div>
+        {recent.length > 0 ? (
+          <div className="mt-4 border-t border-slate-100 pt-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+              Fil court — derniers changements
+            </p>
+            <ul className="space-y-1 text-xs text-slate-700">
+              {recent.map((e) => (
+                <li key={e.id} className="flex flex-wrap gap-2">
+                  <span className="font-mono text-[10px] text-slate-500">
+                    {formatRelativeFr(e.at)}
+                  </span>
+                  <Link
+                    href={
+                      KEYBER_OS_NAV.find((n) => n.id === e.moduleId)?.href ??
+                      "/admin/systeme/vue-globale"
+                    }
+                    className="font-semibold underline-offset-2 hover:underline"
+                  >
+                    {KEYBER_OS_NAV.find((n) => n.id === e.moduleId)?.label ??
+                      e.moduleId}
+                  </Link>
+                  <span>{e.summary}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </section>
 
       <section className="mb-6 rounded-2xl border border-emerald-300 bg-emerald-50/80 p-5 text-sm text-emerald-950 shadow-sm">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700">
@@ -181,7 +281,10 @@ export default function KeyberOsVueGlobalePage() {
           {composantes.map((c) => {
             const on = moduleEnabled(c.id, config);
             return (
-              <li key={c.id} className="text-sm text-slate-800">
+              <li
+                key={c.id}
+                className="flex flex-wrap items-center gap-2 text-sm text-slate-800"
+              >
                 <Link
                   href={c.href}
                   className="font-semibold text-slate-900 underline-offset-2 hover:underline"
@@ -192,14 +295,17 @@ export default function KeyberOsVueGlobalePage() {
                   <span
                     className={
                       on
-                        ? "ml-2 rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-800"
-                        : "ml-2 rounded-md bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-600"
+                        ? "rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-800"
+                        : "rounded-md bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-600"
                     }
                   >
                     {on ? "ON" : "OFF"}
                   </span>
                 )}
-                <span className="text-slate-600"> — {c.blurb}</span>
+                <OsModuleHealthPill
+                  moduleId={c.id as KeyberOsComposanteId}
+                />
+                <span className="text-slate-600">— {c.blurb}</span>
               </li>
             );
           })}

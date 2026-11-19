@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import { KeyberOsSubNav } from "@/components/admin/KeyberOsSubNav";
+import { OsModuleDashboard } from "@/components/admin/OsModuleDashboard";
 import type { ComposanteDoc } from "@/lib/keyberOsDocs";
 import { cn } from "@/lib/utils";
 
@@ -57,9 +58,12 @@ export function KeyberOsComposanteView({
 
       {lead ? <div className="mb-6">{lead}</div> : null}
 
+      <OsModuleDashboard moduleId={doc.id} />
+
       <p className="mb-6 max-w-2xl text-sm text-slate-600">
-        Documentation + module runtime (bandeau vert ci-dessous). Aucun
-        scénario ni entreprise inventés ici — le Front appelle{" "}
+        Dashboard ci-dessus = architecture + santé (màj à chaque réglage).
+        Documentation + runtime (bandeau vert plus bas). Aucun scénario ni
+        entreprise inventés ici — le Front appelle{" "}
         <code className="text-xs">lib/keyberOs/</code>.
       </p>
 

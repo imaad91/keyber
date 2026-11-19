@@ -1,5 +1,6 @@
 "use client";
 
+import { ErpModulePreview } from "@/components/admin/ErpModulePreview";
 import { KeyberOsComposanteView } from "@/components/admin/KeyberOsComposanteView";
 import {
   KeyberOsRuntimePanel,
@@ -14,7 +15,7 @@ import {
 } from "@/lib/keyberOsRuntime";
 
 /**
- * Keyber OS — ERP : doc + module runtime (facteur Trésorerie, équipe…).
+ * Keyber OS — ERP : doc + aperçu UI joueur + runtime.
  */
 export default function Page() {
   const { config, setConfig } = useKeyberOsRuntime();
@@ -25,20 +26,20 @@ export default function Page() {
       <KeyberOsComposanteView doc={KEYBER_OS_COMPOSANTES["erp"]} />
 
       <section className="mt-6 rounded-2xl border border-sky-200 bg-sky-50/70 p-4 text-sm text-sky-950">
-        <p className="font-semibold">Tables Ordinateur ERP (Étape 4)</p>
+        <p className="font-semibold">ERP Ordinateur — feeling pilotage</p>
         <p className="mt-1 text-sky-900/80">
-          Dans le jeu Book → Accès Ordinateur → ERP : 10 modules (dashboard,
-          stock, commandes, production, employés, factures, machines, clients,
-          fournisseurs, maintenance). Fog colonnes via{" "}
-          <strong>Visibilité</strong>. Données = pack param / synthèse OS.
+          Book → Accès Ordinateur → ERP : modules + <strong>Analyse &amp;
+          graphes</strong> (presets, métriques, axes, bar/line/area/pie).
+          Alertes, fiche, liens, export CSV. Fog via{" "}
+          <strong>Visibilité</strong>. Sync multi-lignes après décision.
         </p>
         <p className="mt-2 text-xs text-sky-800">
-          KPI bar (Étape 9) — définitions génériques dans{" "}
-          <code className="rounded bg-white/80 px-1">play.kpis</code> : Trésorerie,
-          Stock, Production, Rebut, Moral, Éthique, Confiance client. Affichage
-          : Interface Joueur → barre KPI.
+          L&apos;aperçu ci-dessous est la même UI joueur. En jeu : ouvrir
+          l&apos;app <strong>ERP</strong> (pas seulement Dashboard).
         </p>
       </section>
+
+      <ErpModulePreview />
 
       <KeyberOsRuntimePanel
         title="ERP — paramètres runtime"

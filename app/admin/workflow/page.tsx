@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 export default function WorkflowIndexRedirect() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/admin/workflow/scenarios");
+    router.replace("/admin/systeme/architecture");
   }, [router]);
   return (
-    <p className="text-sm text-slate-500">Redirection vers Workflow → Scénarios…</p>
+    <p className="text-sm text-slate-500">
+      Redirection vers Système → Architecture…
+    </p>
   );
 }

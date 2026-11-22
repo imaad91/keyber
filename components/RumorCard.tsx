@@ -3,7 +3,9 @@
 import { HelpCircle } from "lucide-react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { Button } from "@/components/ui/button";
+import { getContexteActif } from "@/data/registry";
 import { useGameStore } from "@/lib/store";
+
 export function RumorCard({
   event,
 }: {
@@ -20,7 +22,7 @@ export function RumorCard({
 
   return (
     <article className="flex gap-2.5 rounded-xl border border-dashed border-accent-warm/50 bg-accent-warm/10 p-3">
-      <CharacterAvatar name="Marie" size={28} className="mt-0.5" />
+      <CharacterAvatar name={getContexteActif().computer.chatContacts[0]?.name ?? "?"} size={28} className="mt-0.5" />
       <div className="min-w-0 flex-1">
       <div className="mb-1 flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-accent-warm">

@@ -34,14 +34,8 @@ function agentToEditableJson(a: AgentProfile) {
 
 export default function AgentDetailPage() {
   const { agentId } = useParams<{ agentId: string }>();
-  const { agents, scenarios, updateAgent, runAgentsOnScenario } =
-    useAdminStore();
+  const { agents, updateAgent } = useAdminStore();
   const agent = agents.find((a) => a.id === agentId);
-  const defaultScenarioId =
-    scenarios.find((s) => s.statut === "publie")?.id ??
-    scenarios.find((s) => s.id.includes("novacier"))?.id ??
-    scenarios[0]?.id ??
-    "";
 
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -187,31 +181,11 @@ export default function AgentDetailPage() {
           {editing ? "Aperçu" : "Modifier le JSON"}
         </AdminButton>
         <AdminButton onClick={save}>Sauvegarder</AdminButton>
-        <AdminButton
-          variant="secondary"
-          disabled={!defaultScenarioId || !agent.actif}
-          onClick={() => {
-            if (!defaultScenarioId) return;
-            runAgentsOnScenario(defaultScenarioId, agentId);
-          }}
-        >
-          Lancer cet agent
-        </AdminButton>
-        <AdminButton
-          variant="secondary"
-          disabled={!defaultScenarioId}
-          onClick={() => {
-            if (!defaultScenarioId) return;
-            runAgentsOnScenario(defaultScenarioId);
-          }}
-        >
-          Lancer tous les agents
-        </AdminButton>
         <Link
-          href="/admin/coeur/rapport"
+          href="/admin/controle/prompt"
           className="inline-flex items-center rounded-lg px-3.5 py-2 text-sm font-semibold text-slate-700 underline-offset-2 hover:underline"
         >
-          Voir les rapports →
+          Prompt Audit →
         </Link>
       </div>
 

@@ -48,6 +48,9 @@ export default function AdminPersonnagesPage() {
             "pers-karim",
             "pers-laurent",
             "pers-henri",
+            "pers-samir",
+            "pers-lea",
+            "pers-claire",
           ].includes(p.avatarStyle);
           return (
             <Link

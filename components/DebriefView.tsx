@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { Trophy, AlertTriangle, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TARGET_PIECES } from "@/lib/scenario";
+import { getContexteActif, getScenarioActif } from "@/data/registry";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export function DebriefView() {
   const { gameState, resetState } = useGameStore();
   const ending = gameState.ending;
+  const ctx = getContexteActif();
+  const target = getScenarioActif().targetPieces ?? 500;
+  const contact = ctx.computer.chatContacts[0];
 
   const icon =
     ending === "VICTOIRE" ? Trophy : ending === "PARTIELLE" ? Scale : AlertTriangle;
@@ -27,6 +30,22 @@ export function DebriefView() {
         ? "border-accent-warm/50 bg-accent-warm/10"
         : "border-danger/50 bg-danger/10";
 
+  const blurb =
+    ending === "VICTOIRE"
+      ? ctx.runtime.endingNarration.victoire(
+          gameState.piecesQualiteSemaine,
+          gameState.ethique
+        )
+      : ending === "PARTIELLE"
+        ? ctx.runtime.endingNarration.partielle(
+            gameState.piecesQualiteSemaine,
+            gameState.ethique
+          )
+        : ctx.runtime.endingNarration.echec(
+            gameState.piecesQualiteSemaine,
+            gameState.ethique
+          );
+
   return (
     <section className="view-enter flex h-full items-center justify-center p-4">
       <div
@@ -40,34 +59,29 @@ export function DebriefView() {
           Vendredi 16h00 — Débrief
         </p>
         <h1 className="mt-2 font-display text-3xl font-semibold">{title}</h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted">
-          {ending === "VICTOIRE" &&
-            `≥480 pièces qualité et éthique > 50. AutoVolt reste. Tu as tenu la semaine.`}
-          {ending === "PARTIELLE" &&
-            `Entre 400 et 479 pièces qualité, ou éthique limite. Le contrat respire — fragile.`}
-          {ending === "ECHEC" &&
-            `<400 pièces qualité ou éthique < 20. L'ombre de 2022 revient.`}
-        </p>
+        <p className="mt-3 text-sm leading-relaxed text-muted">{blurb}</p>
 
         <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">
           <Stat
             label="Pièces qualité"
-            value={`${gameState.piecesQualiteSemaine} / ${TARGET_PIECES}`}
+            value={`${gameState.piecesQualiteSemaine} / ${target}`}
           />
           <Stat label="Éthique" value={`${gameState.ethique}`} />
           <Stat
-            label="Confiance AutoVolt"
-            value={`${gameState.confianceAutoVolt}`}
+            label="Confiance client"
+            value={`${gameState.confianceClient}`}
           />
           <Stat
             label="Trésorerie"
             value={`${gameState.tresorerie.toLocaleString("fr-FR")} €`}
           />
           <Stat label="Moral" value={`${gameState.moral}`} />
-          <Stat
-            label="Marie"
-            value={`${gameState.relations["pers-marie"] ?? 0}`}
-          />
+          {contact ? (
+            <Stat
+              label={contact.name.split(" ")[0] ?? contact.name}
+              value={`${gameState.relations[contact.id] ?? 0}`}
+            />
+          ) : null}
         </dl>
 
         <div className="mt-8 flex flex-wrap gap-3">
@@ -75,7 +89,7 @@ export function DebriefView() {
             <Link href="/journal">Lire le journal</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/livre">Livre Novacier</Link>
+            <Link href="/livre">Livre de l&apos;entreprise</Link>
           </Button>
           <Button
             variant="ghost"

@@ -3,10 +3,16 @@
 import { useSyncExternalStore } from "react";
 import {
   normalizeAgent,
+  resolveAgentId,
   type AgentProfile,
   type AgentRunReport,
 } from "./agents";
 import { runErgonomieAudit, runOrchestraAudit } from "./agentAppAudits";
+import { runNettoyageAudit } from "./agentNettoyageAudit";
+import {
+  getAtelierSnapshotForAgents,
+  isTechniqueVague,
+} from "./atelierStore";
 import {
   buildCoeurFromAdminState,
   coeurToAdminSlices,
@@ -73,7 +79,8 @@ import {
   validateLockedImpact,
 } from "./competenceLocks";
 
-const STORAGE_KEY = "keyber-admin-v1";
+/** Studio-only storage — never read by the player runtime. */
+const STORAGE_KEY = "keyber-studio-v1";
 
 export const COEUR_LOCKED_MESSAGE =
   "Action interdite - Le Cœur est verrouillé";
@@ -210,12 +217,14 @@ function loadState(): AdminState {
       coeurMeta,
       agents: (() => {
         const loaded = parsed.agents?.length
-          ? parsed.agents.map((a) => normalizeAgent(a))
+          ? parsed.agents.map((a) =>
+              normalizeAgent({ ...a, id: resolveAgentId(a.id) })
+            )
           : [];
         const byId = new Map(loaded.map((a) => [a.id, a]));
-        // Inject newly seeded agents (Orchestra, Ergonomie…) without touching existing ones
+        // Prefer seed profiles for the 7 contrôle agents (MILO…CLEO)
         for (const demo of seed.agents) {
-          if (!byId.has(demo.id)) byId.set(demo.id, demo);
+          byId.set(demo.id, normalizeAgent({ ...byId.get(demo.id), ...demo }));
         }
         const order = seed.agents.map((a) => a.id);
         const ordered: typeof seed.agents = [];
@@ -255,8 +264,8 @@ function persist(next: AdminState) {
   state = next;
   if (typeof window !== "undefined") {
     const rest = { ...next, toast: null };
+    // Studio-only key — never touches game localStorage, never notifies player UI.
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
-    window.dispatchEvent(new Event("keyber-admin-updated"));
   }
   emit();
 }
@@ -268,16 +277,9 @@ function toast(message: string) {
 function ensureHydrated() {
   if (hydrated || typeof window === "undefined") return;
   hydrated = true;
-  const hadRaw = Boolean(window.localStorage.getItem(STORAGE_KEY));
   state = loadState();
-  // First Studio visit writes seed so Mode Joueur can read the same source.
-  if (!hadRaw) {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...state, toast: null })
-    );
-    window.dispatchEvent(new Event("keyber-admin-updated"));
-  }
+  // Do NOT write localStorage on first visit — Studio stays in-memory
+  // until the user explicitly mutates (Équipe / Glossaire / Agents).
 }
 
 function patch(partial: Partial<AdminState>) {
@@ -1148,6 +1150,7 @@ export function duplicateAgent(id: string) {
     ...src,
     id: `agent-${Date.now().toString(36)}`,
     nom: `${src.nom} (copie)`,
+    nom_affiche: `${src.nom_affiche} (copie)`,
     competences: [...src.competences],
     icone: src.icone ?? "target",
   };
@@ -1161,9 +1164,14 @@ export function createAgent() {
   const a: AgentProfile = {
     id: `agent-${Date.now().toString(36)}`,
     nom: "Nouvel agent",
+    nom_affiche: "Nouvel agent",
     role: "À définir",
+    presentation: "",
     competences: [],
     mission: "",
+    objectifs: "",
+    commentJeTravaille: "",
+    ceQueJeNeFaisJamais: "",
     sortieAttendue: "",
     niveauExigence: "normal",
     actif: true,
@@ -1182,18 +1190,55 @@ export function setAgentActive(id: string, actif: boolean) {
 export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
   ensureHydrated();
   const coeur = getScenarioCoeur(scenarioId);
-  const agents = state.agents.filter((a) =>
+  let agents = state.agents.filter((a) =>
     onlyId ? a.id === onlyId && a.actif : a.actif
   );
+  // CLEO (nettoyage) d'abord : il dit par où commencer
+  if (!onlyId) {
+    agents = [...agents].sort((a, b) => {
+      if (a.id === "nettoyage") return -1;
+      if (b.id === "nettoyage") return 1;
+      return 0;
+    });
+  }
   const reports: AgentRunReport[] = agents.map((a) => {
-    if (a.id === "agent-orchestra") {
+    const aid = resolveAgentId(a.id);
+    if (aid === "nettoyage") {
+      return runNettoyageAudit();
+    }
+    if (aid === "orchestra") {
       return runOrchestraAudit(state, coeur);
     }
-    if (a.id === "agent-ergonomie") {
+    if (aid === "ergonomie") {
       return runErgonomieAudit(state);
     }
     const issues = [];
-    if (a.id === "agent-metier" || a.role.toLowerCase().includes("métier")) {
+    if (aid === "expert_metier" || a.nom_affiche === "ATLAS") {
+      const atelier = getAtelierSnapshotForAgents();
+      for (const comp of atelier.competences) {
+        if (comp.type !== "technique") continue;
+        if (isTechniqueVague(comp)) {
+          issues.push({
+            priorite: "haute" as const,
+            titre: "Fiche technique trop vague",
+            detail: `${comp.id} (${comp.nom}) — formule ou indicateur précis manquant.`,
+            solution:
+              "Ajouter la formule exacte et au moins un indicateur mesurable.",
+            nodeId: comp.id,
+          });
+        } else if (
+          comp.id === "planification_mrp" &&
+          !/besoin\s*net\s*=\s*besoin\s*brut/i.test(comp.formule)
+        ) {
+          issues.push({
+            priorite: "moyenne" as const,
+            titre: "Formule MRP douteuse",
+            detail: `${comp.id} : attendu Besoin net = Besoin brut - Stock - En-cours`,
+            solution: "Corriger la formule dans Atelier > Compétences.",
+            nodeId: comp.id,
+          });
+        }
+      }
       const d1 = coeur.decisions.find((d) => d.jour === 1);
       const cap = d1?.choix.find((c) => /capteur/i.test(c.label));
       const cash = cap?.consequences.find((c) => c.cible === "tresorerie");
@@ -1207,7 +1252,7 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
         });
       }
     }
-    if (a.id === "agent-coherence-erp") {
+    if (aid === "coherence_erp") {
       for (const d of coeur.decisions) {
         for (const c of d.choix) {
           for (const cons of c.consequences) {
@@ -1237,7 +1282,7 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
         }
       }
     }
-    if (a.id === "agent-testeur") {
+    if (aid === "testeur_joueur") {
       issues.push({
         priorite: "basse" as const,
         titre: "Branche « Rien » peu enseignante",
@@ -1246,7 +1291,7 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
         nodeId: "d1-rien",
       });
     }
-    if (a.id === "agent-pedagogue") {
+    if (aid === "pedagogue") {
       let incoherent = 0;
       for (const d of coeur.decisions) {
         for (const c of d.choix) {
@@ -1283,17 +1328,20 @@ export function runAgentsOnScenario(scenarioId: string, onlyId?: string) {
       0
     );
     return {
-      agentId: a.id,
+      agentId: aid,
       score: Math.max(0, 100 - penalty),
       issues,
       ranAt: new Date().toISOString(),
     };
   });
-  persist({ ...state, agentReports: reports });
+  // Append — never erase other agents' reports
+  const prev = state.agentReports ?? [];
+  const merged = [...reports, ...prev].slice(0, 200);
+  persist({ ...state, agentReports: merged });
   toast(
     onlyId
-      ? "Rapport agent généré"
-      : `Rapport multi-agents : ${reports.length} agent(s)`
+      ? "Rapport agent généré (historique conservé)"
+      : `Rapport multi-agents : ${reports.length} nouveau(x) — historique conservé`
   );
   return reports;
 }

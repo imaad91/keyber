@@ -1,0 +1,1376 @@
+{
+  "Nom": "Histoire — Logisticien",
+  "Version": 1,
+  "Type": "Histoire",
+  "Mode": "Histoire",
+  "Rôle": "Logisticien",
+  "Compétence": "",
+  "Secteur": "E-commerce / Éclairage",
+  "Entreprise": "Lumière & Co",
+  "Contexte": {
+    "Nom de l'entreprise": "Lumière & Co",
+    "Secteur d'activité": "E-commerce / Éclairage",
+    "Sous-secteur": "Vente en ligne de luminaires",
+    "Taille": "TPE",
+    "Nombre d'employés": "6",
+    "Chiffre d'affaires": "780 000 € / an",
+    "Année de création": "2019",
+    "Localisation": "Lyon (69), France — entrepôt 450 m² à Vénissieux",
+    "Nombre de sites": "2 (bureau centre-ville + entrepôt)",
+    "Organigramme détaillé": "Directrice (Claire Morel) → Logisticien (Samir) → 2 préparateurs ; Responsable e-commerce (Léa) → 1 SAV ; Achats partagés (Claire + Samir).",
+    "Qui décide quoi": "Claire : trésorerie, fournisseurs stratégiques, prix. Samir : priorités d'expédition, réappro courant. Léa : promos site, SAV crédit.",
+    "Qui travaille avec qui": "Samir ↔ préparateurs quotidien ; Samir ↔ Léa sur ruptures ; Claire ↔ fournisseurs Asie hebdo.",
+    "Horaires": "Entrepôt 8h–17h ; SAV 9h–18h ; pic samedi e-commerce.",
+    "Équipes": "1 équipe entrepôt (3) ; 1 équipe bureau (3).",
+    "Postes clés": "Logisticien, Préparateur, Responsable e-commerce, Directrice, SAV.",
+    "Description de chaque service (Production, Logistique, Qualité, Maintenance, Achats, Ventes)": "Pas de production : achat-revente. Logistique = réception, stockage, picking, expédition. Qualité = contrôle à réception + SAV. Achats = fournisseurs Chine/Vietnam. Ventes = site Shopify + marketplaces.",
+    "Liste des machines (nom, âge, capacité, vitesse, pannes fréquentes, coût de maintenance)": "1 gerbeur électrique (3 ans) ; 1 imprimante étiquettes Zebra ; 2 postes packing. Pas de ligne de production.",
+    "Processus de production étape par étape": "Commande site → validation stock → picking → packing → étiquette transporteur → enlèvement.",
+    "Temps de production": "Picking+packing moyen : 8 min / commande standard.",
+    "Goulots d'étranglement": "Réception containers Asie (douane) ; capacité packing en décembre ; SAV sur lampes LED défectueuses.",
+    "Liste des produits (nom, description, prix, marge, temps de fabrication, composants, fournisseurs, clients)": "Lampe bureau Luna (49€, marge 42%) ; Suspension Halo (129€, 38%) ; Guirlande festives (29€, 55%) ; Ampoules LED pack x4 (19€, 48%). Fournisseurs : MingLight (CN), VietGlow (VN).",
+    "Liste des stocks (nom, quantité actuelle, stock minimum, stock maximum, stock de sécurité, délai de réapprovisionnement, coût de stockage, problèmes récurrents)": "Luna : 420 / min 120 / max 800 / sécu 80 / délai 35 j ; Halo : 95 / min 40 / max 200 ; Guirlandes : 1100 (saison) ; LED : 2200. Problème : casse verre en rack haut.",
+    "Liste des fournisseurs (nom, ce qu'il fournit, délai moyen, fiabilité, prix, problèmes, contrats)": "MingLight — luminaires métal/verre, 35–45 j, fiabilité 85%, retards Q4. VietGlow — LED et guirlandes, 28 j, 90%. Contrat cadre annuel, paiement 30% acompte.",
+    "Liste des clients (nom, ce qu'il achète, volume, fréquence, exigences, problèmes, contrats)": "Particuliers FR via site (70% CA) ; décorateurs pro B2B (20%) ; marketplaces (10%). Exigence : livraison J+2 métropole. Problème : retours verre cassé.",
+    "Liste des problèmes réels (qu'est-ce qui s'est passé, pourquoi, qu'est-ce qu'on a fait, qu'est-ce qu'on aurait dû faire)": "Noël 2025 : rupture Halo — sous-estimation promo. Action : air freight cher. Aurait dû : buffer saisonnier + précommande.",
+    "Trésorerie actuelle": "92 000 € en banque ; 28 000 € créances clients.",
+    "Coûts fixes": "Loyer entrepôt 4 200 €/mois ; salaires 18 500 € ; Shopify+outils 890 €.",
+    "Coûts variables": "Achat marchandises, transport Colissimo/Chronopost, emballages, pubs Meta.",
+    "Objectifs quotidiens / hebdo / annuels": "Quotidien : 0 rupture SKU top 10, 100% commandes J+2. Hebdo : taux casse < 1,5%. Annuel : +15% CA sans dégrader marge."
+  },
+  "Événements entreprise": [
+    {
+      "id": "lumiere-ev-1",
+      "nom": "Colis perdu par le transporteur",
+      "type": "Logistique",
+      "description": "Un colis client disparaît chez le transporteur après enlèvement. Le client relance le SAV.",
+      "jour": 1,
+      "heure": "11:00",
+      "consequences": [
+        {
+          "cible": "confianceClient",
+          "valeur": -8
+        },
+        {
+          "cible": "tresorerie",
+          "valeur": -400
+        }
+      ]
+    },
+    {
+      "id": "lumiere-ev-2",
+      "nom": "Fournisseur en retard",
+      "type": "Fournisseur",
+      "description": "MingLight annonce +12 jours sur le container Halo. Stock bas déjà.",
+      "jour": 1,
+      "heure": "09:00",
+      "consequences": [
+        {
+          "cible": "stock",
+          "valeur": -15
+        }
+      ]
+    },
+    {
+      "id": "lumiere-ev-3",
+      "nom": "Pic de commandes à Noël",
+      "type": "Client",
+      "description": "Volume x3 sur 10 jours. Packing saturé, délais J+2 menacés.",
+      "jour": 2,
+      "heure": "08:30",
+      "consequences": [
+        {
+          "cible": "commandes",
+          "valeur": 3
+        },
+        {
+          "cible": "moral",
+          "valeur": -5
+        }
+      ]
+    },
+    {
+      "id": "lumiere-ev-4",
+      "nom": "Lampe cassée dans l'entrepôt",
+      "type": "Technique",
+      "description": "Chute d'un carton Halo depuis le rack haut : 18 unités cassées + zone bloquée.",
+      "jour": 1,
+      "heure": "10:00",
+      "urgent": true,
+      "deadlineHeure": "16:00",
+      "consequences": [
+        {
+          "cible": "stock",
+          "valeur": -18
+        },
+        {
+          "cible": "moral",
+          "valeur": -4
+        }
+      ],
+      "consequencesDeadline": [
+        {
+          "cible": "qualite",
+          "valeur": -20
+        },
+        {
+          "cible": "confianceClient",
+          "valeur": -10
+        }
+      ]
+    }
+  ],
+  "Rôles sélectionnés": [
+    "Logisticien"
+  ],
+  "Compétences sélectionnées": [
+    {
+      "nom": "Planification MRP",
+      "cours": [
+        "Intro MRP"
+      ]
+    }
+  ],
+  "Décisions": [
+    {
+      "id": "h1",
+      "titre": "Priorité du jour",
+      "dilemme": "Trois urgences en même temps — que traites-tu d'abord ?",
+      "jour": 1,
+      "xpGagne": 25,
+      "options": [
+        {
+          "id": "h1-opt0",
+          "label": "Traiter le retard fournisseur",
+          "feedbackTexte": "Tu sécurises le réappro. Stock remonte, trésorerie un peu sous tension.",
+          "consequences": [
+            {
+              "cible": "stock",
+              "valeur": 25
+            },
+            {
+              "cible": "tresorerie",
+              "valeur": -1500
+            },
+            {
+              "cible": "moral",
+              "valeur": 2
+            }
+          ],
+          "impacts": [
+            {
+              "label": "Stock",
+              "value": "+25",
+              "tone": "pos"
+            },
+            {
+              "label": "Trésorerie",
+              "value": "−1,5 k€",
+              "tone": "neg"
+            }
+          ]
+        },
+        {
+          "id": "h1-opt1",
+          "label": "Sauver le colis perdu",
+          "feedbackTexte": "Le client respire. Confiance en hausse, production un peu ralentie.",
+          "consequences": [
+            {
+              "cible": "confianceClient",
+              "valeur": 8
+            },
+            {
+              "cible": "production",
+              "valeur": -5
+            },
+            {
+              "cible": "xp",
+              "valeur": 15
+            }
+          ],
+          "impacts": [
+            {
+              "label": "Confiance",
+              "value": "+8",
+              "tone": "pos"
+            },
+            {
+              "label": "Prod",
+              "value": "−5",
+              "tone": "neg"
+            }
+          ]
+        },
+        {
+          "id": "h1-opt2",
+          "label": "Sécuriser le rack",
+          "feedbackTexte": "Sécurité d'abord. Éthique et moral montent ; le temps file.",
+          "consequences": [
+            {
+              "cible": "ethique",
+              "valeur": 5
+            },
+            {
+              "cible": "moral",
+              "valeur": 4
+            },
+            {
+              "cible": "temps",
+              "valeur": 30
+            }
+          ],
+          "impacts": [
+            {
+              "label": "Éthique",
+              "value": "+5",
+              "tone": "pos"
+            },
+            {
+              "label": "Temps",
+              "value": "+30 min",
+              "tone": "neu"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h2",
+      "titre": "Pic Noël",
+      "dilemme": "Le volume explose — comment tiens-tu la semaine ?",
+      "jour": 2,
+      "xpGagne": 30,
+      "options": [
+        {
+          "id": "h2-opt0",
+          "label": "Heures sup packing",
+          "feedbackTexte": "Les colis sortent. Production et pièces montent ; le moral fatigue.",
+          "consequences": [
+            {
+              "cible": "production",
+              "valeur": 15
+            },
+            {
+              "cible": "pieces",
+              "valeur": 40
+            },
+            {
+              "cible": "moral",
+              "valeur": -6
+            },
+            {
+              "cible": "tresorerie",
+              "valeur": -800
+            }
+          ],
+          "impacts": [
+            {
+              "label": "Prod",
+              "value": "+15",
+              "tone": "pos"
+            },
+            {
+              "label": "Moral",
+              "value": "−6",
+              "tone": "neg"
+            }
+          ]
+        },
+        {
+          "id": "h2-opt1",
+          "label": "Couper pubs",
+          "feedbackTexte": "Tu réduis la pression commerciale. Trésorerie préservée, commandes en baisse.",
+          "consequences": [
+            {
+              "cible": "tresorerie",
+              "valeur": 2000
+            },
+            {
+              "cible": "commandes",
+              "valeur": -3
+            },
+            {
+              "cible": "confianceClient",
+              "valeur": -4
+            }
+          ],
+          "impacts": [
+            {
+              "label": "Cash",
+              "value": "+2 k€",
+              "tone": "pos"
+            },
+            {
+              "label": "Commandes",
+              "value": "−3",
+              "tone": "neg"
+            }
+          ]
+        },
+        {
+          "id": "h2-opt2",
+          "label": "Prioriser top SKU",
+          "feedbackTexte": "Focus SKU rentables. Qualité semaine et score progressent.",
+          "consequences": [
+            {
+              "cible": "piecesBrutesSemaine",
+              "valeur": 60
+            },
+            {
+              "cible": "score",
+              "valeur": 20
+            },
+            {
+              "cible": "stock",
+              "valeur": -10
+            }
+          ],
+          "impacts": [
+            {
+              "label": "Qualité",
+              "value": "+60",
+              "tone": "pos"
+            },
+            {
+              "label": "Stock",
+              "value": "−10",
+              "tone": "neg"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Fins": [
+    {
+      "id": "fin-semaine",
+      "label": "Semaine tenue, clients livrés",
+      "kind": "victory",
+      "narration": "Les délais J+2 tiennent. Claire valide le plan de la semaine — le quai respire.",
+      "xp": 80,
+      "priority": 10,
+      "conditions": [
+        {
+          "metric": "confianceClient",
+          "op": "gte",
+          "value": 55
+        },
+        {
+          "metric": "stock",
+          "op": "gte",
+          "value": 60
+        }
+      ]
+    },
+    {
+      "id": "fin-chaos",
+      "label": "Retards massifs J+2",
+      "kind": "defeat",
+      "narration": "Le SAV flambe, le packing déborde. Le pic Noël t’a dépassé.",
+      "xp": 15,
+      "priority": 1,
+      "conditions": [
+        {
+          "metric": "confianceClient",
+          "op": "lte",
+          "value": 35
+        }
+      ]
+    }
+  ],
+  "fichier": "lumiere-co_logisticien-histoire_v1.json",
+  "Ordinateur": {
+    "stock": [
+      {
+        "ref": "HALO-30",
+        "nom": "Halo 30",
+        "qte": 95,
+        "seuil": 80,
+        "emplacement": "A-12",
+        "fournisseur": "MingLight",
+        "prixUnitaire": 42,
+        "derniereEntree": "J-5",
+        "statut": "Stock bas"
+      },
+      {
+        "ref": "ARC-SOFT",
+        "nom": "Arc Soft",
+        "qte": 48,
+        "seuil": 20,
+        "emplacement": "B-03",
+        "fournisseur": "VietGlow",
+        "prixUnitaire": 89,
+        "derniereEntree": "J-12",
+        "statut": "OK"
+      },
+      {
+        "ref": "BULB-E27",
+        "nom": "Ampoule E27 soft",
+        "qte": 320,
+        "seuil": 100,
+        "emplacement": "C-01",
+        "fournisseur": "MingLight",
+        "prixUnitaire": 4.5,
+        "derniereEntree": "J-2",
+        "statut": "OK"
+      }
+    ],
+    "commandes": [
+      {
+        "numero": "CMD-4401",
+        "client": "Dupont M.",
+        "piece": "Halo 30",
+        "qteCommandee": 2,
+        "qteProduite": 0,
+        "dateLimite": "J+2",
+        "statut": "À préparer",
+        "montant": 168
+      },
+      {
+        "numero": "CMD-4402",
+        "client": "Déco & Co",
+        "piece": "Arc Soft",
+        "qteCommandee": 6,
+        "qteProduite": 2,
+        "dateLimite": "J+3",
+        "statut": "En cours",
+        "montant": 890
+      },
+      {
+        "numero": "CMD-4408",
+        "client": "Martin L.",
+        "piece": "Halo 30",
+        "qteCommandee": 1,
+        "qteProduite": 0,
+        "dateLimite": "J+1",
+        "statut": "Urgent",
+        "montant": 84
+      }
+    ],
+    "production": [
+      {
+        "ligne": "Packing 1",
+        "piece": "Halo 30",
+        "objectifJour": 40,
+        "produitAujourdhui": 18,
+        "tauxRebut": "1,2 %",
+        "vitesse": "normale",
+        "etat": "En marche"
+      },
+      {
+        "ligne": "Packing 2",
+        "piece": "Mix SKU",
+        "objectifJour": 55,
+        "produitAujourdhui": 22,
+        "tauxRebut": "0,8 %",
+        "vitesse": "tendue",
+        "etat": "En marche"
+      }
+    ],
+    "employes": [
+      {
+        "nom": "Samir",
+        "poste": "Logisticien",
+        "equipe": "Entrepôt",
+        "anciennete": "4 ans",
+        "heuresSup": "4 h",
+        "tauxAbsence": "2 %",
+        "statut": "Présent"
+      },
+      {
+        "nom": "Nora",
+        "poste": "Préparatrice",
+        "equipe": "Entrepôt",
+        "anciennete": "1 an",
+        "heuresSup": "6 h",
+        "tauxAbsence": "0 %",
+        "statut": "Présent"
+      },
+      {
+        "nom": "Yanis",
+        "poste": "Préparateur",
+        "equipe": "Entrepôt",
+        "anciennete": "8 mois",
+        "heuresSup": "2 h",
+        "tauxAbsence": "5 %",
+        "statut": "Présent"
+      },
+      {
+        "nom": "Léa",
+        "poste": "E-commerce",
+        "equipe": "Bureau",
+        "anciennete": "3 ans",
+        "heuresSup": "0 h",
+        "tauxAbsence": "1 %",
+        "statut": "Présent"
+      }
+    ],
+    "factures": [
+      {
+        "numero": "FAC-2201",
+        "client": "Déco & Co",
+        "montant": 2400,
+        "emission": "J-10",
+        "echeance": "J+20",
+        "statut": "En attente"
+      },
+      {
+        "numero": "FAC-2198",
+        "client": "Particuliers (lot)",
+        "montant": 1860,
+        "emission": "J-3",
+        "echeance": "J+12",
+        "statut": "Payée"
+      }
+    ],
+    "machines": [
+      {
+        "nom": "Gerbeur A",
+        "type": "Gerbeur électrique",
+        "etat": "OK",
+        "vitesse": "nominale",
+        "tauxRebut": "—",
+        "derniereMaint": "J-30",
+        "prochaineMaint": "J+60"
+      },
+      {
+        "nom": "Imprimante étiquettes",
+        "type": "Zebra",
+        "etat": "Attention encre",
+        "vitesse": "OK",
+        "tauxRebut": "—",
+        "derniereMaint": "J-7",
+        "prochaineMaint": "J+21"
+      }
+    ],
+    "clients": [
+      {
+        "nom": "Déco & Co",
+        "pctCa": "12 %",
+        "derniereCommande": "J-2",
+        "relation": "Bon",
+        "contact": "paul@decoandco.fr"
+      },
+      {
+        "nom": "Particuliers Shopify",
+        "pctCa": "78 %",
+        "derniereCommande": "Aujourd'hui",
+        "relation": "Variable",
+        "contact": "support@lumiere-co.fr"
+      }
+    ],
+    "fournisseurs": [
+      {
+        "nom": "MingLight",
+        "piece": "Halo 30 / ampoules",
+        "delai": "28–40 j",
+        "prix": "compétitif",
+        "fiabilite": "moyenne Q4"
+      },
+      {
+        "nom": "VietGlow",
+        "piece": "Arc Soft",
+        "delai": "21–30 j",
+        "prix": "un peu plus cher",
+        "fiabilite": "bonne"
+      }
+    ],
+    "maintenance": [
+      {
+        "id": "mnt-gerbeur",
+        "equipement": "Gerbeur A",
+        "type": "Préventive",
+        "echeance": "J+60",
+        "technicien": "Ext. LiftPro",
+        "statut": "Planifiée",
+        "priorite": "Normale"
+      },
+      {
+        "id": "mnt-zebra",
+        "equipement": "Imprimante étiquettes",
+        "type": "Consommable",
+        "echeance": "J+2",
+        "technicien": "Nora",
+        "statut": "À faire",
+        "priorite": "Haute"
+      }
+    ],
+    "emails": [
+      {
+        "id": "mail-ming-retard",
+        "from": "ops@minglight.cn",
+        "subject": "Halo container — +12 jours",
+        "preview": "Container ML-884 delayed +12 days…",
+        "body": "Dear team, container ML-884 delayed +12 days. ETA revised. Please confirm air freight option if needed.",
+        "day": 1,
+        "time": "08:45",
+        "read": false,
+        "urgent": true
+      },
+      {
+        "id": "mail-sav-colis",
+        "from": "sav@lumiere-co.fr",
+        "subject": "URGENT — colis perdu CMD-4390",
+        "preview": "Client relance. Transporteur confirme perte…",
+        "body": "Client relance. Transporteur confirme perte après enlèvement. Besoin décision rembourse / renvoi avant 16h.",
+        "day": 1,
+        "time": "11:05",
+        "read": false,
+        "urgent": true
+      },
+      {
+        "id": "mail-lea-promo",
+        "from": "lea@lumiere-co.fr",
+        "subject": "Promo Halo — on tient ?",
+        "preview": "Le site push Halo ce week-end…",
+        "body": "Le site push Halo ce week-end. Confirme-moi le stock dispo demain matin sinon je coupe la bannière.",
+        "day": 1,
+        "time": "09:20",
+        "read": false
+      },
+      {
+        "id": "mail-claire-cash",
+        "from": "claire@lumiere-co.fr",
+        "subject": "Air freight = cash",
+        "preview": "Si tu proposes de l'air MingLight…",
+        "body": "Si tu proposes de l'air MingLight, passe me voir avec le chiffre. Trésorerie déjà sous tension.",
+        "day": 1,
+        "time": "10:10",
+        "read": true
+      }
+    ],
+    "chatContacts": [
+      {
+        "id": "iv-samir",
+        "name": "Samir",
+        "role": "Logisticien"
+      },
+      {
+        "id": "iv-lea",
+        "name": "Léa",
+        "role": "E-commerce"
+      },
+      {
+        "id": "claire",
+        "name": "Claire",
+        "role": "Directrice"
+      }
+    ],
+    "chatThreads": [
+      {
+        "contactId": "iv-samir",
+        "messages": [
+          {
+            "from": "them",
+            "text": "Commence par l'ERP Halo + le mail MingLight.",
+            "time": "08:50",
+            "alert": true
+          },
+          {
+            "from": "me",
+            "text": "OK — je regarde le seuil sécu.",
+            "time": "08:52"
+          }
+        ]
+      },
+      {
+        "contactId": "iv-lea",
+        "messages": [
+          {
+            "from": "them",
+            "text": "SAV flambe si on rate une expé Halo.",
+            "time": "09:30",
+            "alert": true
+          }
+        ]
+      },
+      {
+        "contactId": "claire",
+        "messages": [
+          {
+            "from": "them",
+            "text": "Point cash à 14h si air freight.",
+            "time": "10:15"
+          }
+        ]
+      }
+    ],
+    "documents": [
+      {
+        "id": "doc-proc-picking",
+        "titre": "Procédure picking Halo",
+        "type": "SOP",
+        "contenu": "1) Scanner A-12 2) Contrôler carton 3) Packing mousse 4) Étiquette J+2. Seuil alerte : stock < 80."
+      },
+      {
+        "id": "doc-ming-contrat",
+        "titre": "Fiche MingLight Q4",
+        "type": "Fournisseur",
+        "contenu": "Incoterm FOB. Lead time nominal 28 j. Buffer sécu Halo = 80 u. Air freight sur devis Claire."
+      },
+      {
+        "id": "doc-sav",
+        "titre": "Grille SAV colis perdu",
+        "type": "SAV",
+        "contenu": "Perte transporteur : renvoi prioritaire si stock > seuil, sinon avoir + délai annoncé."
+      }
+    ],
+    "browser": [
+      {
+        "id": "br-shopify-halo",
+        "title": "Shopify — page Halo 30",
+        "url": "https://shop.lumiere-co.example/halo-30",
+        "snippet": "Best-seller · promo week-end activée",
+        "body": "Bannière « −15 % Halo » live. Stock affiché côté site = 95 (sync WMS retardée).",
+        "tags": [
+          "site",
+          "promo",
+          "halo"
+        ]
+      },
+      {
+        "id": "br-tracking",
+        "title": "Tracking transporteur CMD-4390",
+        "url": "https://track.carrier.example/4390",
+        "snippet": "Statut : Lost after pickup",
+        "body": "Dernier scan quai transporteur J-1 18h. Aucun scan hub.",
+        "tags": [
+          "sav",
+          "transport"
+        ]
+      }
+    ],
+    "dashboardCards": [
+      {
+        "label": "Stock Halo",
+        "value": "95 u"
+      },
+      {
+        "label": "Commandes J",
+        "value": "14"
+      },
+      {
+        "label": "Retards J+2",
+        "value": "3"
+      },
+      {
+        "label": "Trésorerie",
+        "value": "48 k€"
+      }
+    ],
+    "dashboardSeries": [
+      {
+        "name": "Lun",
+        "prod": 32,
+        "panne": 1
+      },
+      {
+        "name": "Mar",
+        "prod": 38,
+        "panne": 0
+      },
+      {
+        "name": "Mer",
+        "prod": 41,
+        "panne": 2
+      },
+      {
+        "name": "Jeu",
+        "prod": 29,
+        "panne": 1
+      },
+      {
+        "name": "Ven",
+        "prod": 44,
+        "panne": 0
+      },
+      {
+        "name": "Sam",
+        "prod": 36,
+        "panne": 1
+      }
+    ],
+    "interviews": [
+      {
+        "id": "iv-samir",
+        "nom": "Samir",
+        "role": "Logisticien (mentor)",
+        "phrase": "Le quai ne ment jamais.",
+        "bio": "Tu es Logisticien junior. Samir te coache sur les priorités d'expédition et le réappro MingLight.",
+        "relationConfiance": 60,
+        "lines": [
+          {
+            "q": "Par où je commence ?",
+            "a": "ERP stock Halo, puis le mail MingLight. Ensuite tu tranches."
+          }
+        ],
+        "questions": [
+          {
+            "id": "samir-q1",
+            "texte": "Par où je commence ce matin ?",
+            "choices": [
+              {
+                "id": "samir-q1-a",
+                "texte": "Je croise stock ERP et mail fournisseur.",
+                "reponse": "Bien. Le stock Halo est tendu — note le seuil avant de décider.",
+                "confianceDelta": 6,
+                "xp": 8,
+                "unlockInfo": "PRIORITE_ERP"
+              },
+              {
+                "id": "samir-q1-b",
+                "texte": "Je file direct au packing.",
+                "reponse": "Le packing attend une décision, pas un corps de plus. Passe par l'ERP.",
+                "confianceDelta": -4
+              }
+            ]
+          },
+          {
+            "id": "samir-q2",
+            "texte": "MingLight annonce un retard — je fais quoi ?",
+            "choices": [
+              {
+                "id": "samir-q2-a",
+                "texte": "Je prépare un plan B VietGlow + air freight.",
+                "reponse": "Solide. Claire voudra les chiffres cash avant de signer l'air.",
+                "confianceDelta": 5,
+                "xp": 10,
+                "consequences": [
+                  {
+                    "cible": "moral",
+                    "valeur": 2
+                  }
+                ]
+              },
+              {
+                "id": "samir-q2-b",
+                "texte": "On attend, ça se débloquera.",
+                "reponse": "Risqué en Q4. Le pic Noël n'attendra pas MingLight.",
+                "confianceDelta": -6,
+                "consequences": [
+                  {
+                    "cible": "confianceClient",
+                    "valeur": -3
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "iv-lea",
+        "nom": "Léa",
+        "role": "Responsable e-commerce",
+        "phrase": "Le site vend — l'entrepôt doit suivre.",
+        "bio": "Léa gère promos et SAV. Elle pousse le volume ; toi, tu tiens les délais J+2.",
+        "relationConfiance": 50,
+        "lines": [
+          {
+            "q": "La promo Halo tient ?",
+            "a": "Oui, mais le SAV flambe si on rate une expé."
+          }
+        ],
+        "questions": [
+          {
+            "id": "lea-q1",
+            "texte": "La promo Halo — on coupe ou on tient ?",
+            "choices": [
+              {
+                "id": "lea-q1-a",
+                "texte": "On tient, mais je priorise les SKU top.",
+                "reponse": "OK pour moi si tu me confirms le stock demain matin.",
+                "confianceDelta": 4,
+                "xp": 6
+              },
+              {
+                "id": "lea-q1-b",
+                "texte": "Coupe la promo, on sauve le service.",
+                "reponse": "Dur à digérer côté CA… mais le SAV te remerciera.",
+                "confianceDelta": -2,
+                "consequences": [
+                  {
+                    "cible": "commandes",
+                    "valeur": -1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "objectifs": [
+      {
+        "id": "obj-lumiere-stock",
+        "titre": "Tenir le stock Halo",
+        "type": "JOURNALIER",
+        "status": "EN_COURS",
+        "description": "Éviter la rupture avant le pic — stock ≥ 80.",
+        "cible": "Stock ≥ 80",
+        "cibleNombre": 80,
+        "metric": "stock",
+        "op": "gte",
+        "progression": 0,
+        "xp": 25,
+        "failOnDayEnd": true
+      },
+      {
+        "id": "obj-lumiere-decide",
+        "titre": "Trancher la priorité du jour",
+        "type": "JOURNALIER",
+        "status": "EN_COURS",
+        "description": "Valider au moins une décision scénario.",
+        "cible": "1 décision",
+        "cibleNombre": 1,
+        "metric": "stepIndex",
+        "op": "gte",
+        "progression": 0,
+        "xp": 20,
+        "failOnDayEnd": true
+      },
+      {
+        "id": "obj-lumiere-mail",
+        "titre": "Lire les mails urgents",
+        "type": "JOURNALIER",
+        "status": "EN_COURS",
+        "description": "Ouvrir au moins un mail urgent (ops / events).",
+        "cible": "1 mail urgent lu",
+        "cibleNombre": 1,
+        "metric": "emailsReadUrgent",
+        "op": "gte",
+        "progression": 0,
+        "xp": 15,
+        "failOnDayEnd": true
+      },
+      {
+        "id": "obj-lumiere-hebdo",
+        "titre": "Qualité semaine Noël",
+        "type": "HEBDOMADAIRE",
+        "status": "EN_COURS",
+        "description": "Accumuler la qualité / pièces sur la semaine.",
+        "cible": "Qualité ≥ 150",
+        "cibleNombre": 150,
+        "metric": "piecesBrutesSemaine",
+        "op": "gte",
+        "progression": 0,
+        "xp": 40,
+        "failOnDayEnd": false
+      }
+    ],
+    "sensors": [
+      {
+        "id": "sensor-quai",
+        "label": "Capteur quai / gerbeur",
+        "description": "Mesure flux picking hauteur — lève le brouillard stock / prod.",
+        "cost": 18000,
+        "unlockLevel": 2,
+        "modules": [
+          "stock",
+          "production",
+          "rebut"
+        ],
+        "installed": false
+      },
+      {
+        "id": "sensor-wms-live",
+        "label": "Passerelle WMS live",
+        "description": "Temps réel entrepôt + trésorerie ops.",
+        "cost": 42000,
+        "unlockLevel": 3,
+        "modules": [
+          "stock",
+          "production",
+          "tresorerie",
+          "rebut",
+          "moral"
+        ],
+        "installed": false
+      }
+    ]
+  },
+  "Interviews": [
+    {
+      "id": "iv-samir",
+      "nom": "Samir",
+      "role": "Logisticien (mentor)",
+      "phrase": "Le quai ne ment jamais.",
+      "bio": "Tu es Logisticien junior. Samir te coache sur les priorités d'expédition et le réappro MingLight.",
+      "relationConfiance": 60,
+      "lines": [
+        {
+          "q": "Par où je commence ?",
+          "a": "ERP stock Halo, puis le mail MingLight. Ensuite tu tranches."
+        }
+      ],
+      "questions": [
+        {
+          "id": "samir-q1",
+          "texte": "Par où je commence ce matin ?",
+          "choices": [
+            {
+              "id": "samir-q1-a",
+              "texte": "Je croise stock ERP et mail fournisseur.",
+              "reponse": "Bien. Le stock Halo est tendu — note le seuil avant de décider.",
+              "confianceDelta": 6,
+              "xp": 8,
+              "unlockInfo": "PRIORITE_ERP"
+            },
+            {
+              "id": "samir-q1-b",
+              "texte": "Je file direct au packing.",
+              "reponse": "Le packing attend une décision, pas un corps de plus. Passe par l'ERP.",
+              "confianceDelta": -4
+            }
+          ]
+        },
+        {
+          "id": "samir-q2",
+          "texte": "MingLight annonce un retard — je fais quoi ?",
+          "choices": [
+            {
+              "id": "samir-q2-a",
+              "texte": "Je prépare un plan B VietGlow + air freight.",
+              "reponse": "Solide. Claire voudra les chiffres cash avant de signer l'air.",
+              "confianceDelta": 5,
+              "xp": 10,
+              "consequences": [
+                {
+                  "cible": "moral",
+                  "valeur": 2
+                }
+              ]
+            },
+            {
+              "id": "samir-q2-b",
+              "texte": "On attend, ça se débloquera.",
+              "reponse": "Risqué en Q4. Le pic Noël n'attendra pas MingLight.",
+              "confianceDelta": -6,
+              "consequences": [
+                {
+                  "cible": "confianceClient",
+                  "valeur": -3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "iv-lea",
+      "nom": "Léa",
+      "role": "Responsable e-commerce",
+      "phrase": "Le site vend — l'entrepôt doit suivre.",
+      "bio": "Léa gère promos et SAV. Elle pousse le volume ; toi, tu tiens les délais J+2.",
+      "relationConfiance": 50,
+      "lines": [
+        {
+          "q": "La promo Halo tient ?",
+          "a": "Oui, mais le SAV flambe si on rate une expé."
+        }
+      ],
+      "questions": [
+        {
+          "id": "lea-q1",
+          "texte": "La promo Halo — on coupe ou on tient ?",
+          "choices": [
+            {
+              "id": "lea-q1-a",
+              "texte": "On tient, mais je priorise les SKU top.",
+              "reponse": "OK pour moi si tu me confirms le stock demain matin.",
+              "confianceDelta": 4,
+              "xp": 6
+            },
+            {
+              "id": "lea-q1-b",
+              "texte": "Coupe la promo, on sauve le service.",
+              "reponse": "Dur à digérer côté CA… mais le SAV te remerciera.",
+              "confianceDelta": -2,
+              "consequences": [
+                {
+                  "cible": "commandes",
+                  "valeur": -1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Objectifs": [
+    {
+      "id": "obj-lumiere-stock",
+      "titre": "Tenir le stock Halo",
+      "type": "JOURNALIER",
+      "status": "EN_COURS",
+      "description": "Éviter la rupture avant le pic — stock ≥ 80.",
+      "cible": "Stock ≥ 80",
+      "cibleNombre": 80,
+      "metric": "stock",
+      "op": "gte",
+      "progression": 0,
+      "xp": 25,
+      "failOnDayEnd": true
+    },
+    {
+      "id": "obj-lumiere-decide",
+      "titre": "Trancher la priorité du jour",
+      "type": "JOURNALIER",
+      "status": "EN_COURS",
+      "description": "Valider au moins une décision scénario.",
+      "cible": "1 décision",
+      "cibleNombre": 1,
+      "metric": "stepIndex",
+      "op": "gte",
+      "progression": 0,
+      "xp": 20,
+      "failOnDayEnd": true
+    },
+    {
+      "id": "obj-lumiere-mail",
+      "titre": "Lire les mails urgents",
+      "type": "JOURNALIER",
+      "status": "EN_COURS",
+      "description": "Ouvrir au moins un mail urgent (ops / events).",
+      "cible": "1 mail urgent lu",
+      "cibleNombre": 1,
+      "metric": "emailsReadUrgent",
+      "op": "gte",
+      "progression": 0,
+      "xp": 15,
+      "failOnDayEnd": true
+    },
+    {
+      "id": "obj-lumiere-hebdo",
+      "titre": "Qualité semaine Noël",
+      "type": "HEBDOMADAIRE",
+      "status": "EN_COURS",
+      "description": "Accumuler la qualité / pièces sur la semaine.",
+      "cible": "Qualité ≥ 150",
+      "cibleNombre": 150,
+      "metric": "piecesBrutesSemaine",
+      "op": "gte",
+      "progression": 0,
+      "xp": 40,
+      "failOnDayEnd": false
+    }
+  ],
+  "Jours": [
+    {
+      "id": "jour-1",
+      "jour": 1,
+      "label": "J1 — Feu au quai",
+      "phase": "urgence",
+      "decisionIds": [
+        "h1",
+        "d1"
+      ],
+      "eventIds": [
+        "lumiere-ev-1",
+        "lumiere-ev-2",
+        "lumiere-ev-4"
+      ]
+    },
+    {
+      "id": "jour-1-end",
+      "jour": 1,
+      "label": "Fin de jour J1 — bilan quai",
+      "phase": "DAY_END",
+      "decisionIds": [],
+      "eventIds": []
+    },
+    {
+      "id": "jour-2",
+      "jour": 2,
+      "label": "J2 — Pic Noël",
+      "phase": "pic",
+      "decisionIds": [
+        "h2"
+      ],
+      "eventIds": [
+        "lumiere-ev-3"
+      ]
+    },
+    {
+      "id": "jour-2-end",
+      "jour": 2,
+      "label": "Fin de jour J2 — bilan",
+      "phase": "DAY_END",
+      "decisionIds": [],
+      "eventIds": []
+    }
+  ],
+  "Kpis": [
+    {
+      "id": "kpi-stock",
+      "label": "Stock Halo",
+      "format": "number",
+      "path": "stock",
+      "unit": "u"
+    },
+    {
+      "id": "kpi-cash",
+      "label": "Trésorerie",
+      "format": "currency",
+      "path": "tresorerie",
+      "unit": "€"
+    },
+    {
+      "id": "kpi-confiance",
+      "label": "Confiance client",
+      "format": "percent",
+      "path": "confianceClient",
+      "unit": "%"
+    },
+    {
+      "id": "kpi-moral",
+      "label": "Moral équipe",
+      "format": "number",
+      "path": "moral",
+      "unit": ""
+    }
+  ],
+  "Conséquences": [
+    {
+      "id": "cons-stock-up",
+      "label": "Réappro Halo",
+      "consequences": [
+        {
+          "cible": "stock",
+          "valeur": 25
+        }
+      ]
+    },
+    {
+      "id": "cons-cash-hit",
+      "label": "Cash air freight",
+      "consequences": [
+        {
+          "cible": "tresorerie",
+          "valeur": -1500
+        }
+      ]
+    },
+    {
+      "id": "cons-confiance",
+      "label": "SAV client sauvé",
+      "consequences": [
+        {
+          "cible": "confianceClient",
+          "valeur": 8
+        }
+      ]
+    },
+    {
+      "id": "cons-moral-down",
+      "label": "Heures sup packing",
+      "consequences": [
+        {
+          "cible": "moral",
+          "valeur": -6
+        }
+      ]
+    }
+  ],
+  "Intro": [
+    "Bienvenue chez Lumière & Co — e-commerce de luminaires, entrepôt Vénissieux.",
+    "Tu es Logisticien junior. Samir te coache ; Léa pousse le volume site ; Claire tient la trésorerie.",
+    "Objectif de la semaine : tenir le stock Halo et les délais J+2 pendant le pic Noël.",
+    "Ouvre l'Ordinateur : ERP stock, mails MingLight, chat interne. Puis tranche les décisions du jour."
+  ],
+  "Livre": {
+    "nom": "Lumière & Co",
+    "slogan": "Éclairer sans casser les délais.",
+    "histoire": {
+      "fondation": "Fondée à Lyon en 2019 par Claire Morel, Lumière & Co vend des luminaires design en ligne avec un entrepôt à Vénissieux.",
+      "datesCles": [
+        {
+          "annee": "2019",
+          "fait": "Création — premier container MingLight"
+        },
+        {
+          "annee": "2021",
+          "fait": "Passage Shopify + 2 préparateurs"
+        },
+        {
+          "annee": "2024",
+          "fait": "Pic Noël x3 — stress stock Halo"
+        }
+      ],
+      "anecdotes": [
+        "Le surnom « Halo » vient du halo de lumière du best-seller.",
+        "Samir chronomètre le picking au stopwatch — le quai ne ment jamais."
+      ],
+      "crisesPassees": [
+        "2022 : container bloqué en douane — rupture 11 jours.",
+        "2023 : panne gerbeur — zone A fermée une après-midi."
+      ],
+      "narratif": "Petite équipe, gros volume saisonnier. La semaine décisive, c'est maintenant : stock Halo, SAV, et MingLight en retard."
+    },
+    "activite": {
+      "ceQuOnFabrique": "Achat-revente de luminaires (plafonniers, lampadaires, ampoules design). Pas de production.",
+      "pourQui": "Particuliers France + petits pros déco via le site.",
+      "produitsPhares": [
+        {
+          "nom": "Halo 30",
+          "description": "Plafonnier best-seller — stock critique Q4."
+        },
+        {
+          "nom": "Arc Soft",
+          "description": "Lampadaire design — volume moyen, marge haute."
+        }
+      ],
+      "clientsPrincipaux": [
+        "Particuliers Shopify",
+        "Déco & Co (B2B léger)"
+      ]
+    },
+    "organigramme": [
+      {
+        "personnageId": "claire",
+        "label": "Claire Morel — Directrice"
+      },
+      {
+        "personnageId": "iv-samir",
+        "label": "Samir — Logisticien mentor"
+      },
+      {
+        "personnageId": "iv-lea",
+        "label": "Léa — E-commerce"
+      }
+    ],
+    "chiffresCles": {
+      "ca": "780 000 € / an",
+      "employes": 6,
+      "machines": 2,
+      "clients": 4200,
+      "satisfaction": "4,2 / 5"
+    },
+    "valeurs": [
+      {
+        "titre": "Délai J+2",
+        "description": "Promesse client non négociable en pic."
+      },
+      {
+        "titre": "Stock honnête",
+        "description": "Mieux vaut couper une promo que mentir sur le dispo."
+      }
+    ],
+    "glossaire": [
+      {
+        "terme": "Halo",
+        "definition": "SKU plafonnier best-seller, stock de sécurité 80."
+      },
+      {
+        "terme": "MingLight",
+        "definition": "Fournisseur Asie principal — délais longs Q4."
+      },
+      {
+        "terme": "J+2",
+        "definition": "Engagement d'expédition sous 48 h ouvrées."
+      }
+    ]
+  }
+}

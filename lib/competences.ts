@@ -168,7 +168,7 @@ export const COMPETENCES_CIBLEES_PROD: CompetenceCibleeDef[] = [
     indicateurs: [
       "Séquence OF publiée pour la journée",
       "Contrainte machine / outillage prise en compte",
-      "Priorité contrat AutoVolt respectée",
+      "Priorité contrat client respectée",
     ],
     erreursFrequentes: [
       "FIFO aveugle sans priorité client",

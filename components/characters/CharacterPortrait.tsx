@@ -119,13 +119,19 @@ function PortraitSvg({
         <circle cx="160" cy="36" r="42" fill={mintWash} opacity="0.28" />
       ) : null}
       {id === "pers-marie" ? (
-        <Marie expression={expression} />
+        <SlotAtelier expression={expression} />
       ) : id === "pers-karim" ? (
-        <Karim expression={expression} />
+        <SlotMaintenance expression={expression} />
       ) : id === "pers-laurent" ? (
-        <Laurent expression={expression} />
+        <SlotDirection expression={expression} />
+      ) : id === "pers-henri" ? (
+        <SlotMentor expression={expression} />
+      ) : id === "pers-samir" ? (
+        <SlotSamir expression={expression} />
+      ) : id === "pers-lea" ? (
+        <SlotLea expression={expression} />
       ) : (
-        <Henri expression={expression} />
+        <SlotClaire expression={expression} />
       )}
     </svg>
   );
@@ -228,7 +234,7 @@ function Mouth({
   );
 }
 
-function Marie({ expression }: { expression: CharacterExpression }) {
+function SlotAtelier({ expression }: { expression: CharacterExpression }) {
   const meta = CHARACTER_META["pers-marie"];
   const skin = CHARACTER_PALETTE.skinLight;
   return (
@@ -290,7 +296,7 @@ function Marie({ expression }: { expression: CharacterExpression }) {
   );
 }
 
-function Karim({ expression }: { expression: CharacterExpression }) {
+function SlotMaintenance({ expression }: { expression: CharacterExpression }) {
   const meta = CHARACTER_META["pers-karim"];
   const skin = CHARACTER_PALETTE.skinMid;
   return (
@@ -330,7 +336,7 @@ function Karim({ expression }: { expression: CharacterExpression }) {
   );
 }
 
-function Laurent({ expression }: { expression: CharacterExpression }) {
+function SlotDirection({ expression }: { expression: CharacterExpression }) {
   const meta = CHARACTER_META["pers-laurent"];
   const skin = CHARACTER_PALETTE.skinLight;
   return (
@@ -375,7 +381,7 @@ function Laurent({ expression }: { expression: CharacterExpression }) {
   );
 }
 
-function Henri({ expression }: { expression: CharacterExpression }) {
+function SlotMentor({ expression }: { expression: CharacterExpression }) {
   const meta = CHARACTER_META["pers-henri"];
   const skin = CHARACTER_PALETTE.skinLight;
   const smileExpr: CharacterExpression =
@@ -422,6 +428,141 @@ function Henri({ expression }: { expression: CharacterExpression }) {
       </g>
       <Eyes expression={smileExpr} y={84} />
       <Mouth expression={smileExpr} y={110} />
+    </g>
+  );
+}
+
+/** Lumière — Samir (logisticien mentor). */
+function SlotSamir({ expression }: { expression: CharacterExpression }) {
+  const meta = CHARACTER_META["pers-samir"];
+  const skin = CHARACTER_PALETTE.skinMid;
+  return (
+    <g>
+      <path
+        d="M40 200 L40 146 C40 130 58 120 80 120 L120 120 C142 120 160 130 160 146 L160 200 Z"
+        fill={meta.jacketOrTop}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <path
+        d="M88 120 L100 138 L112 120"
+        fill={CHARACTER_PALETTE.beige}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      {/* badge / chronomètre suggestion */}
+      <circle
+        cx="148"
+        cy="158"
+        r="10"
+        fill={CHARACTER_PALETTE.beige}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <circle cx="148" cy="158" r="3" fill={STROKE.color} />
+      <path
+        d="M62 88 C62 52 78 38 100 38 C122 38 138 52 138 88 L138 76 C138 56 120 48 100 48 C80 48 62 56 62 76 Z"
+        fill={meta.hair}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <FaceBase skin={skin} />
+      <path
+        d="M74 102 C78 124 90 132 100 132 C110 132 122 124 126 102"
+        fill="#5C4033"
+        opacity="0.3"
+        stroke={STROKE.color}
+        strokeWidth={1.5}
+      />
+      <Eyes expression={expression} y={80} />
+      <Mouth expression={expression} y={106} />
+    </g>
+  );
+}
+
+/** Lumière — Léa (e-commerce). */
+function SlotLea({ expression }: { expression: CharacterExpression }) {
+  const meta = CHARACTER_META["pers-lea"];
+  const skin = CHARACTER_PALETTE.skinLight;
+  return (
+    <g>
+      <path
+        d="M42 200 L42 148 C42 132 60 124 80 124 L120 124 C140 124 158 132 158 148 L158 200 Z"
+        fill={meta.jacketOrTop}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      {/* bob hair */}
+      <path
+        d="M55 100 C55 48 74 32 100 32 C126 32 145 48 145 100 L145 118 C145 88 128 70 100 70 C72 70 55 88 55 118 Z"
+        fill={meta.hair}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <ellipse
+        cx="58"
+        cy="108"
+        rx="10"
+        ry="18"
+        fill={meta.hair}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <ellipse
+        cx="142"
+        cy="108"
+        rx="10"
+        ry="18"
+        fill={meta.hair}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <FaceBase skin={skin} cy={90} />
+      <Eyes expression={expression} y={84} />
+      <Mouth expression={expression} y={110} />
+    </g>
+  );
+}
+
+/** Lumière — Claire Morel (directrice). */
+function SlotClaire({ expression }: { expression: CharacterExpression }) {
+  const meta = CHARACTER_META["pers-claire"];
+  const skin = CHARACTER_PALETTE.skinLight;
+  return (
+    <g>
+      <path
+        d="M38 200 L38 148 C38 132 58 122 80 122 L120 122 C142 122 162 132 162 148 L162 200 Z"
+        fill={meta.jacketOrTop}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <path
+        d="M90 122 L100 148 L110 122 Z"
+        fill={CHARACTER_PALETTE.white}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      {/* bun */}
+      <circle
+        cx="100"
+        cy="42"
+        r="14"
+        fill={meta.hair}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <path
+        d="M62 90 C62 52 78 40 100 40 C122 40 138 52 138 90 L138 78 C138 58 120 50 100 50 C80 50 62 58 62 78 Z"
+        fill={meta.hair}
+        stroke={STROKE.color}
+        strokeWidth={STROKE.width}
+      />
+      <FaceBase skin={skin} />
+      <Eyes
+        expression={expression === "ALLIE" ? "NEUTRE" : expression}
+        y={80}
+      />
+      <Mouth expression={expression} y={108} />
     </g>
   );
 }

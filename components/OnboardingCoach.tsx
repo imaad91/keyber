@@ -24,7 +24,7 @@ export function OnboardingCoach() {
             {meta.titre}
           </p>
           <p className="text-sm leading-relaxed text-foreground">
-            <span className="font-semibold text-accent">Henri :</span>{" "}
+            <span className="font-semibold text-accent">Mentor :</span>{" "}
             {meta.mentorLine}
           </p>
         </div>

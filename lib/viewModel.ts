@@ -9,6 +9,7 @@ import {
   visibilityForLevel,
   type VisibilityLevel,
 } from "./engine";
+import { applyOsTresorerie } from "./keyberOsRuntime";
 
 export type GameView = {
   // nested passthrough
@@ -32,7 +33,7 @@ export type GameView = {
   stockKg: number;
   rebutRate: number;
   ethique: number;
-  confianceAutoVolt: number;
+  confianceClient: number;
   piecesQualiteSemaine: number;
   piecesBrutesSemaine: number;
   dailyProductionBase: number;
@@ -135,7 +136,8 @@ export function toGameView(state: GameState): GameView {
     dayLengthMinutes: state.meta?.dayLengthMinutes ?? 600,
     xp: state.progression?.xp ?? 0,
     level: state.progression?.niveau ?? 1,
-    tresorerie: state.finance?.tresorerie ?? 0,
+    // Keyber OS runtime (Admin → ERP) : facteur Trésorerie
+    tresorerie: applyOsTresorerie(state.finance?.tresorerie ?? 0),
     production: state.finance?.productionParJour ?? 0,
     moral: state.humain?.moralEquipe ?? 0,
     piecesAujourdhui: state.finance?.piecesAujourdhui ?? 0,
@@ -144,7 +146,7 @@ export function toGameView(state: GameState): GameView {
     stockKg: state.finance?.stockKg ?? 0,
     rebutRate: state.finance?.tauxRebut ?? 0,
     ethique: state.humain?.ethique ?? 0,
-    confianceAutoVolt: state.humain?.confianceClient ?? 0,
+    confianceClient: state.humain?.confianceClient ?? 0,
     piecesQualiteSemaine: state.finance?.qualite ?? 0,
     piecesBrutesSemaine: state.finance?.piecesBrutesSemaine ?? 0,
     dailyProductionBase: state.flags?.dailyProductionBase ?? 60,

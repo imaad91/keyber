@@ -1,0 +1,2513 @@
+{
+  "Nom": "NOVACIER — La Semaine Qui Décide De Tout",
+  "Version": 1,
+  "Type": "Histoire",
+  "Mode": "Histoire",
+  "Rôle": "Responsable de Production",
+  "Compétence": "",
+  "Secteur": "Industrie / Automobile",
+  "Entreprise": "Novacier",
+  "Contexte": {
+    "Nom de l'entreprise": "Novacier",
+    "Secteur d'activité": "Industrie / Automobile",
+    "Sous-secteur": "Pièces métalliques automobile",
+    "Taille": "PME",
+    "Nombre d'employés": "120",
+    "Chiffre d'affaires": "12 M€ / an",
+    "Année de création": "1987",
+    "Localisation": "Saint-Étienne (42), France",
+    "Nombre de sites": "1 atelier",
+    "Organigramme détaillé": "Directeur (Laurent Perrin) → Responsable Production → Cheffe d'atelier (Marie) / Maintenance (Karim) ; Mentor (Henri Vallon).",
+    "Qui décide quoi": "Laurent : client AutoVolt, cash. Production : arbitrages atelier/qualité. Marie : ligne. Karim : machines.",
+    "Qui travaille avec qui": "Production ↔ Marie quotidien ; Production ↔ Karim pannes ; Laurent ↔ AutoVolt.",
+    "Horaires": "Atelier 08:00–18:00 (journée jouable).",
+    "Postes clés": "Responsable Production, Cheffe d'atelier, Maintenance, Directeur, Mentor.",
+    "Trésorerie actuelle": "180000",
+    "Liste des stocks (nom, quantité actuelle, stock minimum, stock maximum, stock de sécurité, délai de réapprovisionnement, coût de stockage, problèmes récurrents)": "Support Moteur A-42 : 120 / seuil 200 — stock bas critique.",
+    "Objectifs quotidiens / hebdo / annuels": "Hebdo : 500 pièces qualité avant vendredi 16h (contrat AutoVolt)."
+  },
+  "Événements entreprise": [
+    {
+      "id": "ev-mail-laurent-j2",
+      "nom": "Email de Laurent",
+      "type": "message",
+      "description": "Laurent : AutoVolt insiste pour un point statut aujourd'hui. Réponds avant midi.",
+      "jour": 2,
+      "heure": "10:00",
+      "consequences": [
+        {
+          "cible": "flags.mailLaurentJ2",
+          "valeur": 1,
+          "mode": "set"
+        }
+      ]
+    },
+    {
+      "id": "ev-rumor-j2",
+      "nom": "Rumeur AutoVolt / Pologne",
+      "type": "message",
+      "description": "On parle d'un concurrent polonais contacté par AutoVolt.",
+      "jour": 2,
+      "heure": "09:00"
+    },
+    {
+      "id": "ev-alerte-stock",
+      "nom": "Alerte stock",
+      "type": "alerte",
+      "description": "Stock sous le seuil de sécurité (200 kg).",
+      "jour": 0,
+      "condition": {
+        "si": "stock",
+        "inferieurA": 200
+      },
+      "consequences": [
+        {
+          "cible": "flags.alerteStock",
+          "valeur": 1,
+          "mode": "set"
+        }
+      ]
+    },
+    {
+      "id": "ev-marie-mefiante",
+      "nom": "Marie méfiante",
+      "type": "visite",
+      "description": "Marie évite ton regard. La confiance est trop basse.",
+      "jour": 0,
+      "condition": {
+        "si": "confiance.marie",
+        "inferieurA": 40
+      }
+    },
+    {
+      "id": "ev-panne-m3",
+      "nom": "Panne Machine 3",
+      "type": "panne",
+      "description": "Alarme atelier — tu dois décider avant 16:00.",
+      "jour": 3,
+      "heure": "10:00",
+      "urgent": true,
+      "deadlineHeure": "16:00",
+      "consequences": [
+        {
+          "cible": "flags.alarmActive",
+          "valeur": 1,
+          "mode": "set"
+        },
+        {
+          "cible": "machine.m3.etat",
+          "valeur": 0,
+          "setValeur": "PANNE"
+        }
+      ],
+      "consequencesDeadline": [
+        {
+          "cible": "qualite",
+          "valeur": -40
+        },
+        {
+          "cible": "moral",
+          "valeur": -10
+        },
+        {
+          "cible": "confianceClient",
+          "valeur": -8
+        }
+      ]
+    },
+    {
+      "id": "ev-mail-laurent-j1",
+      "nom": "Email de Laurent",
+      "type": "message",
+      "description": "Où en est le retard ? AutoVolt appelle cet après-midi.",
+      "jour": 1,
+      "heure": "08:15"
+    },
+    {
+      "id": "ev-defaut-j4",
+      "nom": "40 pièces à micro-défaut",
+      "type": "alerte",
+      "description": "Contrôle qualité : décisions éthiques à venir.",
+      "jour": 4,
+      "heure": "09:30"
+    }
+  ],
+  "Rôles sélectionnés": [
+    "Responsable de Production"
+  ],
+  "Compétences sélectionnées": [
+    {
+      "nom": "Pilotage production semaine critique",
+      "cours": []
+    }
+  ],
+  "Décisions": [
+    {
+      "id": "dec-jour-1",
+      "titre": "Cause du retard",
+      "dilemme": "La production stagne et les KPIs affichent ???. Comment lever le brouillard — ou non ?",
+      "jour": 1,
+      "xpGagne": 0,
+      "categorie": "Jour 1 · 12h — Cause du retard",
+      "options": [
+        {
+          "id": "d1-machine",
+          "label": "Commander une nouvelle machine (80 k€)",
+          "description": "Investissement lourd. Livraison hors délai pour cette semaine critique.",
+          "feedbackTexte": "Nouvelle machine commandée — trop tard pour cette semaine",
+          "impacts": [
+            {
+              "label": "Trésorerie",
+              "value": "-80 000 €",
+              "tone": "neg"
+            },
+            {
+              "label": "Cette semaine",
+              "value": "Aucun gain",
+              "tone": "neg"
+            },
+            {
+              "label": "Visibilité",
+              "value": "Inchangée",
+              "tone": "neu"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "priorisation",
+              "type": "generale",
+              "xp": 10,
+              "feedback": "Tu as priorisé un capex long terme alors que l'échéance contrat est cette semaine."
+            },
+            {
+              "competenceId": "planification_mrp",
+              "type": "ciblee",
+              "xp": 5,
+              "indicateurIndex": 2,
+              "feedback": "Tu n'as pas recalculé le besoin net de la semaine : la machine n'arrive pas à temps."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "tresorerie",
+              "valeur": -80000
+            },
+            {
+              "cible": "temps",
+              "valeur": 30
+            },
+            {
+              "cible": "xp",
+              "valeur": 20
+            }
+          ]
+        },
+        {
+          "id": "d1-capteur",
+          "label": "Installer le capteur Machine 3 (5 k€)",
+          "description": "Remplace le capteur mort. Débloque les KPIs réels : rebut 18 %, prod ~60/jour.",
+          "feedbackTexte": "Données débloquées — rebut réel 18 %, prod 60/jour",
+          "impacts": [
+            {
+              "label": "Trésorerie",
+              "value": "-5 000 €",
+              "tone": "neg"
+            },
+            {
+              "label": "Visibilité",
+              "value": "PRÉCIS / LIVE",
+              "tone": "pos"
+            },
+            {
+              "label": "Vérité",
+              "value": "Rebut 18 %",
+              "tone": "pos"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "decision_incertitude",
+              "type": "generale",
+              "xp": 25,
+              "feedback": "Tu as levé l'incertitude avec une mesure réelle (rebut, cadence) avant d'agir."
+            },
+            {
+              "competenceId": "qualite",
+              "type": "ciblee",
+              "xp": 20,
+              "indicateurIndex": 0,
+              "feedback": "Tu as mesuré le taux de défaut réel (18 %) au lieu de décider à l'aveugle."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "tresorerie",
+              "valeur": -5000
+            },
+            {
+              "cible": "visibilite.erp",
+              "valeur": 2,
+              "mode": "set"
+            },
+            {
+              "cible": "visibilite.stock",
+              "valeur": 2,
+              "mode": "set"
+            },
+            {
+              "cible": "visibilite.production",
+              "valeur": 3,
+              "mode": "set"
+            },
+            {
+              "cible": "confiance.karim",
+              "valeur": 10
+            },
+            {
+              "cible": "temps",
+              "valeur": 45
+            },
+            {
+              "cible": "xp",
+              "valeur": 100
+            },
+            {
+              "cible": "flags.sensorInstalled",
+              "valeur": 1,
+              "mode": "set"
+            },
+            {
+              "cible": "tauxRebut",
+              "valeur": 18,
+              "mode": "set"
+            },
+            {
+              "cible": "production",
+              "valeur": 60,
+              "mode": "set"
+            },
+            {
+              "cible": "badge.badge-eye",
+              "valeur": 1,
+              "mode": "set"
+            }
+          ]
+        },
+        {
+          "id": "d1-rien",
+          "label": "Ne rien faire pour l'instant",
+          "description": "Reporter l'investissement. Rester dans le brouillard.",
+          "feedbackTexte": "Tu n'as rien investi. Les KPIs restent des ???.",
+          "impacts": [
+            {
+              "label": "Cash",
+              "value": "Préservé",
+              "tone": "pos"
+            },
+            {
+              "label": "Visibilité",
+              "value": "Toujours ???",
+              "tone": "neg"
+            },
+            {
+              "label": "Risque",
+              "value": "Élevé",
+              "tone": "neg"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "decision_incertitude",
+              "type": "generale",
+              "xp": 5,
+              "feedback": "Tu as maintenu l'incertitude sans critère d'arrêt ni hypothèse explicite."
+            },
+            {
+              "competenceId": "priorisation",
+              "type": "generale",
+              "xp": 5,
+              "feedback": "Tu as reporté l'action critique sans ordonner les risques contrat / rebut."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "temps",
+              "valeur": 10
+            },
+            {
+              "cible": "xp",
+              "valeur": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dec-jour-2",
+      "titre": "Heures supplémentaires",
+      "dilemme": "Il faut du volume. Brûler l'équipe en HS, refuser, ou écouter Marie ?",
+      "jour": 2,
+      "xpGagne": 0,
+      "categorie": "Jour 2 — Heures sup",
+      "options": [
+        {
+          "id": "d2-hs",
+          "label": "Imposer 3 h supplémentaires",
+          "description": "+20 pièces/jour, coût 15 k€, moral et Marie en souffrance.",
+          "feedbackTexte": "Heures sup décrétées. +20 pièces/jour, moral et Marie en berne.",
+          "impacts": [
+            {
+              "label": "Coût",
+              "value": "-15 000 €",
+              "tone": "neg"
+            },
+            {
+              "label": "Pièces / jour",
+              "value": "+20",
+              "tone": "pos"
+            },
+            {
+              "label": "Moral",
+              "value": "-15",
+              "tone": "neg"
+            },
+            {
+              "label": "Marie",
+              "value": "-10 confiance",
+              "tone": "neg"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "leadership",
+              "type": "generale",
+              "xp": 15,
+              "feedback": "Tu as imposé une priorité volume sans sécuriser la confiance de l'équipe."
+            },
+            {
+              "competenceId": "ordonnancement",
+              "type": "ciblee",
+              "xp": 15,
+              "indicateurIndex": 2,
+              "feedback": "Tu as poussé le volume AutoVolt via HS, sans séquence OF publiée."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "tresorerie",
+              "valeur": -15000
+            },
+            {
+              "cible": "moral",
+              "valeur": -15
+            },
+            {
+              "cible": "confiance.marie",
+              "valeur": -10
+            },
+            {
+              "cible": "flags.overtimeBonus",
+              "valeur": 20,
+              "mode": "set"
+            },
+            {
+              "cible": "production",
+              "valeur": 20
+            },
+            {
+              "cible": "temps",
+              "valeur": 30
+            },
+            {
+              "cible": "xp",
+              "valeur": 30
+            }
+          ]
+        },
+        {
+          "id": "d2-no-hs",
+          "label": "Refuser les heures supplémentaires",
+          "description": "Préserver le moral. Compter sur l'organisation.",
+          "feedbackTexte": "Pas d'heures sup. Marie apprécie.",
+          "impacts": [
+            {
+              "label": "Moral",
+              "value": "Stable / +5",
+              "tone": "pos"
+            },
+            {
+              "label": "Marie",
+              "value": "+8 confiance",
+              "tone": "pos"
+            },
+            {
+              "label": "Volume",
+              "value": "Pas de boost",
+              "tone": "neu"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "leadership",
+              "type": "generale",
+              "xp": 20,
+              "feedback": "Tu as préservé la confiance atelier en refusant de brûler l'équipe."
+            },
+            {
+              "competenceId": "communication",
+              "type": "generale",
+              "xp": 15,
+              "feedback": "Tu as clarifié le non aux HS avec un statut moral / volume compréhensible."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "moral",
+              "valeur": 5
+            },
+            {
+              "cible": "confiance.marie",
+              "valeur": 8
+            },
+            {
+              "cible": "temps",
+              "valeur": 20
+            },
+            {
+              "cible": "xp",
+              "valeur": 40
+            }
+          ]
+        },
+        {
+          "id": "d2-marie-reorg",
+          "label": "Réorganisation Marie (+2 h/jour sans HS)",
+          "description": "Débloquée si confiance Marie > 60. Gain de cadence sans brûler l'équipe.",
+          "feedbackTexte": "Réorganisation de Marie activée : +2 h utiles / jour sans heures sup.",
+          "impacts": [
+            {
+              "label": "Pièces / jour",
+              "value": "+15",
+              "tone": "pos"
+            },
+            {
+              "label": "Moral",
+              "value": "+8",
+              "tone": "pos"
+            },
+            {
+              "label": "Coût",
+              "value": "0 €",
+              "tone": "pos"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "leadership",
+              "type": "generale",
+              "xp": 30,
+              "feedback": "Tu as aligné l'atelier sur une réorganisation portée par Marie, sans HS."
+            },
+            {
+              "competenceId": "ordonnancement",
+              "type": "ciblee",
+              "xp": 25,
+              "indicateurIndex": 0,
+              "feedback": "Tu as publié une séquence de journée (+2 h utiles) sans surcharger en HS."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "moral",
+              "valeur": 8
+            },
+            {
+              "cible": "production",
+              "valeur": 15
+            },
+            {
+              "cible": "flags.marieReorgBonus",
+              "valeur": 15,
+              "mode": "set"
+            },
+            {
+              "cible": "temps",
+              "valeur": 40
+            },
+            {
+              "cible": "xp",
+              "valeur": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dec-jour-3",
+      "titre": "Panne Machine 3",
+      "dilemme": "10h00 — Machine 3 en panne. Réparer, contourner, ou appeler un prestataire ?",
+      "jour": 3,
+      "xpGagne": 0,
+      "categorie": "Jour 3 · 10h — PANNE MACHINE 3",
+      "options": [
+        {
+          "id": "d3-repair",
+          "label": "Réparer en urgence (12 k€, 1 jour d'arrêt)",
+          "description": "Machine 3 arrêtée 1 jour, puis saine.",
+          "feedbackTexte": "Machine 3 en réparation — atelier mis à jour",
+          "impacts": [
+            {
+              "label": "Coût",
+              "value": "-12 000 €",
+              "tone": "neg"
+            },
+            {
+              "label": "Arrêt",
+              "value": "1 jour",
+              "tone": "neg"
+            },
+            {
+              "label": "Qualité",
+              "value": "Préservée",
+              "tone": "pos"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "gestion_crise",
+              "type": "generale",
+              "xp": 25,
+              "feedback": "Tu as contenu le risque qualité en acceptant un arrêt planifié plutôt qu'un bypass."
+            },
+            {
+              "competenceId": "maintenance",
+              "type": "ciblee",
+              "xp": 30,
+              "indicateurIndex": 1,
+              "feedback": "Tu as estimé une fenêtre d'arrêt (1 jour) et un coût MTTR avant de relancer."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "tresorerie",
+              "valeur": -12000
+            },
+            {
+              "cible": "production",
+              "valeur": -15
+            },
+            {
+              "cible": "flags.machine3DownDays",
+              "valeur": 1,
+              "mode": "set"
+            },
+            {
+              "cible": "flags.alarmActive",
+              "valeur": 0,
+              "mode": "set"
+            },
+            {
+              "cible": "machine.m3.etat",
+              "valeur": 0,
+              "setValeur": "ARRET"
+            },
+            {
+              "cible": "temps",
+              "valeur": 60
+            },
+            {
+              "cible": "xp",
+              "valeur": 50
+            }
+          ]
+        },
+        {
+          "id": "d3-bypass",
+          "label": "Contourner sur Machines 1-2 (qualité -10 %)",
+          "description": "Continuer à produire en reportant la charge. Risque rebut.",
+          "feedbackTexte": "Contournement actif — qualité -10 %, Machine 3 rouge",
+          "impacts": [
+            {
+              "label": "Volume",
+              "value": "Maintenu",
+              "tone": "pos"
+            },
+            {
+              "label": "Qualité",
+              "value": "-10 %",
+              "tone": "neg"
+            },
+            {
+              "label": "Rebut",
+              "value": "+8 pts",
+              "tone": "neg"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "gestion_crise",
+              "type": "generale",
+              "xp": 15,
+              "feedback": "Tu as réagi vite, mais sans isoler la cause avant de contourner."
+            },
+            {
+              "competenceId": "maintenance",
+              "type": "ciblee",
+              "xp": 10,
+              "indicateurIndex": 2,
+              "feedback": "Tu as documenté un bypass avec risque rebut (+8 pts) — sans plan de réparation."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "production",
+              "valeur": 5
+            },
+            {
+              "cible": "moral",
+              "valeur": -3
+            },
+            {
+              "cible": "tauxRebut",
+              "valeur": 8
+            },
+            {
+              "cible": "flags.machine3Bypass",
+              "valeur": 1,
+              "mode": "set"
+            },
+            {
+              "cible": "flags.alarmActive",
+              "valeur": 1,
+              "mode": "set"
+            },
+            {
+              "cible": "machine.m3.etat",
+              "valeur": 0,
+              "setValeur": "PANNE"
+            },
+            {
+              "cible": "temps",
+              "valeur": 30
+            },
+            {
+              "cible": "xp",
+              "valeur": 25
+            }
+          ]
+        },
+        {
+          "id": "d3-externe",
+          "label": "Prestataire externe (25 k€, réparé en 4 h)",
+          "description": "Cher, rapide. Machine 3 repart le jour même.",
+          "feedbackTexte": "Machine 3 réparée (prestataire) — retour au vert",
+          "impacts": [
+            {
+              "label": "Coût",
+              "value": "-25 000 €",
+              "tone": "neg"
+            },
+            {
+              "label": "Délai",
+              "value": "4 h",
+              "tone": "pos"
+            },
+            {
+              "label": "Machine 3",
+              "value": "PRODUCTION",
+              "tone": "pos"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "gestion_crise",
+              "type": "generale",
+              "xp": 30,
+              "feedback": "Tu as contenu l'arrêt sous 4 h avec un plan prestataire clair."
+            },
+            {
+              "competenceId": "maintenance",
+              "type": "ciblee",
+              "xp": 25,
+              "indicateurIndex": 0,
+              "feedback": "Tu as nommé la cause et externalisé le diagnostic pour un retour PRODUCTION le jour même."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "tresorerie",
+              "valeur": -25000
+            },
+            {
+              "cible": "production",
+              "valeur": 5
+            },
+            {
+              "cible": "flags.machine3DownDays",
+              "valeur": 0,
+              "mode": "set"
+            },
+            {
+              "cible": "flags.alarmActive",
+              "valeur": 0,
+              "mode": "set"
+            },
+            {
+              "cible": "machine.m3.etat",
+              "valeur": 0,
+              "setValeur": "PRODUCTION"
+            },
+            {
+              "cible": "temps",
+              "valeur": 45
+            },
+            {
+              "cible": "xp",
+              "valeur": 60
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dec-jour-4",
+      "titre": "Éthique",
+      "dilemme": "40 pièces à micro-défaut. Livrer pour le volume, ou jeter et négocier ?",
+      "jour": 4,
+      "xpGagne": 0,
+      "categorie": "Jour 4 — Éthique",
+      "options": [
+        {
+          "id": "d4-livrer",
+          "label": "Livrer les 40 pièces à micro-défaut",
+          "description": "Tenir le volume. Risque éthique et contrat.",
+          "feedbackTexte": "40 pièces livrées — éthique -30",
+          "impacts": [
+            {
+              "label": "Volume",
+              "value": "+40 pièces",
+              "tone": "pos"
+            },
+            {
+              "label": "Éthique",
+              "value": "-30",
+              "tone": "neg"
+            },
+            {
+              "label": "AutoVolt",
+              "value": "Risque élevé",
+              "tone": "neg"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "priorisation",
+              "type": "generale",
+              "xp": 10,
+              "feedback": "Tu as priorisé le volume contrat au détriment du risque client."
+            },
+            {
+              "competenceId": "qualite",
+              "type": "ciblee",
+              "xp": 5,
+              "indicateurIndex": 2,
+              "feedback": "Tu as chiffré l'impact éthique (−30) mais choisi de livrer sans tri."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "ethique",
+              "valeur": -30
+            },
+            {
+              "cible": "confianceClient",
+              "valeur": -15
+            },
+            {
+              "cible": "piecesAujourdhui",
+              "valeur": 40
+            },
+            {
+              "cible": "piecesBrutesSemaine",
+              "valeur": 40
+            },
+            {
+              "cible": "qualite",
+              "valeur": 40
+            },
+            {
+              "cible": "temps",
+              "valeur": 25
+            },
+            {
+              "cible": "xp",
+              "valeur": 15
+            }
+          ]
+        },
+        {
+          "id": "d4-jeter",
+          "label": "Jeter les 40 pièces et négocier le délai",
+          "description": "Éthique +20, confiance AutoVolt +10, volume à rattraper.",
+          "feedbackTexte": "Pièces jetées — éthique +20, AutoVolt +10",
+          "impacts": [
+            {
+              "label": "Éthique",
+              "value": "+20",
+              "tone": "pos"
+            },
+            {
+              "label": "AutoVolt",
+              "value": "+10 confiance",
+              "tone": "pos"
+            },
+            {
+              "label": "Volume",
+              "value": "-40 à refaire",
+              "tone": "neg"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "communication",
+              "type": "generale",
+              "xp": 20,
+              "feedback": "Tu as formulé un statut honnête vers AutoVolt : rebut + négociation de délai."
+            },
+            {
+              "competenceId": "qualite",
+              "type": "ciblee",
+              "xp": 30,
+              "indicateurIndex": 1,
+              "feedback": "Tu as décidé rebut argumenté plutôt que livraison de micro-défauts."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "ethique",
+              "valeur": 20
+            },
+            {
+              "cible": "confianceClient",
+              "valeur": 10
+            },
+            {
+              "cible": "badge.badge-ethique",
+              "valeur": 1,
+              "mode": "set"
+            },
+            {
+              "cible": "temps",
+              "valeur": 35
+            },
+            {
+              "cible": "xp",
+              "valeur": 70
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dec-jour-5",
+      "titre": "Négociation AutoVolt",
+      "dilemme": "Dernier jour. Comment jouer la négociation avec AutoVolt ?",
+      "jour": 5,
+      "xpGagne": 0,
+      "categorie": "Jour 5 — Négociation AutoVolt",
+      "options": [
+        {
+          "id": "d5-nego-dur",
+          "label": "Négociation dure — tenir les 500 sans rabais",
+          "description": "Exiger le maintien du contrat sur la base de tes choix.",
+          "feedbackTexte": "Négociation dure avec AutoVolt. Le débrief tombe à 16h.",
+          "impacts": [
+            {
+              "label": "AutoVolt",
+              "value": "Selon éthique & volume",
+              "tone": "neu"
+            },
+            {
+              "label": "Pression",
+              "value": "Maximale",
+              "tone": "neg"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "negociation",
+              "type": "generale",
+              "xp": 25,
+              "feedback": "Tu as tenu le cadre prix/volume sans offrir de contrepartie mesurable."
+            },
+            {
+              "competenceId": "communication",
+              "type": "generale",
+              "xp": 15,
+              "feedback": "Tu as poussé un statut ferme ; la réception AutoVolt dépend de tes chiffres."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "confianceClient",
+              "valeur": -5
+            },
+            {
+              "cible": "temps",
+              "valeur": 45
+            },
+            {
+              "cible": "xp",
+              "valeur": 40
+            }
+          ]
+        },
+        {
+          "id": "d5-nego-transparence",
+          "label": "Transparence totale + plan qualité",
+          "description": "Avouer les écarts, promettre capteurs et process.",
+          "feedbackTexte": "Tu as mis cartes sur table. AutoVolt écoute le plan qualité.",
+          "impacts": [
+            {
+              "label": "Éthique",
+              "value": "+10",
+              "tone": "pos"
+            },
+            {
+              "label": "AutoVolt",
+              "value": "+15 si honnête",
+              "tone": "pos"
+            },
+            {
+              "label": "Délai",
+              "value": "Possible souplesse",
+              "tone": "pos"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "negociation",
+              "type": "generale",
+              "xp": 30,
+              "feedback": "Tu as échangé transparence (écarts + plan) contre écoute client."
+            },
+            {
+              "competenceId": "qualite",
+              "type": "ciblee",
+              "xp": 20,
+              "indicateurIndex": 2,
+              "feedback": "Tu as chiffré l'impact client et proposé un plan qualité explicite."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "ethique",
+              "valeur": 10
+            },
+            {
+              "cible": "confianceClient",
+              "valeur": 15
+            },
+            {
+              "cible": "temps",
+              "valeur": 50
+            },
+            {
+              "cible": "xp",
+              "valeur": 80
+            }
+          ]
+        },
+        {
+          "id": "d5-nego-agressive",
+          "label": "Négociation agressive",
+          "description": "Pousser AutoVolt au maximum : volume + prix. Exige Négociation Niveau 2.",
+          "feedbackTexte": "Tu as mené une négociation agressive. AutoVolt cède du terrain — au prix d'une tension nette.",
+          "impacts": [
+            {
+              "label": "AutoVolt",
+              "value": "+12",
+              "tone": "pos"
+            },
+            {
+              "label": "Trésorerie",
+              "value": "+8 000 €",
+              "tone": "pos"
+            },
+            {
+              "label": "Relation",
+              "value": "Tendue",
+              "tone": "neg"
+            }
+          ],
+          "competenceImpacts": [
+            {
+              "competenceId": "negociation",
+              "type": "generale",
+              "xp": 35,
+              "feedback": "Tu as obtenu volume + cash (+8 k€) avec une contrepartie relationnelle tendue."
+            },
+            {
+              "competenceId": "priorisation",
+              "type": "generale",
+              "xp": 15,
+              "feedback": "Tu as priorisé le levier commercial immédiat sur la relation long terme."
+            }
+          ],
+          "consequences": [
+            {
+              "cible": "confianceClient",
+              "valeur": 12
+            },
+            {
+              "cible": "tresorerie",
+              "valeur": 8000
+            },
+            {
+              "cible": "moral",
+              "valeur": -5
+            },
+            {
+              "cible": "temps",
+              "valeur": 45
+            },
+            {
+              "cible": "xp",
+              "valeur": 90
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Fins": [
+    {
+      "id": "fin-victoire",
+      "label": "Victoire — contrat client critique tenu",
+      "kind": "VICTOIRE",
+      "narration": "Victoire. 500 pièces qualité, éthique 60. Le client stratégique reste. L'entreprise tient.",
+      "xp": 500,
+      "priority": 30,
+      "conditions": [
+        {
+          "metric": "qualite",
+          "op": "gte",
+          "value": 480
+        },
+        {
+          "metric": "ethique",
+          "op": "gte",
+          "value": 51
+        }
+      ]
+    },
+    {
+      "id": "fin-partielle",
+      "label": "Victoire partielle",
+      "kind": "PARTIELLE",
+      "narration": "Victoire partielle. 420 pièces qualité, éthique 40. Le contrat est fragile, mais vivant.",
+      "xp": 200,
+      "priority": 20,
+      "conditions": [
+        {
+          "metric": "qualite",
+          "op": "gte",
+          "value": 400
+        },
+        {
+          "metric": "ethique",
+          "op": "gte",
+          "value": 20
+        }
+      ]
+    },
+    {
+      "id": "fin-echec",
+      "label": "Échec — contrat en danger",
+      "kind": "ECHEC",
+      "narration": "Échec. 300 pièces qualité, éthique 15. Le client s'éloigne — l'écho de la crise passée.",
+      "xp": 50,
+      "priority": 10,
+      "conditions": [
+        {
+          "metric": "qualite",
+          "op": "lte",
+          "value": 399
+        }
+      ]
+    }
+  ],
+  "fichier": "novacier_responsable-de-production-histoire_v1.json",
+  "Ordinateur": {
+    "stock": [
+      {
+        "ref": "A-42",
+        "nom": "Support Moteur",
+        "qte": 120,
+        "seuil": 200,
+        "emplacement": "Allée B - Étagère 3",
+        "fournisseur": "MétalPro",
+        "prixUnitaire": 45,
+        "derniereEntree": "J-2",
+        "statut": "Stock bas"
+      },
+      {
+        "ref": "B-17",
+        "nom": "Bride de Frein",
+        "qte": 340,
+        "seuil": 100,
+        "emplacement": "Allée A - Étagère 1",
+        "fournisseur": "MétalPro",
+        "prixUnitaire": 62,
+        "derniereEntree": "J-1",
+        "statut": "OK"
+      },
+      {
+        "ref": "C-09",
+        "nom": "Carter",
+        "qte": 45,
+        "seuil": 80,
+        "emplacement": "Allée C - Bac 2",
+        "fournisseur": "Nord Acier",
+        "prixUnitaire": 88,
+        "derniereEntree": "J-5",
+        "statut": "Stock bas"
+      },
+      {
+        "ref": "AC-2MM",
+        "nom": "Acier 2mm (coil)",
+        "qte": 850,
+        "seuil": 200,
+        "emplacement": "Quai matières",
+        "fournisseur": "MétalPro",
+        "prixUnitaire": 1.2,
+        "derniereEntree": "J-3",
+        "statut": "OK"
+      },
+      {
+        "ref": "VIS-M6",
+        "nom": "Vis M6",
+        "qte": 0,
+        "seuil": 150,
+        "emplacement": "Allée D - Tiroir 4",
+        "fournisseur": "FixOutillage",
+        "prixUnitaire": 0.08,
+        "derniereEntree": "J-12",
+        "statut": "Rupture"
+      }
+    ],
+    "commandes": [
+      {
+        "numero": "CMD-248",
+        "client": "AutoVolt",
+        "piece": "A-42",
+        "qteCommandee": 500,
+        "qteProduite": 0,
+        "dateLimite": "Vendredi 16h",
+        "statut": "En cours",
+        "montant": 186000
+      },
+      {
+        "numero": "CMD-1043",
+        "client": "Nord Méca",
+        "piece": "B-17",
+        "qteCommandee": 80,
+        "qteProduite": 80,
+        "dateLimite": "J+5",
+        "statut": "Livrée",
+        "montant": 12400
+      },
+      {
+        "numero": "CMD-1051",
+        "client": "Helio Parts",
+        "piece": "C-09",
+        "qteCommandee": 40,
+        "qteProduite": 12,
+        "dateLimite": "J+2",
+        "statut": "En retard",
+        "montant": 9800
+      }
+    ],
+    "production": [
+      {
+        "ligne": "Presse 1",
+        "piece": "A-42 Support Moteur",
+        "objectifJour": 80,
+        "produitAujourdhui": 22,
+        "tauxRebut": "6 %",
+        "vitesse": "22 p/h",
+        "etat": "En marche"
+      },
+      {
+        "ligne": "CNC 2",
+        "piece": "B-17 Bride",
+        "objectifJour": 70,
+        "produitAujourdhui": 20,
+        "tauxRebut": "4 %",
+        "vitesse": "20 p/h",
+        "etat": "En marche"
+      },
+      {
+        "ligne": "Assembleuse 3",
+        "piece": "A-42 assemblage",
+        "objectifJour": 90,
+        "produitAujourdhui": 18,
+        "tauxRebut": "18 %",
+        "vitesse": "???",
+        "etat": "En panne"
+      },
+      {
+        "ligne": "Contrôle Q4",
+        "piece": "—",
+        "objectifJour": 0,
+        "produitAujourdhui": 0,
+        "tauxRebut": "—",
+        "vitesse": "0",
+        "etat": "Arrêt"
+      }
+    ],
+    "employes": [
+      {
+        "nom": "Marie Dubois",
+        "poste": "Cheffe d'atelier",
+        "equipe": "Équipe A",
+        "anciennete": "18 ans",
+        "heuresSup": "2h",
+        "tauxAbsence": "2 %",
+        "statut": "Présent"
+      },
+      {
+        "nom": "Karim Benali",
+        "poste": "Technicien Maintenance",
+        "equipe": "Équipe A",
+        "anciennete": "4 ans",
+        "heuresSup": "5h",
+        "tauxAbsence": "1 %",
+        "statut": "Présent"
+      },
+      {
+        "nom": "Laurent Perrin",
+        "poste": "Directeur",
+        "equipe": "Direction",
+        "anciennete": "11 ans",
+        "heuresSup": "0h",
+        "tauxAbsence": "0 %",
+        "statut": "Présent"
+      },
+      {
+        "nom": "Léa Moreau",
+        "poste": "Contrôle Qualité",
+        "equipe": "Équipe B",
+        "anciennete": "6 ans",
+        "heuresSup": "1h",
+        "tauxAbsence": "3 %",
+        "statut": "Présent"
+      },
+      {
+        "nom": "Tom Rivière",
+        "poste": "Opérateur Presse",
+        "equipe": "Équipe A",
+        "anciennete": "2 ans",
+        "heuresSup": "6h",
+        "tauxAbsence": "4 %",
+        "statut": "Absent"
+      }
+    ],
+    "factures": [
+      {
+        "numero": "FAC-880",
+        "client": "AutoVolt",
+        "montant": 42000,
+        "emission": "J-10",
+        "echeance": "J+5",
+        "statut": "En attente"
+      },
+      {
+        "numero": "FAC-881",
+        "client": "Nord Méca",
+        "montant": 6400,
+        "emission": "J-20",
+        "echeance": "J-5",
+        "statut": "Payée"
+      },
+      {
+        "numero": "FAC-872",
+        "client": "Helio Parts",
+        "montant": 11200,
+        "emission": "J-30",
+        "echeance": "J-8",
+        "statut": "En retard"
+      }
+    ],
+    "machines": [
+      {
+        "nom": "Presse 1",
+        "type": "Presse hydraulique",
+        "etat": "PRODUCTION",
+        "vitesse": "22 p/h",
+        "tauxRebut": "6 %",
+        "derniereMaint": "J-14",
+        "prochaineMaint": "J+4"
+      },
+      {
+        "nom": "CNC 2",
+        "type": "Centre usinage",
+        "etat": "PRODUCTION",
+        "vitesse": "20 p/h",
+        "tauxRebut": "4 %",
+        "derniereMaint": "J-7",
+        "prochaineMaint": "J+2"
+      },
+      {
+        "nom": "Assembleuse 3",
+        "type": "Ligne assemblage",
+        "etat": "Capteur HS",
+        "vitesse": "???",
+        "tauxRebut": "???",
+        "derniereMaint": "J-40",
+        "prochaineMaint": "Capteur HS"
+      },
+      {
+        "nom": "Contrôle Q4",
+        "type": "Banc contrôle",
+        "etat": "ARRET",
+        "vitesse": "0",
+        "tauxRebut": "—",
+        "derniereMaint": "J-3",
+        "prochaineMaint": "J+6"
+      }
+    ],
+    "clients": [
+      {
+        "nom": "AutoVolt",
+        "pctCa": "45 %",
+        "derniereCommande": "CMD-248",
+        "relation": "Critique",
+        "contact": "Achats AutoVolt"
+      },
+      {
+        "nom": "Nord Méca",
+        "pctCa": "18 %",
+        "derniereCommande": "CMD-1043",
+        "relation": "Bon",
+        "contact": "Sophie L."
+      },
+      {
+        "nom": "Helio Parts",
+        "pctCa": "12 %",
+        "derniereCommande": "CMD-1051",
+        "relation": "Tendu",
+        "contact": "Marc D."
+      }
+    ],
+    "fournisseurs": [
+      {
+        "nom": "MétalPro",
+        "piece": "Acier 2mm / A-42 brut",
+        "delai": "5 jours",
+        "prix": "1,20 €/kg",
+        "fiabilite": "Moyenne — retards récents"
+      },
+      {
+        "nom": "Nord Acier",
+        "piece": "Carter C-09 brut",
+        "delai": "8 jours",
+        "prix": "2,10 €/kg",
+        "fiabilite": "Bonne"
+      },
+      {
+        "nom": "FixOutillage",
+        "piece": "Vis M6 / consommables",
+        "delai": "2 jours",
+        "prix": "0,08 €/u",
+        "fiabilite": "Bonne"
+      }
+    ],
+    "maintenance": [],
+    "emails": [
+      {
+        "id": "em-d1-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Où en est le retard ?",
+        "body": "Bonjour,\n\nOù en est le retard ?\n\nAutoVolt appelle cet après-midi. Je veux un statut clair avant midi — causes, pas de langue de bois.\n\nLaurent Perrin\nDirecteur",
+        "day": 1,
+        "read": false,
+        "preview": "Point 08:15. J'attends un statut clair avant midi.",
+        "time": "08:15",
+        "urgent": true
+      },
+      {
+        "id": "em-d1-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien avec AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien avec AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 1,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "08:40"
+      },
+      {
+        "id": "em-d1-metalpro",
+        "from": "MétalPro — Logistique",
+        "subject": "Retard livraison acier",
+        "body": "Bonjour Novacier,\n\nNous accusons un retard sur votre coil acier 2mm (réf. AC-2MM).\nLivraison initiale décalée de 48 à 72 h.\n\nNous vous tiendrons informés.\n\nMétalPro Logistique",
+        "day": 1,
+        "read": false,
+        "preview": "Coil 2mm : retard probable 48–72 h sur votre commande…",
+        "time": "08:55"
+      },
+      {
+        "id": "em-d1-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Où en est le retard ?",
+        "body": "Bonjour,\n\nOù en est le retard ?\n\nAutoVolt appelle cet après-midi. Je veux un statut clair avant midi — causes, pas de langue de bois.\n\nLaurent Perrin\nDirecteur",
+        "day": 2,
+        "read": false,
+        "preview": "Point 08:15. J'attends un statut clair avant midi.",
+        "time": "08:15",
+        "urgent": true
+      },
+      {
+        "id": "em-d1-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien avec AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien avec AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 2,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "08:40"
+      },
+      {
+        "id": "em-d1-metalpro",
+        "from": "MétalPro — Logistique",
+        "subject": "Retard livraison acier",
+        "body": "Bonjour Novacier,\n\nNous accusons un retard sur votre coil acier 2mm (réf. AC-2MM).\nLivraison initiale décalée de 48 à 72 h.\n\nNous vous tiendrons informés.\n\nMétalPro Logistique",
+        "day": 2,
+        "read": false,
+        "preview": "Coil 2mm : retard probable 48–72 h sur votre commande…",
+        "time": "08:55"
+      },
+      {
+        "id": "em-d2-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien côté AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien côté AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 2,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "09:10"
+      },
+      {
+        "id": "em-d2-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Heures sup — décision aujourd'hui",
+        "body": "On a besoin de volume cette semaine.\nTranchez sur les heures sup avant 14h.\n\nLP",
+        "day": 2,
+        "read": false,
+        "preview": "On a besoin de volume. Tranchez avant 14h.",
+        "time": "08:40",
+        "urgent": true
+      },
+      {
+        "id": "em-d1-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Où en est le retard ?",
+        "body": "Bonjour,\n\nOù en est le retard ?\n\nAutoVolt appelle cet après-midi. Je veux un statut clair avant midi — causes, pas de langue de bois.\n\nLaurent Perrin\nDirecteur",
+        "day": 3,
+        "read": false,
+        "preview": "Point 08:15. J'attends un statut clair avant midi.",
+        "time": "08:15",
+        "urgent": true
+      },
+      {
+        "id": "em-d1-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien avec AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien avec AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 3,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "08:40"
+      },
+      {
+        "id": "em-d1-metalpro",
+        "from": "MétalPro — Logistique",
+        "subject": "Retard livraison acier",
+        "body": "Bonjour Novacier,\n\nNous accusons un retard sur votre coil acier 2mm (réf. AC-2MM).\nLivraison initiale décalée de 48 à 72 h.\n\nNous vous tiendrons informés.\n\nMétalPro Logistique",
+        "day": 3,
+        "read": false,
+        "preview": "Coil 2mm : retard probable 48–72 h sur votre commande…",
+        "time": "08:55"
+      },
+      {
+        "id": "em-d2-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien côté AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien côté AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 3,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "09:10"
+      },
+      {
+        "id": "em-d2-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Heures sup — décision aujourd'hui",
+        "body": "On a besoin de volume cette semaine.\nTranchez sur les heures sup avant 14h.\n\nLP",
+        "day": 3,
+        "read": false,
+        "preview": "On a besoin de volume. Tranchez avant 14h.",
+        "time": "08:40",
+        "urgent": true
+      },
+      {
+        "id": "em-d3-alarme",
+        "from": "Supervision Atelier",
+        "subject": "ALARME — Machine 3 en panne",
+        "body": "ALARME AUTOMATIQUE\n\nMachine 3 — panne détectée à 10:00.\nProduction ligne impactée.\nOuvrez l'Atelier Live et décidez.",
+        "day": 3,
+        "read": false,
+        "preview": "Arrêt détecté 10:00. Intervention requise.",
+        "time": "10:00",
+        "urgent": true
+      },
+      {
+        "id": "em-d1-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Où en est le retard ?",
+        "body": "Bonjour,\n\nOù en est le retard ?\n\nAutoVolt appelle cet après-midi. Je veux un statut clair avant midi — causes, pas de langue de bois.\n\nLaurent Perrin\nDirecteur",
+        "day": 4,
+        "read": false,
+        "preview": "Point 08:15. J'attends un statut clair avant midi.",
+        "time": "08:15",
+        "urgent": true
+      },
+      {
+        "id": "em-d1-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien avec AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien avec AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 4,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "08:40"
+      },
+      {
+        "id": "em-d1-metalpro",
+        "from": "MétalPro — Logistique",
+        "subject": "Retard livraison acier",
+        "body": "Bonjour Novacier,\n\nNous accusons un retard sur votre coil acier 2mm (réf. AC-2MM).\nLivraison initiale décalée de 48 à 72 h.\n\nNous vous tiendrons informés.\n\nMétalPro Logistique",
+        "day": 4,
+        "read": false,
+        "preview": "Coil 2mm : retard probable 48–72 h sur votre commande…",
+        "time": "08:55"
+      },
+      {
+        "id": "em-d2-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien côté AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien côté AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 4,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "09:10"
+      },
+      {
+        "id": "em-d2-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Heures sup — décision aujourd'hui",
+        "body": "On a besoin de volume cette semaine.\nTranchez sur les heures sup avant 14h.\n\nLP",
+        "day": 4,
+        "read": false,
+        "preview": "On a besoin de volume. Tranchez avant 14h.",
+        "time": "08:40",
+        "urgent": true
+      },
+      {
+        "id": "em-d3-alarme",
+        "from": "Supervision Atelier",
+        "subject": "ALARME — Machine 3 en panne",
+        "body": "ALARME AUTOMATIQUE\n\nMachine 3 — panne détectée à 10:00.\nProduction ligne impactée.\nOuvrez l'Atelier Live et décidez.",
+        "day": 4,
+        "read": false,
+        "preview": "Arrêt détecté 10:00. Intervention requise.",
+        "time": "10:00",
+        "urgent": true
+      },
+      {
+        "id": "em-d4-qualite",
+        "from": "Contrôle Qualité",
+        "subject": "40 pièces — micro-défaut détecté",
+        "body": "40 pièces du lot Support Moteur A-42 présentent un micro-défaut.\nDécision : livrer ou jeter + négocier délai.\n\nQualité",
+        "day": 4,
+        "read": false,
+        "preview": "Lot A-42 : micro-fissures. Décision livraison requise.",
+        "time": "09:30",
+        "urgent": true
+      },
+      {
+        "id": "em-d1-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Où en est le retard ?",
+        "body": "Bonjour,\n\nOù en est le retard ?\n\nAutoVolt appelle cet après-midi. Je veux un statut clair avant midi — causes, pas de langue de bois.\n\nLaurent Perrin\nDirecteur",
+        "day": 5,
+        "read": false,
+        "preview": "Point 08:15. J'attends un statut clair avant midi.",
+        "time": "08:15",
+        "urgent": true
+      },
+      {
+        "id": "em-d1-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien avec AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien avec AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 5,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "08:40"
+      },
+      {
+        "id": "em-d1-metalpro",
+        "from": "MétalPro — Logistique",
+        "subject": "Retard livraison acier",
+        "body": "Bonjour Novacier,\n\nNous accusons un retard sur votre coil acier 2mm (réf. AC-2MM).\nLivraison initiale décalée de 48 à 72 h.\n\nNous vous tiendrons informés.\n\nMétalPro Logistique",
+        "day": 5,
+        "read": false,
+        "preview": "Coil 2mm : retard probable 48–72 h sur votre commande…",
+        "time": "08:55"
+      },
+      {
+        "id": "em-d2-com",
+        "from": "Commercial AutoVolt (interne)",
+        "subject": "Tout va bien côté AutoVolt",
+        "body": "Hello,\n\nPour info : tout va bien côté AutoVolt. Relation saine, pas d'inquiétude à remonter en COMEX.\n\nBonne journée,",
+        "day": 5,
+        "read": false,
+        "preview": "Relation saine, pas d'inquiétude à remonter…",
+        "time": "09:10"
+      },
+      {
+        "id": "em-d2-laurent",
+        "from": "Laurent Perrin",
+        "subject": "Heures sup — décision aujourd'hui",
+        "body": "On a besoin de volume cette semaine.\nTranchez sur les heures sup avant 14h.\n\nLP",
+        "day": 5,
+        "read": false,
+        "preview": "On a besoin de volume. Tranchez avant 14h.",
+        "time": "08:40",
+        "urgent": true
+      },
+      {
+        "id": "em-d3-alarme",
+        "from": "Supervision Atelier",
+        "subject": "ALARME — Machine 3 en panne",
+        "body": "ALARME AUTOMATIQUE\n\nMachine 3 — panne détectée à 10:00.\nProduction ligne impactée.\nOuvrez l'Atelier Live et décidez.",
+        "day": 5,
+        "read": false,
+        "preview": "Arrêt détecté 10:00. Intervention requise.",
+        "time": "10:00",
+        "urgent": true
+      },
+      {
+        "id": "em-d4-qualite",
+        "from": "Contrôle Qualité",
+        "subject": "40 pièces — micro-défaut détecté",
+        "body": "40 pièces du lot Support Moteur A-42 présentent un micro-défaut.\nDécision : livrer ou jeter + négocier délai.\n\nQualité",
+        "day": 5,
+        "read": false,
+        "preview": "Lot A-42 : micro-fissures. Décision livraison requise.",
+        "time": "09:30",
+        "urgent": true
+      },
+      {
+        "id": "em-d5-autovolt",
+        "from": "AutoVolt — Achats",
+        "subject": "Point contrat — aujourd'hui 14h / débrief 16h",
+        "body": "Bonjour,\n\nPoint négociation aujourd'hui. Nous attendons volume qualité et transparence sur les écarts.\nDébrief interne de votre côté à 16h — nous aussi.\n\nAutoVolt Achats",
+        "day": 5,
+        "read": false,
+        "preview": "Nous attendons vos chiffres et votre position.",
+        "time": "08:20",
+        "urgent": true
+      }
+    ],
+    "chatContacts": [
+      {
+        "id": "pers-marie",
+        "name": "Marie Dubois",
+        "role": "Cheffe d'atelier"
+      },
+      {
+        "id": "pers-karim",
+        "name": "Karim Benali",
+        "role": "Maintenance"
+      },
+      {
+        "id": "pers-laurent",
+        "name": "Laurent Perrin",
+        "role": "Directeur"
+      }
+    ],
+    "chatThreads": [
+      {
+        "contactId": "henri-vallon",
+        "messages": [
+          {
+            "from": "them",
+            "text": "Bienvenue dans la semaine. Lis le mail de Laurent à 08:15. Puis parle à Karim — il sait des choses.",
+            "time": "08:05"
+          },
+          {
+            "from": "them",
+            "text": "Bienvenue dans la semaine. Lis le mail de Laurent à 08:15. Puis parle à Karim — il sait des choses.",
+            "time": "08:05"
+          },
+          {
+            "from": "them",
+            "text": "Bienvenue dans la semaine. Lis le mail de Laurent à 08:15. Puis parle à Karim — il sait des choses.",
+            "time": "08:05"
+          },
+          {
+            "from": "them",
+            "text": "Bienvenue dans la semaine. Lis le mail de Laurent à 08:15. Puis parle à Karim — il sait des choses.",
+            "time": "08:05"
+          },
+          {
+            "from": "them",
+            "text": "Bienvenue dans la semaine. Lis le mail de Laurent à 08:15. Puis parle à Karim — il sait des choses.",
+            "time": "08:05"
+          },
+          {
+            "from": "them",
+            "text": "Bienvenue dans la semaine. Lis le mail de Laurent à 08:15. Puis parle à Karim — il sait des choses.",
+            "time": "08:05"
+          },
+          {
+            "from": "them",
+            "text": "Dernier jour. Négocie. À 16h, on regarde le score — pièces qualité et éthique.",
+            "time": "08:10"
+          }
+        ]
+      },
+      {
+        "contactId": "pers-karim",
+        "messages": [
+          {
+            "from": "them",
+            "text": "En douce : le capteur de la Machine 3 est mort. 5k€. Si tu n'installes rien, tu resteras en ???.",
+            "time": "08:35",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "En douce : le capteur de la Machine 3 est mort. 5k€. Si tu n'installes rien, tu resteras en ???.",
+            "time": "08:35",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "La rumeur Pologne… mon contact chez AutoVolt confirme qu'ils ont un devis. Le mail « tout va bien » est faux.",
+            "time": "09:25",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "En douce : le capteur de la Machine 3 est mort. 5k€. Si tu n'installes rien, tu resteras en ???.",
+            "time": "08:35",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "La rumeur Pologne… mon contact chez AutoVolt confirme qu'ils ont un devis. Le mail « tout va bien » est faux.",
+            "time": "09:25",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "En douce : le capteur de la Machine 3 est mort. 5k€. Si tu n'installes rien, tu resteras en ???.",
+            "time": "08:35",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "La rumeur Pologne… mon contact chez AutoVolt confirme qu'ils ont un devis. Le mail « tout va bien » est faux.",
+            "time": "09:25",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "En douce : le capteur de la Machine 3 est mort. 5k€. Si tu n'installes rien, tu resteras en ???.",
+            "time": "08:35",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "La rumeur Pologne… mon contact chez AutoVolt confirme qu'ils ont un devis. Le mail « tout va bien » est faux.",
+            "time": "09:25",
+            "alert": true
+          }
+        ]
+      },
+      {
+        "contactId": "pers-marie",
+        "messages": [
+          {
+            "from": "them",
+            "text": "Si tu m'écoutes vraiment, on peut réorganiser sans HS. Sinon bon courage avec le moral.",
+            "time": "10:05"
+          },
+          {
+            "from": "them",
+            "text": "Si tu m'écoutes vraiment, on peut réorganiser sans HS. Sinon bon courage avec le moral.",
+            "time": "10:05"
+          },
+          {
+            "from": "them",
+            "text": "Si tu m'écoutes vraiment, on peut réorganiser sans HS. Sinon bon courage avec le moral.",
+            "time": "10:05"
+          },
+          {
+            "from": "them",
+            "text": "Si tu m'écoutes vraiment, on peut réorganiser sans HS. Sinon bon courage avec le moral.",
+            "time": "10:05"
+          }
+        ]
+      },
+      {
+        "contactId": "supervision",
+        "messages": [
+          {
+            "from": "them",
+            "text": "🚨 10:00 — MACHINE 3 EN PANNE. Atelier Live en alarme rouge.",
+            "time": "10:00",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "🚨 10:00 — MACHINE 3 EN PANNE. Atelier Live en alarme rouge.",
+            "time": "10:00",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "🚨 10:00 — MACHINE 3 EN PANNE. Atelier Live en alarme rouge.",
+            "time": "10:00",
+            "alert": true
+          }
+        ]
+      },
+      {
+        "contactId": "l-a-qualit-",
+        "messages": [
+          {
+            "from": "them",
+            "text": "40 pièces micro-défaut. Je ne signe pas la conformité si on livre.",
+            "time": "09:35",
+            "alert": true
+          },
+          {
+            "from": "them",
+            "text": "40 pièces micro-défaut. Je ne signe pas la conformité si on livre.",
+            "time": "09:35",
+            "alert": true
+          }
+        ]
+      }
+    ],
+    "documents": [
+      {
+        "id": "doc-autovolt",
+        "titre": "Contrat AutoVolt",
+        "type": "Contrat",
+        "contenu": "Contrat-cadre Novacier × AutoVolt — pièces A-42 Support Moteur.\n\nVolume critique semaine : 500 pièces qualité avant vendredi 16h.\nPénalités de retard : jusqu'à 2 % du CA mensuel AutoVolt.\nClause qualité : zéro lot non conforme toléré sans accord écrit.\n\nAutoVolt représente 45 % du CA Novacier. Renégociation possible si volume + transparence."
+      },
+      {
+        "id": "doc-qualite",
+        "titre": "Procédure Qualité",
+        "type": "Procédure",
+        "contenu": "PQ-04 Contrôle final — Supports A-42.\n\n1. Échantillonnage 5 % par lot.\n2. Contrôle dimensionnel + micro-fissures.\n3. Tout lot douteux : quarantine + décision Direction / Qualité.\n4. Interdiction de livrer sans signature Qualité.\n\nEn cas de micro-défaut : jeter ou négocier délai — ne jamais « passer »."
+      },
+      {
+        "id": "doc-m3",
+        "titre": "Fiche Machine 3",
+        "type": "Fiche technique",
+        "contenu": "Assembleuse 3 — ligne critique A-42.\n\nCapteur IoT : HORS SERVICE depuis plusieurs semaines.\nSans capteur : OEE et rebut non fiables (affichage ???).\nDevis remplacement capteur : 5 000 € — demandé par Karim Benali.\nAlternative : nouvelle machine 80 k€ (délai hors semaine critique).\n\nHistorique : a « sauvé » deux trimestres, en a cassé un."
+      },
+      {
+        "id": "doc-planning",
+        "titre": "Planning Équipe",
+        "type": "Planning",
+        "contenu": "Semaine critique — Équipe A (matin) : Marie (cheffe), Tom, Nadia, Karim (maintenance).\nÉquipe B (après-midi) : Léa (qualité), Samir, Inès.\n\nHeures sup possibles : +3 h/jour (coût moral + cash).\nRéorganisation Marie (si confiance > 60) : +2 h utiles sans HS."
+      }
+    ],
+    "browser": [
+      {
+        "id": "br-autovolt-pl",
+        "title": "AutoVolt aurait consulté un concurrent en Pologne",
+        "url": "industrie-radar.fr/autovolt-pologne",
+        "snippet": "Des sources proches des achats évoquent un devis polonais pour des supports moteur…",
+        "body": "Rumeur / article : AutoVolt aurait demandé un devis à un équipementier polonais pour des pièces de type support moteur. Non confirmé officiellement. Chez Novacier, le commercial interne affirme que « tout va bien » — à croiser avec Karim.",
+        "tags": [
+          "autovolt",
+          "concurrent",
+          "pologne",
+          "rumeur"
+        ]
+      },
+      {
+        "id": "br-novacier",
+        "title": "Novacier — Saint-Étienne (fiche entreprise)",
+        "url": "annuaire-indus.fr/novacier",
+        "snippet": "Fondée en 1987. 120 employés. Pièces métalliques auto. Client clé AutoVolt.",
+        "body": "Novacier, Saint-Étienne. Fondation 1987. Quasi-faillite 2022. Aujourd'hui : 4 machines, focus A-42 / B-17 / C-09. Cette semaine : livraison critique AutoVolt (45 % CA).",
+        "tags": [
+          "novacier",
+          "entreprise",
+          "saint-etienne"
+        ]
+      },
+      {
+        "id": "br-metalpro",
+        "title": "MétalPro — retards de livraison acier signalés",
+        "url": "supply-watch.fr/metalpro",
+        "snippet": "Plusieurs PME rhônalpines rapportent des retards coil 2mm…",
+        "body": "MétalPro, fournisseur acier de Novacier, cumule des retards sur les coils 2mm. Impact possible sur stock de sécurité A-42.",
+        "tags": [
+          "metalpro",
+          "acier",
+          "fournisseur",
+          "retard"
+        ]
+      }
+    ],
+    "dashboardCards": [
+      {
+        "label": "Stock A-42",
+        "value": "120 / seuil 200"
+      },
+      {
+        "label": "CMD-248 AutoVolt",
+        "value": "0 / 500 produites"
+      },
+      {
+        "label": "Rebut Machine 3",
+        "value": "18 %"
+      },
+      {
+        "label": "Trésorerie affichée",
+        "value": "Masquée / ???"
+      }
+    ],
+    "dashboardSeries": [],
+    "interviews": [],
+    "objectifs": [],
+    "sensors": []
+  },
+  "Interviews": [
+    {
+      "id": "pers-henri",
+      "nom": "Henri Vallon",
+      "role": "Ancien Responsable · Mentor",
+      "phrase": "Cinq jours. Pas une de plus.",
+      "bio": "Mentor discret. Te rappelle que 2022 n'est pas si loin.",
+      "relationConfiance": 65,
+      "lines": [
+        {
+          "q": "Par où commencer cette semaine ?",
+          "a": "Je te fais confiance — guide-moi. → Jour 1 : découvre la vraie cause du retard. Les ??? ne sont pas un hasard. Interroge Karim."
+        },
+        {
+          "q": "Par où commencer cette semaine ?",
+          "a": "Je gère seul. → Très bien. Mais lis tes mails à 08:15. Laurent n'attend pas."
+        }
+      ],
+      "questions": [
+        {
+          "id": "hq1",
+          "texte": "Par où commencer cette semaine ?",
+          "choices": [
+            {
+              "id": "hq1a",
+              "texte": "Je te fais confiance — guide-moi.",
+              "reponse": "Jour 1 : découvre la vraie cause du retard. Les ??? ne sont pas un hasard. Interroge Karim.",
+              "confianceDelta": 5,
+              "unlockInfo": "Piste : capteur Machine 3",
+              "xp": 10
+            },
+            {
+              "id": "hq1b",
+              "texte": "Je gère seul.",
+              "reponse": "Très bien. Mais lis tes mails à 08:15. Laurent n'attend pas.",
+              "confianceDelta": -2,
+              "xp": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pers-marie",
+      "nom": "Marie Dubois",
+      "role": "Cheffe d'atelier · 52 ans",
+      "phrase": "L'atelier sait. Toi, pas encore.",
+      "bio": "Cheffe d'atelier depuis 18 ans. Méfiante envers les nouveaux chefs qui décident sans voir la ligne.",
+      "relationConfiance": 30,
+      "lines": [
+        {
+          "q": "Pourquoi le retard s'installe ?",
+          "a": "Je te fais confiance — dis-moi tout. → On pousse trop sans voir. Le rebut est pire que ce que Laurent croit. Et les heures sup brûlent l'équipe."
+        },
+        {
+          "q": "Pourquoi le retard s'installe ?",
+          "a": "Montre-moi les chiffres. → Quels chiffres ? Tout est en ???. Installez un capteur, après on parle."
+        },
+        {
+          "q": "Pourquoi le retard s'installe ?",
+          "a": "Il faut juste produire plus. → Comme en 2022. On a failli mourir comme ça."
+        },
+        {
+          "q": "Peut-on gagner des pièces sans casser l'équipe ?",
+          "a": "Je m'en remets à ton expérience. → Si tu me fais vraiment confiance… on peut réorganiser les postes : +2 h/jour sans heures sup. Mais seulement si tu m'écoutes jusqu'au bout."
+        },
+        {
+          "q": "Peut-on gagner des pièces sans casser l'équipe ?",
+          "a": "Les heures sup, c'est non négociable. → Alors ne viens pas te plaindre du moral."
+        },
+        {
+          "q": "La rumeur AutoVolt / Pologne ?",
+          "a": "Tu as entendu quelque chose de concret ? → Des bruits. Karim en sait plus que moi. Le commercial, lui, ment ou se rassure."
+        },
+        {
+          "q": "La rumeur AutoVolt / Pologne ?",
+          "a": "Ce n'est que du bruit de couloir. → Espérons. AutoVolt ne prévient pas toujours."
+        }
+      ],
+      "questions": [
+        {
+          "id": "mq1",
+          "texte": "Pourquoi le retard s'installe ?",
+          "choices": [
+            {
+              "id": "mq1a",
+              "texte": "Je te fais confiance — dis-moi tout.",
+              "reponse": "On pousse trop sans voir. Le rebut est pire que ce que Laurent croit. Et les heures sup brûlent l'équipe.",
+              "confianceDelta": 15,
+              "unlockInfo": "Marie confirme un rebut sous-estimé",
+              "xp": 20
+            },
+            {
+              "id": "mq1b",
+              "texte": "Montre-moi les chiffres.",
+              "reponse": "Quels chiffres ? Tout est en ???. Installez un capteur, après on parle.",
+              "confianceDelta": 5,
+              "xp": 10
+            },
+            {
+              "id": "mq1c",
+              "texte": "Il faut juste produire plus.",
+              "reponse": "Comme en 2022. On a failli mourir comme ça.",
+              "confianceDelta": -12,
+              "xp": 0
+            }
+          ]
+        },
+        {
+          "id": "mq2",
+          "texte": "Peut-on gagner des pièces sans casser l'équipe ?",
+          "choices": [
+            {
+              "id": "mq2a",
+              "texte": "Je m'en remets à ton expérience.",
+              "reponse": "Si tu me fais vraiment confiance… on peut réorganiser les postes : +2 h/jour sans heures sup. Mais seulement si tu m'écoutes jusqu'au bout.",
+              "confianceDelta": 18,
+              "unlockInfo": "SOLUTION_MARIE",
+              "xp": 25
+            },
+            {
+              "id": "mq2b",
+              "texte": "Les heures sup, c'est non négociable.",
+              "reponse": "Alors ne viens pas te plaindre du moral.",
+              "confianceDelta": -10,
+              "xp": 5
+            }
+          ]
+        },
+        {
+          "id": "mq3",
+          "texte": "La rumeur AutoVolt / Pologne ?",
+          "choices": [
+            {
+              "id": "mq3a",
+              "texte": "Tu as entendu quelque chose de concret ?",
+              "reponse": "Des bruits. Karim en sait plus que moi. Le commercial, lui, ment ou se rassure.",
+              "confianceDelta": 8,
+              "unlockInfo": "Vérifier via Karim — rumeur plausible",
+              "xp": 15
+            },
+            {
+              "id": "mq3b",
+              "texte": "Ce n'est que du bruit de couloir.",
+              "reponse": "Espérons. AutoVolt ne prévient pas toujours.",
+              "confianceDelta": 0,
+              "xp": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pers-karim",
+      "nom": "Karim Benali",
+      "role": "Technicien Maintenance · 28 ans",
+      "phrase": "Le capteur de la 3 est mort. 5k€. Personne n'écoute.",
+      "bio": "Technicien maintenance. Connaît chaque capteur. Envoie des messages en douce quand ça chauffe.",
+      "relationConfiance": 70,
+      "lines": [
+        {
+          "q": "Qu'est-ce qui cloche vraiment sur la ligne ?",
+          "a": "Parle franchement. → Capteur Machine 3 mort depuis des semaines. Sans lui, vous naviguez à l'aveugle. 5 000 € et vous voyez le vrai rebut — autour de 18 %."
+        },
+        {
+          "q": "Qu'est-ce qui cloche vraiment sur la ligne ?",
+          "a": "C'est grave au point d'investir ? → Oui. Une nouvelle machine à 80k arrivera trop tard pour cette semaine. Le capteur, c'est maintenant."
+        },
+        {
+          "q": "AutoVolt a contacté un concurrent en Pologne ?",
+          "a": "Dis-moi ce que tu sais. → Oui. Un copain chez AutoVolt m'a parlé d'un devis polonais. Le mail « tout va bien » du commercial… c'est du théâtre."
+        },
+        {
+          "q": "AutoVolt a contacté un concurrent en Pologne ?",
+          "a": "Tu es sûr de ta source ? → Sûr à 80 %. Assez pour ne pas dormir tranquille."
+        }
+      ],
+      "questions": [
+        {
+          "id": "kq1",
+          "texte": "Qu'est-ce qui cloche vraiment sur la ligne ?",
+          "choices": [
+            {
+              "id": "kq1a",
+              "texte": "Parle franchement.",
+              "reponse": "Capteur Machine 3 mort depuis des semaines. Sans lui, vous naviguez à l'aveugle. 5 000 € et vous voyez le vrai rebut — autour de 18 %.",
+              "confianceDelta": 10,
+              "unlockInfo": "CAPTEUR_M3_MORT",
+              "xp": 25
+            },
+            {
+              "id": "kq1b",
+              "texte": "C'est grave au point d'investir ?",
+              "reponse": "Oui. Une nouvelle machine à 80k arrivera trop tard pour cette semaine. Le capteur, c'est maintenant.",
+              "confianceDelta": 5,
+              "unlockInfo": "Nouvelle machine = trop tard pour la semaine",
+              "xp": 15
+            }
+          ]
+        },
+        {
+          "id": "kq2",
+          "texte": "AutoVolt a contacté un concurrent en Pologne ?",
+          "choices": [
+            {
+              "id": "kq2a",
+              "texte": "Dis-moi ce que tu sais.",
+              "reponse": "Oui. Un copain chez AutoVolt m'a parlé d'un devis polonais. Le mail « tout va bien » du commercial… c'est du théâtre.",
+              "confianceDelta": 8,
+              "unlockInfo": "RUMEUR_CONFIRMED",
+              "xp": 20
+            },
+            {
+              "id": "kq2b",
+              "texte": "Tu es sûr de ta source ?",
+              "reponse": "Sûr à 80 %. Assez pour ne pas dormir tranquille.",
+              "confianceDelta": 3,
+              "unlockInfo": "RUMEUR_PARTIELLE",
+              "xp": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pers-laurent",
+      "nom": "Laurent Perrin",
+      "role": "Directeur · 48 ans",
+      "phrase": "Où en est le retard ?",
+      "bio": "Directeur. Emails secs, pression AutoVolt, mémoire de 2022.",
+      "relationConfiance": 50,
+      "lines": [
+        {
+          "q": "Quelle est ta priorité cette semaine ?",
+          "a": "Livrer AutoVolt sans casser la boîte. → 500 pièces conformes avant vendredi 16h. Pas de magouilles qualité. On a déjà frôlé la mort en 2022."
+        },
+        {
+          "q": "Quelle est ta priorité cette semaine ?",
+          "a": "Tu me laisses les mains libres ? → Oui — tant que la trésorerie tient et qu'AutoVolt ne part pas. Rend compte."
+        }
+      ],
+      "questions": [
+        {
+          "id": "lq1",
+          "texte": "Quelle est ta priorité cette semaine ?",
+          "choices": [
+            {
+              "id": "lq1a",
+              "texte": "Livrer AutoVolt sans casser la boîte.",
+              "reponse": "500 pièces conformes avant vendredi 16h. Pas de magouilles qualité. On a déjà frôlé la mort en 2022.",
+              "confianceDelta": 8,
+              "xp": 15
+            },
+            {
+              "id": "lq1b",
+              "texte": "Tu me laisses les mains libres ?",
+              "reponse": "Oui — tant que la trésorerie tient et qu'AutoVolt ne part pas. Rend compte.",
+              "confianceDelta": 4,
+              "xp": 10
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Objectifs": [
+    {
+      "id": "obj-j1-cause",
+      "titre": "Découvrir la vraie cause du retard",
+      "type": "JOURNALIER",
+      "status": "EN_COURS",
+      "cible": "1",
+      "description": "Investis dans le capteur ou obtiens l'aveu de Karim.",
+      "progression": 0,
+      "seuil": 1
+    },
+    {
+      "id": "obj-hebdo-500",
+      "titre": "Livrer 500 pièces avant vendredi 16h",
+      "type": "HEBDOMADAIRE",
+      "status": "EN_COURS",
+      "cible": "500",
+      "description": "Pièces de qualité cumulées sur la semaine.",
+      "progression": 0,
+      "seuil": 500
+    }
+  ],
+  "Jours": [
+    {
+      "id": "jour-1",
+      "jour": 1,
+      "label": "Jour 1 — Le brouillard",
+      "phase": "JOUR",
+      "decisionIds": [
+        "dec-jour-1"
+      ],
+      "eventIds": [
+        "ev-mail-laurent-j1"
+      ]
+    },
+    {
+      "id": "jour-2",
+      "jour": 2,
+      "label": "Jour 2 — Rumeur & pression",
+      "phase": "JOUR",
+      "decisionIds": [
+        "dec-jour-2"
+      ],
+      "eventIds": [
+        "ev-mail-laurent-j2",
+        "ev-rumor-j2"
+      ]
+    },
+    {
+      "id": "jour-3",
+      "jour": 3,
+      "label": "Jour 3 — Panne Machine 3",
+      "phase": "JOUR",
+      "decisionIds": [
+        "dec-jour-3"
+      ],
+      "eventIds": [
+        "ev-panne-m3"
+      ]
+    },
+    {
+      "id": "jour-4",
+      "jour": 4,
+      "label": "Jour 4 — Éthique",
+      "phase": "JOUR",
+      "decisionIds": [
+        "dec-jour-4"
+      ],
+      "eventIds": [
+        "ev-defaut-j4"
+      ]
+    },
+    {
+      "id": "jour-5",
+      "jour": 5,
+      "label": "Jour 5 — Négociation & débrief",
+      "phase": "JOUR",
+      "decisionIds": [
+        "dec-jour-5"
+      ],
+      "eventIds": []
+    }
+  ],
+  "Kpis": [
+    {
+      "id": "kpi-pieces",
+      "label": "Pièces qualité",
+      "format": "number",
+      "path": "qualite",
+      "unit": "pcs"
+    },
+    {
+      "id": "kpi-ethique",
+      "label": "Éthique",
+      "format": "percent",
+      "path": "ethique",
+      "unit": "%"
+    },
+    {
+      "id": "kpi-stock",
+      "label": "Stock A-42",
+      "format": "number",
+      "path": "stock",
+      "unit": "u"
+    },
+    {
+      "id": "kpi-cash",
+      "label": "Trésorerie",
+      "format": "currency",
+      "path": "tresorerie",
+      "unit": "€"
+    }
+  ],
+  "Conséquences": [],
+  "Intro": [
+    "Lundi 8h00. Tu viens d'être nommé Responsable de Production chez Novacier.",
+    "120 employés. Quatre machines. AutoVolt = 45 % du CA. En 2022, l'entreprise a failli mourir.",
+    "Cette semaine décide de tout : 500 pièces qualité avant vendredi 16h. Laurent écrit déjà. Karim sait un secret. Marie te jauge."
+  ],
+  "Livre": {
+    "nom": "Novacier",
+    "slogan": "La Semaine Qui Décide De Tout",
+    "histoire": {
+      "fondation": "Fondée en 1987 à Saint-Étienne, Novacier emploie aujourd'hui 120 personnes et fabrique des pièces métalliques pour l'automobile.",
+      "datesCles": [
+        {
+          "annee": "1987",
+          "fait": "Fondation à Saint-Étienne"
+        },
+        {
+          "annee": "2005",
+          "fait": "Premier contrat AutoVolt"
+        },
+        {
+          "annee": "2018",
+          "fait": "Passage à 4 machines CNC / presse"
+        },
+        {
+          "annee": "2022",
+          "fait": "Quasi-faillite — plan de sauvetage"
+        },
+        {
+          "annee": "2026",
+          "fait": "Semaine critique : livraison AutoVolt"
+        }
+      ],
+      "anecdotes": [
+        "L'atelier refuse encore les réunions sans passage terrain.",
+        "La Machine 3 a déjà « sauvé » deux trimestres — et en a cassé un.",
+        "AutoVolt visite rarement, mais lit chaque taux de rebut."
+      ],
+      "crisesPassees": [
+        "2022 : quasi-faillite, 3 mois de trésorerie critique.",
+        "2023 : rappel qualité Bride B-17 (lot limité)."
+      ],
+      "narratif": "Novacier a grandi dans le bruit des presses stéphanoises. Longtemps solide, elle a frôlé la faillite en 2022 : retards clients, rebuts trop élevés, confiance AutoVolt au bord du gouffre. Cette semaine, tu arrives comme Responsable de Production. Cinq jours pour remettre la ligne sur les rails — ou perdre le contrat qui fait 45 % du CA."
+    },
+    "activite": {
+      "ceQuOnFabrique": "Pièces métalliques usinées et embouties pour l'automobile : supports, brides, carters.",
+      "pourQui": "Équipementiers et constructeurs. Client clé : AutoVolt (45 % du CA).",
+      "produitsPhares": [
+        {
+          "nom": "Support Moteur A-42",
+          "description": "Support structurel haute tolérance — volume principal."
+        },
+        {
+          "nom": "Bride de Frein B-17",
+          "description": "Bride critique sécurité — zéro défaut toléré."
+        },
+        {
+          "nom": "Carter C-09",
+          "description": "Carter usiné petites/moyennes séries."
+        }
+      ],
+      "clientsPrincipaux": [
+        "AutoVolt (45 % CA)",
+        "Nord Méca",
+        "Helio Parts"
+      ]
+    },
+    "organigramme": [
+      {
+        "personnageId": "pers-marie",
+        "label": ""
+      },
+      {
+        "personnageId": "pers-karim",
+        "label": ""
+      },
+      {
+        "personnageId": "pers-laurent",
+        "label": ""
+      },
+      {
+        "personnageId": "pers-henri",
+        "label": ""
+      }
+    ],
+    "chiffresCles": {
+      "ca": "12 M€",
+      "employes": 120,
+      "machines": 4,
+      "clients": 18,
+      "satisfaction": "72 %"
+    },
+    "valeurs": [
+      {
+        "titre": "On ne lâche jamais un client",
+        "description": "Tenir la promesse, même sous pression — sans tricher sur la qualité."
+      },
+      {
+        "titre": "La qualité avant la quantité",
+        "description": "Un lot douteux coûte plus cher qu'un délai négocié."
+      },
+      {
+        "titre": "L'atelier sait",
+        "description": "Écoute le terrain avant les tableaux. Marie et Karim ont souvent raison."
+      }
+    ],
+    "glossaire": [
+      {
+        "terme": "OEE",
+        "definition": "Overall Equipment Effectiveness — rendement global machine (dispo × perf × qualité)."
+      },
+      {
+        "terme": "Taux de rebut",
+        "definition": "Pourcentage de pièces non conformes. Chez Novacier, le vrai chiffre est longtemps resté flou."
+      },
+      {
+        "terme": "ERP",
+        "definition": "Progiciel de gestion : stocks, commandes, RH, factures."
+      },
+      {
+        "terme": "Stock de sécurité",
+        "definition": "Réserve minimale d'acier pour absorber retards fournisseurs."
+      },
+      {
+        "terme": "Capteur IoT",
+        "definition": "Capteur connecté qui remonte l'état machine. Sur la Machine 3, le capteur est mort…"
+      }
+    ]
+  }
+}

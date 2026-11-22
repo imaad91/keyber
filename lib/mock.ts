@@ -15,31 +15,32 @@ import {
   emptyCibleesProgress,
   emptyGeneralesProgress,
 } from "./competences";
-import {
-  createNovacierInitialState,
-  novacierDecisions,
-  SCENARIO_ID,
-} from "@/data/scenarioNovacier";
+import { getContexteActif, getScenarioActif } from "@/data/registry";
 import {
   emailsForDay,
   eventsForDay,
-  livreNovacier as livreFromScenario,
+  getChaptersActifs,
+  getLivreActif,
+  getMachinesActives,
+  getObjectivesActifs,
+  getPersonnagesActifs,
+  getRumorActif,
   messagesForDay,
-  scenarioChapters,
-  scenarioMachines,
-  scenarioObjectives,
-  scenarioPersonnages,
-  scenarioRumor,
-  SCENARIO_TITLE,
 } from "./scenario";
 
-export const COMPANY_NAME = "Novacier";
-export const SCENARIO_NAME = SCENARIO_TITLE;
-export const livreNovacier = livreFromScenario;
-export const examplePersonnages = scenarioPersonnages;
-export const exampleMachines = scenarioMachines;
-export const exampleObjectives = scenarioObjectives;
-export const exampleChapters = scenarioChapters;
+/** Prefer getContexteActif().nom — Company label from active contexte. */
+export function getCompanyName(): string {
+  return getContexteActif().nom;
+}
+export const COMPANY_NAME = "Entreprise";
+export const SCENARIO_NAME = "Scénario actif";
+export {
+  getLivreActif as getLivre,
+  getPersonnagesActifs as getExamplePersonnages,
+  getMachinesActives as getExampleMachines,
+  getObjectivesActifs as getExampleObjectives,
+  getChaptersActifs as getExampleChapters,
+};
 export const exampleNewMachine = {
   id: "m5",
   nom: "Ligne Flex 5",
@@ -75,22 +76,22 @@ export const skills: Skill[] = [
   niveau: 1,
   xp: 0,
   xpMax: 500,
-  scenarioIds: ["novacier"],
+  scenarioIds: [],
   icone: SKILL_ICONS[c.id] ?? "Package",
 }));
 
+/** Role shells — narrative copy comes from getContexteActif().runtime. */
 export const roles: Role[] = [
   {
     id: "prod",
     titre: "Responsable de Production",
-    description:
-      "Scénario POC : La Semaine Qui Décide De Tout — contrat AutoVolt.",
+    description: "Scénario histoire — production.",
     icone: "Factory",
-    focus: ["Atelier", "Qualité", "AutoVolt"],
+    focus: ["Atelier", "Qualité", "Client"],
     introLines: [
-      "Lundi 8h00. Tu viens d'être nommé Responsable de Production chez Novacier.",
-      "120 employés. Quatre machines. AutoVolt = 45 % du CA. En 2022, l'entreprise a failli mourir.",
-      "Cette semaine décide de tout : 500 pièces qualité avant vendredi 16h. Laurent écrit déjà. Karim sait un secret. Marie te jauge.",
+      "Lundi 8h00. Tu prends les commandes en production.",
+      "Cette semaine décide de tout.",
+      "Lis tes mails, parle à l'atelier, ouvre l'ERP.",
     ],
   },
   {
@@ -181,7 +182,7 @@ export const visibilityInvestments: VisibilityInvestment[] = [
   },
   {
     level: 2,
-    label: "Capteur IoT Machine 3",
+    label: "Capteur IoT ligne critique",
     cost: 5_000,
     description: "KPIs réels — cœur du Jour 1.",
   },
@@ -207,7 +208,7 @@ export const exampleActions: Action[] = [
     type: "INTERVIEW",
     titre: "Interview",
     icone: "MessagesSquare",
-    description: "Marie, Karim, Laurent…",
+    description: "Équipe atelier & direction…",
     timeCostMinutes: 30,
   },
   {
@@ -238,8 +239,8 @@ export const onboardingStepsMeta = [
   },
   {
     step: 2 as const,
-    titre: "Parler à Marie",
-    mentorLine: "Marie Dubois te jauge. Interviewe-la.",
+    titre: "Parler à l'atelier",
+    mentorLine: "La cheffe d'atelier te jauge. Interviewe-la.",
     unlock: "INTERVIEW" as const,
     actionHint: "INTERVIEW" as const,
   },
@@ -247,7 +248,7 @@ export const onboardingStepsMeta = [
     step: 3 as const,
     titre: "Accès Ordinateur",
     mentorLine:
-      "Ouvre l'ordinateur — ERP Novacier, mails et chat sont dessus.",
+      "Ouvre l'ordinateur — ERP, mails et chat sont dessus.",
     unlock: "ACCESS_COMPUTER" as const,
     actionHint: "ACCESS_COMPUTER" as const,
   },
@@ -261,7 +262,9 @@ export const onboardingStepsMeta = [
   },
 ];
 
-export const exampleDecisions = novacierDecisions;
+export function getExampleDecisions() {
+  return getScenarioActif().decisions;
+}
 
 export const exampleBadges: Badge[] = [
   {
@@ -290,7 +293,7 @@ export const exampleBadges: Badge[] = [
   },
   {
     id: "badge-livre",
-    titre: "Mémoire de Novacier",
+    titre: "Mémoire de l'entreprise",
     description: "Ouvrir le Livre.",
     unlocked: false,
   },
@@ -303,7 +306,7 @@ export const exampleBadges: Badge[] = [
   {
     id: "badge-victoire",
     titre: "Contrat sauvé",
-    description: "Victoire AutoVolt.",
+    description: "Victoire — contrat client tenu.",
     unlocked: false,
   },
 ];
@@ -311,7 +314,7 @@ export const exampleBadges: Badge[] = [
 export const exampleEmails = emailsForDay(1);
 export const exampleMessages = messagesForDay(1);
 export const exampleEvents = eventsForDay(1);
-export const exampleRumors = [scenarioRumor];
+export const exampleRumors = [getRumorActif()];
 
 export const erpStock = [
   { id: "ST-01", article: "Acier 2mm", qty: 850, seuil: 200, statut: "OK" },
@@ -329,7 +332,7 @@ export const erpStock = [
 export const erpOrders = [
   {
     id: "CMD-AV-500",
-    client: "AutoVolt",
+    client: "Client stratégique",
     montant: 186000,
     statut: "Critique",
     echeance: "Vendredi 16h",
@@ -346,26 +349,26 @@ export const erpOrders = [
 export const erpEmployees = [
   {
     id: "E-12",
-    nom: "Marie Dubois",
+    nom: "Cheffe d'atelier",
     poste: "Cheffe d'atelier",
     shift: "Matin",
   },
   {
     id: "E-18",
-    nom: "Karim Benali",
+    nom: "Technicien maintenance",
     poste: "Technicien Maintenance",
     shift: "Journée",
   },
   {
     id: "E-01",
-    nom: "Laurent Perrin",
+    nom: "Directeur",
     poste: "Directeur",
     shift: "—",
   },
 ];
 
 export const erpInvoices = [
-  { id: "FAC-880", client: "AutoVolt", montant: 42000, statut: "En cours" },
+  { id: "FAC-880", client: "Client stratégique", montant: 42000, statut: "En cours" },
   { id: "FAC-881", client: "Nord Méca", montant: 6400, statut: "Payée" },
 ];
 
@@ -403,7 +406,8 @@ const ALL_ACTIONS: GameState["world"]["unlockedActions"] = [
 ];
 
 export function createInitialGameState(): GameState {
-  const base = createNovacierInitialState();
+  const scenario = getScenarioActif();
+  const base = scenario.createInitial();
   const competencesGenerales = emptyGeneralesProgress();
   const competencesCiblees = emptyCibleesProgress("prod");
   const skillProgress = {
@@ -424,7 +428,7 @@ export function createInitialGameState(): GameState {
     ...base,
     modeActuel: base.modeActuel ?? null,
     scenarioCompetenceId: base.scenarioCompetenceId ?? null,
-    scenarioHistoireId: base.scenarioHistoireId ?? SCENARIO_ID,
+    scenarioHistoireId: base.scenarioHistoireId ?? scenario.id,
     progression: {
       ...base.progression,
       competencesGenerales,
@@ -433,12 +437,12 @@ export function createInitialGameState(): GameState {
     flags: { ...base.flags, tauxPanne: 5 },
     world: {
       ...base.world,
-      machines: scenarioMachines.map((m) => ({ ...m })),
-      objectives: scenarioObjectives.map((o) => ({ ...o })),
+      machines: getMachinesActives().map((m) => ({ ...m })),
+      objectives: getObjectivesActifs().map((o) => ({ ...o })),
       events: eventsForDay(1),
       emails: emailsForDay(1),
       messages: messagesForDay(1),
-      rumors: [{ ...scenarioRumor }],
+      rumors: [{ ...getRumorActif() }],
       badges: exampleBadges.map((b) => ({ ...b })),
       skillProgress,
       trainingsCompleted: base.world.trainingsCompleted ?? [],
@@ -448,7 +452,7 @@ export function createInitialGameState(): GameState {
       eventNotifications: base.world.eventNotifications ?? [],
       urgentBanner: base.world.urgentBanner ?? null,
       showDayEnd: false,
-      chapters: scenarioChapters.map((c) => ({ ...c })),
+      chapters: getChaptersActifs().map((c) => ({ ...c })),
       unlockedActions: ["ACCESS_COMPUTER", "VIEW_ATELIER_LIVE"],
     },
   });
@@ -482,7 +486,7 @@ export function createScenarioDayState(
         day >= 2
           ? [
               {
-                ...scenarioRumor,
+                ...getRumorActif(),
                 verified: from.world.unlockedInfos.includes("RUMEUR_CONFIRMED")
                   ? true
                   : from.world.unlockedInfos.includes("RUMEUR_PARTIELLE")
@@ -502,10 +506,10 @@ export function createScenarioDayState(
   return checkEvenements(base);
 }
 
-export { ALL_ACTIONS, novacierDecisions };
-/** @deprecated use novacierDecisions — kept for any leftover imports */
-export const dayDecisions = Object.fromEntries(
-  novacierDecisions.map((d) => [d.jour, d.choix])
-);
+export { ALL_ACTIONS };
+export function getDayDecisions() {
+  return Object.fromEntries(
+    getScenarioActif().decisions.map((d) => [d.jour, d.choix])
+  );
+}
 export const initialGameState = createInitialGameState();
-export { dayTitles } from "@/data/scenarioNovacier";

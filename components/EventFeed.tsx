@@ -3,18 +3,29 @@
 import { Building2, HelpCircle } from "lucide-react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { RumorCard } from "@/components/RumorCard";
+import { getContexteActif } from "@/data/registry";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 function eventAvatarName(kind: string, titre: string): string | null {
   const blob = `${kind} ${titre}`.toLowerCase();
-  if (blob.includes("marie")) return "Marie";
-  if (blob.includes("karim") || blob.includes("maintenance")) return "Karim";
-  if (blob.includes("laurent") || blob.includes("directeur")) return "Laurent";
-  if (blob.includes("henri") || blob.includes("mentor")) return "Henri";
-  if (blob.includes("machine") || blob.includes("panne")) return "Karim";
-  if (blob.includes("contrat") || blob.includes("autovolt")) return "Laurent";
-  if (blob.includes("rumeur")) return "Marie";
+  const contacts = getContexteActif().computer.chatContacts;
+  for (const c of contacts) {
+    const first = c.name.split(" ")[0]?.toLowerCase() ?? "";
+    if (first && blob.includes(first)) return c.name.split(" ")[0]!;
+    if (c.role && blob.includes(c.role.toLowerCase())) {
+      return c.name.split(" ")[0]!;
+    }
+  }
+  if (blob.includes("machine") || blob.includes("panne")) {
+    return contacts.find((c) => /maint/i.test(c.role))?.name.split(" ")[0] ?? null;
+  }
+  if (blob.includes("contrat") || blob.includes("client")) {
+    return contacts.find((c) => /direct/i.test(c.role))?.name.split(" ")[0] ?? null;
+  }
+  if (blob.includes("rumeur")) {
+    return contacts[0]?.name.split(" ")[0] ?? null;
+  }
   return null;
 }
 

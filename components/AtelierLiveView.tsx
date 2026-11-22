@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Activity, AlertTriangle, Gauge, Wrench, X } from "lucide-react";
+import { getContexteActif } from "@/data/registry";
 import { useGameStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import type { Machine } from "@/lib/types";
@@ -56,7 +57,7 @@ export function AtelierLiveView() {
       >
         {gameState.alarmActive ? (
           <div className="absolute left-4 top-4 z-10 rounded-full bg-danger px-3 py-1 text-xs font-bold uppercase tracking-wider text-white machine-fault">
-            Alarme Machine 3
+            {getContexteActif().runtime.alarmLabel}
           </div>
         ) : null}
         <div

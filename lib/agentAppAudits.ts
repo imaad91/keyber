@@ -105,7 +105,7 @@ export function runOrchestraAudit(
     priorite: "basse",
     titre: "Sauvegarde : localStorage seul (POC)",
     detail:
-      "lib/adminStore.ts STORAGE_KEY keyber-admin-v1 + lib/store.ts joueur — pas de couche cloud. Conforme Journal « Rester en local », mais le mélange futur Supabase doit rester séparé.",
+      "lib/adminStore.ts STORAGE_KEY keyber-studio-v1 (Studio) + lib/store.ts joueur — séparés, pas de couche cloud. Conforme Journal « Rester en local ».",
     solution:
       "Prévoir un adaptateur SaveAdapter (local | cloud) sans mélanger les clés dans un même namespace.",
   });
@@ -162,7 +162,7 @@ export function runOrchestraAudit(
   }
 
   return {
-    agentId: "agent-orchestra",
+    agentId: "orchestra",
     score: scoreFromIssues(issues),
     issues,
     ranAt: new Date().toISOString(),
@@ -245,7 +245,7 @@ export function runErgonomieAudit(state: AdminState): AgentRunReport {
   }
 
   return {
-    agentId: "agent-ergonomie",
+    agentId: "ergonomie",
     score: scoreFromIssues(issues),
     issues,
     ranAt: new Date().toISOString(),

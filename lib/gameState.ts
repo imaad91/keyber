@@ -62,7 +62,7 @@ export type GameFinance = {
 export type GameHumain = {
   moralEquipe: number;
   ethique: number;
-  confianceClient: number; // AutoVolt-like client trust (generic)
+  confianceClient: number; // strategic client trust (generic)
 };
 
 export type CompetenceProgressState = {
@@ -165,7 +165,7 @@ export type JournalEntryState = {
   xp: number;
   at: string;
   mode?: ModeJeu;
-  /** e.g. "Novacier Jour 3" or "Négociation" */
+  /** e.g. "Jour 3" or "Négociation" */
   modeLabel?: string;
 };
 
@@ -235,7 +235,7 @@ export type GameState = {
   meta: GameMeta;
   finance: GameFinance;
   humain: GameHumain;
-  /** confiance keyed by personnage id (marie, karim, … or pers-marie) */
+  /** confiance keyed by personnage visual slot id (pers-marie, …) */
   relations: Record<string, number>;
   progression: GameProgression;
   visibilite: Record<string, VisibilityTier>;

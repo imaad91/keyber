@@ -209,7 +209,7 @@ export default function AdminFicheDetailPage() {
 
         {fiche.statutWorkflow === "provisoire_cree" ? (
           <AdminButton onClick={() => run(() => lancerTestsAgents(fiche.id))}>
-            Lancer les tests Agents
+            Enregistrer les tests Agents
           </AdminButton>
         ) : null}
 

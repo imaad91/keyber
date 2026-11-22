@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import { FileText } from "lucide-react";
-import { computerDocuments } from "@/lib/computerData";
+import { getComputerDocuments, getDesktopCopy } from "@/lib/computerData";
 import { cn } from "@/lib/utils";
 
 export function ComputerDocs() {
-  const [selectedId, setSelectedId] = useState(computerDocuments[0]?.id ?? null);
-  const doc = computerDocuments.find((d) => d.id === selectedId) ?? null;
+  const [selectedId, setSelectedId] = useState(getComputerDocuments()[0]?.id ?? null);
+  const doc = getComputerDocuments().find((d) => d.id === selectedId) ?? null;
 
   return (
     <div className="flex h-full min-h-[440px] bg-white text-slate-900">
       <ul className="w-64 shrink-0 overflow-y-auto border-r border-slate-200 bg-slate-50">
         <li className="px-3 py-3 text-[10px] font-bold uppercase tracking-wide text-slate-400">
-          Documents Novacier
+          {getDesktopCopy().docsTitle}
         </li>
-        {computerDocuments.map((d) => (
+        {getComputerDocuments().map((d) => (
           <li key={d.id}>
             <button
               type="button"

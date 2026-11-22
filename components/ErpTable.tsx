@@ -3,12 +3,12 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import {
-  erpEmployees,
-  erpInvoices,
-  erpMachinesTable,
-  erpOrders,
-  erpStock,
-} from "@/lib/mock";
+  getErpCommandes,
+  getErpEmployes,
+  getErpFactures,
+  getErpMachines,
+  getErpStockRows,
+} from "@/lib/computerData";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -30,36 +30,77 @@ export function ErpTable({ embedded = false }: { embedded?: boolean }) {
     const q = query.trim().toLowerCase();
     const filterRows = <T extends Record<string, unknown>>(list: T[]) =>
       list.filter((row) =>
-        Object.values(row).some((v) =>
-          String(v).toLowerCase().includes(q)
-        )
+        Object.values(row).some((v) => String(v).toLowerCase().includes(q))
       );
 
     if (tab === "stock") {
-      const data = filterRows(erpStock);
+      const data = filterRows(
+        getErpStockRows().map((r) => ({
+          id: r.ref,
+          article: r.nom,
+          qty: r.qte,
+          seuil: r.seuil,
+          statut: r.statut,
+        }))
+      );
       return [...data].sort((a, b) =>
-        sortAsc ? a.article.localeCompare(b.article) : b.article.localeCompare(a.article)
+        sortAsc
+          ? a.article.localeCompare(b.article)
+          : b.article.localeCompare(a.article)
       );
     }
     if (tab === "commandes") {
-      const data = filterRows(erpOrders);
+      const data = filterRows(
+        getErpCommandes().map((r) => ({
+          id: r.numero,
+          client: r.client,
+          montant: r.montant,
+          statut: r.statut,
+          echeance: r.dateLimite,
+        }))
+      );
       return [...data].sort((a, b) =>
-        sortAsc ? a.client.localeCompare(b.client) : b.client.localeCompare(a.client)
+        sortAsc
+          ? a.client.localeCompare(b.client)
+          : b.client.localeCompare(a.client)
       );
     }
     if (tab === "employes") {
-      const data = filterRows(erpEmployees);
+      const data = filterRows(
+        getErpEmployes().map((r) => ({
+          id: r.nom,
+          nom: r.nom,
+          poste: r.poste,
+          shift: r.equipe,
+        }))
+      );
       return [...data].sort((a, b) =>
         sortAsc ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom)
       );
     }
     if (tab === "factures") {
-      const data = filterRows(erpInvoices);
+      const data = filterRows(
+        getErpFactures().map((r) => ({
+          id: r.numero,
+          client: r.client,
+          montant: r.montant,
+          statut: r.statut,
+        }))
+      );
       return [...data].sort((a, b) =>
-        sortAsc ? a.client.localeCompare(b.client) : b.client.localeCompare(a.client)
+        sortAsc
+          ? a.client.localeCompare(b.client)
+          : b.client.localeCompare(a.client)
       );
     }
-    const data = filterRows(erpMachinesTable);
+    const data = filterRows(
+      getErpMachines().map((r) => ({
+        id: r.nom,
+        nom: r.nom,
+        etat: r.etat,
+        oee: r.vitesse,
+      }))
+    );
     return [...data].sort((a, b) =>
       sortAsc ? a.nom.localeCompare(b.nom) : b.nom.localeCompare(a.nom)
     );

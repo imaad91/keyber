@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CharacterAvatar } from "@/components/characters/CharacterAvatar";
 import { CharacterPortrait } from "@/components/characters/CharacterPortrait";
-import { examplePersonnages } from "@/lib/mock";
+import { getPersonnagesActifs } from "@/lib/scenario";
 import {
   CHARACTER_META,
   expressionFromTrust,
@@ -22,8 +22,8 @@ export function InterviewView() {
     applyDialogueChoice,
   } = useGameStore();
   const personnage =
-    examplePersonnages.find((p) => p.id === selectedPersonnageId) ??
-    examplePersonnages[0];
+    getPersonnagesActifs().find((p) => p.id === selectedPersonnageId) ??
+    getPersonnagesActifs()[0];
   const visualId = personnage.id as CharacterVisualId;
   const [activeQ, setActiveQ] = useState<string | null>(null);
   const [lastChoice, setLastChoice] = useState<DialogueChoice | null>(null);
@@ -37,7 +37,7 @@ export function InterviewView() {
     <section className="view-enter flex h-full min-h-[480px] flex-col gap-4">
       {/* Selector: small round avatars only */}
       <div className="flex flex-wrap gap-2">
-        {examplePersonnages.map((p) => {
+        {getPersonnagesActifs().map((p) => {
           const t = gameState.relations[p.id] ?? p.relationConfiance;
           return (
             <button

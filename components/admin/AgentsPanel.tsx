@@ -15,7 +15,8 @@ import {
 } from "@/components/admin/AdminPrimitives";
 import { useAdminStore } from "@/lib/adminStore";
 
-export function AgentsPanel({ scenarioId }: { scenarioId: string }) {
+export function AgentsPanel({ scenarioId: _scenarioId }: { scenarioId: string }) {
+  void _scenarioId;
   const {
     agents,
     agentReports,
@@ -23,8 +24,6 @@ export function AgentsPanel({ scenarioId }: { scenarioId: string }) {
     duplicateAgent,
     createAgent,
     setAgentActive,
-    runAgentsOnScenario,
-    applyAgentMetierCapteurPatch,
   } = useAdminStore();
 
   const [editId, setEditId] = useState<string | null>(null);
@@ -40,18 +39,6 @@ export function AgentsPanel({ scenarioId }: { scenarioId: string }) {
 
       <div className="flex flex-wrap gap-2">
         <AdminButton onClick={() => createAgent()}>Ajouter un agent</AdminButton>
-        <AdminButton
-          variant="secondary"
-          onClick={() => runAgentsOnScenario(scenarioId)}
-        >
-          Lancer tous les agents
-        </AdminButton>
-        <AdminButton
-          variant="secondary"
-          onClick={() => applyAgentMetierCapteurPatch(scenarioId)}
-        >
-          Démo : appliquer patch Expert Métier (−6000)
-        </AdminButton>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -111,13 +98,6 @@ export function AgentsPanel({ scenarioId }: { scenarioId: string }) {
                 onClick={() => setAgentActive(a.id, !a.actif)}
               >
                 {a.actif ? "Désactiver" : "Activer"}
-              </AdminButton>
-              <AdminButton
-                variant="ghost"
-                className="text-xs"
-                onClick={() => runAgentsOnScenario(scenarioId, a.id)}
-              >
-                Tester cet agent
               </AdminButton>
             </div>
           </article>

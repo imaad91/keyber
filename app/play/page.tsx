@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Étape 42 — `/play` n'est plus l'entrée joueur.
+ * Redirige vers `/jouer/live` sauf `?archive=1` (POC Novacier archivé).
+ */
+
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ActionSidebar } from "@/components/ActionSidebar";
@@ -19,6 +24,10 @@ import { OnboardingCoach } from "@/components/OnboardingCoach";
 import { ScenarioDayBanner } from "@/components/ScenarioDayBanner";
 import { UrgentEventBanner } from "@/components/UrgentEventBanner";
 import { VisibilityPanel } from "@/components/VisibilityPanel";
+import {
+  OS_LEGACY_PLAY_RETIRED,
+  osLegacyPlayRedirectHref,
+} from "@/lib/keyberOs/bookBridge";
 import { exampleActions, roles } from "@/lib/mock";
 import { useGameStore } from "@/lib/store";
 
@@ -64,24 +73,41 @@ function ActionWorkspace() {
 function PlayInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const archive = searchParams.get("archive") === "1";
   const { gameState, setActiveAction } = useGameStore();
   const { activeAction } = useGameStore();
   const role = roles.find((r) => r.id === gameState.roleId);
   const computerOpen = activeAction?.type === "ACCESS_COMPUTER";
 
   useEffect(() => {
+    if (OS_LEGACY_PLAY_RETIRED && !archive) {
+      router.replace(osLegacyPlayRedirectHref());
+    }
+  }, [archive, router]);
+
+  useEffect(() => {
+    if (OS_LEGACY_PLAY_RETIRED && !archive) return;
     if (gameState.mode === "story" && gameState.roleId && !gameState.introSeen) {
       router.replace("/intro");
     }
-  }, [gameState.mode, gameState.roleId, gameState.introSeen, router]);
+  }, [archive, gameState.mode, gameState.roleId, gameState.introSeen, router]);
 
   useEffect(() => {
+    if (OS_LEGACY_PLAY_RETIRED && !archive) return;
     const action = searchParams.get("action");
     if (action === "interview") {
       const interview = exampleActions.find((a) => a.type === "INTERVIEW");
       if (interview) setActiveAction({ ...interview, timeCostMinutes: 0 });
     }
-  }, [searchParams, setActiveAction]);
+  }, [archive, searchParams, setActiveAction]);
+
+  if (OS_LEGACY_PLAY_RETIRED && !archive) {
+    return (
+      <div className="flex h-screen items-center justify-center atmosphere-play text-sm text-muted">
+        Redirection vers le catalogue Live…
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden atmosphere-play text-foreground">

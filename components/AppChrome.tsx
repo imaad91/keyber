@@ -1,12 +1,6 @@
 "use client";
 
-import { SaveIndicator } from "@/components/SaveIndicator";
-
+/** Chrome global minimal — plus d'indicateur de save POC (useGameStore). */
 export function AppChrome({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      {children}
-      <SaveIndicator />
-    </>
-  );
+  return <>{children}</>;
 }

@@ -17,7 +17,7 @@ Référence Studio — l’Admin lit et propose ; Cursor construit ; le jeu ne l
 ## Studio vs jeu
 
 1. Storage Studio : `keyber-studio-*` uniquement. Jamais `keyber-admin-v1`.
-2. Le jeu (`lib/store.ts` / GameState) ne lit pas le localStorage Studio.
+2. Le jeu (Book OS / `keyber-os-*`) ne lit pas le localStorage Studio.
 3. Pas de bandeau « Studio » dans Décider / play.
 4. Les agents (Contrôle) relisent et proposent — ils ne patchent pas le Cœur ni le code.
 
@@ -73,12 +73,12 @@ Go / no-go V1 = validation humaine.
 **Pack Novacier (Étape 41 — exemple)** : `data/scenarios/novacier/*.json` (extraction `data/contextes/novacier`).
 Seed Admin : `/admin/book/demo-novacier`. Jouer via Book `/jouer/book/[id]`. **Aucun** nom Novacier dans `lib/keyberOs/*`.
 
-**Porte unique joueur (Étape 42)** : Accueil / liens → `/jouer/live` uniquement.
-`/play` **redirige** vers `/jouer/live`. POC archivé : `/play?archive=1` (hors catalogue).
-Code `app/play` conservé comme archive, plus d’entrée produit.
+**Porte unique joueur (Étape 42+)** : Accueil / liens → `/jouer/live` uniquement.
+`/play` et `/intro` **redirigent** vers `/jouer/live`. POC Novacier joueur **retiré** (plus d’archive `?archive=1`, plus de `components/computer/*` / `useGameStore`).
 **Fence legacy** : `/jouer/histoire`, `/jouer/competence*`, `/story`, `/skills`, `/jouer` (slots) → Live.
-Journal / Livre / Profil / ERP hors session Book → CTA Live (plus de fallback Novacier).
+Journal / Livre / Profil / ERP hors session Book → CTA Live.
 Accueil « Reprendre » = saves Book OS (`keyber-os-play-saves-v1`).
+Contenu Novacier Book : `data/scenarios/novacier/*.json` (extraction scripts depuis `data/contextes/novacier` uniquement).
 
 **Keyber OS** = moteur générique du jeu : **chaque sous-onglet Admin = un module runtime** sous `lib/keyberOs/` + doc.
 Sous-onglets : Vue Globale · ERP · Scénarios · Décisions · Événements · Progression · Interface Joueur · **Ordinateur** · **Temps** · **Cycle de vie** · **Notifications** · **Interviews** · **Relations** · **Objectifs** · **Visibilité** · Données & Sauvegarde.

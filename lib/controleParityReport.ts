@@ -103,9 +103,9 @@ export function buildControleParityReport(
     severity: "info",
     area: "Entrée joueur",
     title: "Porte unique Book Live (Étape 42)",
-    detail: `Catalogue officiel : /jouer/live → ${OS_BOOK_PLAY_PATH}/[id]. Ancien ${OS_LEGACY_PLAY_PATH} redirige vers le Live (POC archivé ?archive=1).`,
+    detail: `Catalogue officiel : /jouer/live → ${OS_BOOK_PLAY_PATH}/[id]. Ancien ${OS_LEGACY_PLAY_PATH} redirige vers le Live (POC joueur retiré).`,
     proposal:
-      "Ne plus lier le produit à /play. Archive debug uniquement via /play?archive=1.",
+      "Ne plus lier le produit à /play — redirection permanente vers /jouer/live.",
   });
 
   // —— Modules OS OFF ——
@@ -281,7 +281,7 @@ export function buildControleParityReport(
     dualEngine: {
       officialPath: `${OS_BOOK_PLAY_PATH}/[id]`,
       legacyPath: OS_LEGACY_PLAY_PATH,
-      note: "Étape 42 — /play redirige vers /jouer/live ; POC archivé ?archive=1.",
+      note: "Étape 42 — /play redirige vers /jouer/live ; POC joueur retiré.",
     },
     summaryLines,
     texte,

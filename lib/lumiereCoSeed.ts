@@ -412,10 +412,24 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
   bookEntries = [...createdBook, ...bookEntries];
   writeJson(KEY_BOOK, { entries: bookEntries });
 
-  // Catalogue joueur (hors studio) — uniquement Live
+  // Catalogue joueur — merge Live Lumière (ne wipe pas Novacier / autres)
+  const KEY_CATALOG = "keyber-play-catalog-v1";
+  const catalog = readJson<{ entries: Record<string, unknown>[] }>(KEY_CATALOG, {
+    entries: [],
+  });
+  const isLumiereCatalogEntry = (e: Record<string, unknown>) => {
+    const ent = String(e.entrepriseNom ?? "").trim().toLowerCase();
+    const fam = String(e.familyId ?? "");
+    return (
+      ent === LUMIERE_NOM.toLowerCase() ||
+      fam === LUMIERE_FAMILY_ID ||
+      fam.startsWith(`${LUMIERE_FAMILY_ID}:`)
+    );
+  };
+  let catEntries = (catalog.entries || []).filter((e) => !isLumiereCatalogEntry(e));
   const liveOnly = createdBook.filter((e) => e.status === "live");
-  writeJson("keyber-play-catalog-v1", {
-    entries: liveOnly.map((e) => ({
+  catEntries = [
+    ...liveOnly.map((e) => ({
       id: e.id,
       familyId: e.familyId,
       version: e.version,
@@ -431,7 +445,9 @@ export function seedLumiereCoDemo(): LumiereSeedResult {
       status: e.status,
       updatedAt: e.updatedAt,
     })),
-  });
+    ...catEntries,
+  ];
+  writeJson(KEY_CATALOG, { entries: catEntries });
 
   // Invalider les singletons in-memory (prochain chargement reprend le LS)
   const w = window as unknown as {

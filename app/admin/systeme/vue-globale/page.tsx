@@ -218,11 +218,11 @@ export default function KeyberOsVueGlobalePage() {
             </dd>
             <dd className="mt-1 text-xs text-slate-600">
               {bridge.legacyRetired
-                ? "Retiré de l'entrée joueur — POC archivé"
+                ? "Retiré — redirection permanente vers Live (UI POC supprimée)"
                 : "Encore actif"}{" "}
               (
               <code className="rounded bg-violet-100 px-1">
-                {bridge.legacyArchiveHref}
+                {bridge.liveCatalog}
               </code>
               ).
             </dd>

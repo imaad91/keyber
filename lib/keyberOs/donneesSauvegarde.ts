@@ -5,6 +5,7 @@
 
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
+import { emitOsSaveEvent } from "@/lib/osSaveEvents";
 import { validateScenarioFileContract } from "@/lib/scenarioFileContract";
 import {
   createDefaultOsKpis,
@@ -135,6 +136,8 @@ export function osDonneesSaveProgress(state: OsPlayState): OsPlayState {
   const bag = readBag();
   bag[state.sessionId] = state;
   writeBag(bag);
+  const at = new Date().toISOString();
+  emitOsSaveEvent(state.sessionId, at);
   return {
     ...state,
     log: [

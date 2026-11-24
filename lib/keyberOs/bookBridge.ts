@@ -2,7 +2,7 @@
  * Keyber OS — Pont Book → Front-End joueur (Étape 20 + 42)
  *
  * Chemin officiel : `/jouer/live` → `/jouer/book/[id]`
- * Étape 42 : `/play` redirige vers le catalogue Live (code POC archivé derrière ?archive=1).
+ * `/play` et `/intro` redirigent toujours vers le catalogue Live (POC UI retiré).
  *
  * Book Admin (cartes Test/Live) → catalogue / param → OsPlayShell.
  * Aucune donnée Studio (`keyber-studio-*`) lue par le jeu.
@@ -11,7 +11,7 @@
 /** Route joueur officielle Keyber OS (Book). */
 export const OS_BOOK_PLAY_PATH = "/jouer/book";
 
-/** Ancienne route POC — redirigée (Étape 42). */
+/** Ancienne route POC — redirigée. */
 export const OS_LEGACY_PLAY_PATH = "/play";
 
 /** Catalogue Live Front-End — porte unique joueur. */
@@ -20,24 +20,24 @@ export const OS_LIVE_CATALOG_PATH = "/jouer/live";
 export const OS_LIVE_COMPETENCE_PATH = "/jouer/live/competence";
 export const OS_LIVE_HISTOIRE_PATH = "/jouer/live/histoire";
 
-/** Étape 42 — /play n'est plus une entrée joueur. */
+/** `/play` n'est plus une entrée joueur. */
 export const OS_LEGACY_PLAY_RETIRED = true;
 
-/** Escape hatch debug : `/play?archive=1` montre encore le POC. */
+/** @deprecated Archive POC retirée — alias de redirect Live. */
 export const OS_LEGACY_PLAY_ARCHIVE_QUERY = "archive=1";
 
 export function osBookPlayHref(bookEntryId: string): string {
   return `${OS_BOOK_PLAY_PATH}/${encodeURIComponent(bookEntryId)}`;
 }
 
-/** Cible de redirection pour tout lien legacy `/play`. */
+/** Cible de redirection pour tout lien legacy `/play` (y compris ?archive=1). */
 export function osLegacyPlayRedirectHref(): string {
   return OS_LIVE_CATALOG_PATH;
 }
 
-/** URL archive POC (hors catalogue joueur). */
+/** @deprecated Plus d'UI archive — renvoie le catalogue Live. */
 export function osLegacyPlayArchiveHref(): string {
-  return `${OS_LEGACY_PLAY_PATH}?${OS_LEGACY_PLAY_ARCHIVE_QUERY}`;
+  return OS_LIVE_CATALOG_PATH;
 }
 
 export type OsBookBridgeInfo = {
@@ -55,6 +55,7 @@ export type OsBookBridgeInfo = {
   note: string;
   /** Étape 42 */
   legacyRetired: boolean;
+  /** Toujours = catalogue Live (archive UI retirée). */
   legacyArchiveHref: string;
 };
 
@@ -73,6 +74,6 @@ export function osBookBridgeInfo(): OsBookBridgeInfo {
     legacyRetired: OS_LEGACY_PLAY_RETIRED,
     legacyArchiveHref: osLegacyPlayArchiveHref(),
     note:
-      "Étape 42 — porte unique joueur : `/jouer/live` → Compétence | Histoire → `/jouer/book/[id]?new=1`. `/play` redirige vers le catalogue (POC archivé : `/play?archive=1`).",
+      "Porte unique joueur : `/jouer/live` → Compétence | Histoire → `/jouer/book/[id]?new=1`. `/play` et `/intro` redirigent vers le catalogue (UI POC retirée).",
   };
 }

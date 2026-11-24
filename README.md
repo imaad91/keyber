@@ -11,6 +11,6 @@ npm run dev
 
 - Landing : [http://localhost:3000](http://localhost:3000)
 - **Porte joueur** : `/jouer/live` → `/jouer/book/[id]` (Keyber OS)
-- Archive POC : `/play?archive=1` (redirigé vers Live sans query)
+- `/play` et `/intro` redirigent vers `/jouer/live` (UI POC retirée)
 
 Données mockées locales uniquement. Placeholders « Exemple » pour démontrer les cinq types d'action.

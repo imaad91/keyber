@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 export default function AdminHomeRedirect() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/admin/atelier/creation");
+    // Clear Campus : hub Production = entrée Studio visible (pas l'ancien Création seul).
+    router.replace("/admin/atelier/production");
   }, [router]);
   return (
     <p className="text-sm text-slate-500">
-      Redirection vers Atelier → Création…
+      Redirection vers Atelier → Production (Clear Campus)…
     </p>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * Étape 34 — Pipeline assemblage Atelier → param Book (déterministe).
- * Fusionne Contexte + Événements + packs Excel (Ordinateur 32 / Narration 33)
- * → fichier de paramétrage. Aucune invention métier.
+ * Fusionne Contexte + Événements + packs Excel (Ordinateur 32 / Narration 33 /
+ * Monde Clear Campus Phase 4) → fichier de paramétrage. Aucune invention métier.
  */
 
 import type { AtelierCreation } from "@/lib/atelierCreationStore";
@@ -15,12 +15,20 @@ import {
   ordinateurPackToParam,
 } from "@/lib/atelierOrdinateurExcel";
 import {
+  countCampusPackRows,
+  countMondePackRows,
+  countProductionPackRows,
+  mondePackToParamBlocks,
+} from "@/lib/atelierMondeExcel";
+import {
   buildSkeletonParamFile,
   filledContexteRecord,
-  type ScenarioParamFile,
 } from "@/lib/bookGenerationPrompt";
 import { ensureContractKeysInParam } from "@/lib/scenarioFileContract";
-import { emptyOrdinateurStructure } from "@/lib/scenarioParamSchema";
+import {
+  emptyOrdinateurStructure,
+  type ScenarioParamFileExtended,
+} from "@/lib/scenarioParamSchema";
 
 export type AssemblageLogLevel = "ok" | "info" | "warn";
 
@@ -34,6 +42,9 @@ export type AssemblageStats = {
   events: number;
   ordinateurRows: number;
   narrationRows: number;
+  mondeRows: number;
+  campusRows: number;
+  productionRows: number;
   decisions: number;
   optionsApprox: number;
   interviews: number;
@@ -58,7 +69,7 @@ export type AssembleParamArgs = {
 };
 
 export type AssembleParamResult = {
-  paramFile: ScenarioParamFile;
+  paramFile: ScenarioParamFileExtended;
   log: AssemblageLogLine[];
   stats: AssemblageStats;
 };
@@ -114,16 +125,28 @@ export function assembleParamFromAtelier(
 
   const ordPack = args.creation.ordinateurPack ?? {};
   const narrPack = args.creation.narrationPack ?? {};
+  const mondePack = args.creation.mondePack ?? {};
   const ordinateurRows = countOrdinateurPackRows(ordPack);
   const narrationRows = countNarrationPackRows(narrPack);
+  const mondeRows = countMondePackRows(mondePack);
+  const campusRows = countCampusPackRows(mondePack);
+  const productionRows = countProductionPackRows(mondePack);
 
   log.push({
     level: ordinateurRows > 0 ? "ok" : "info",
-    message: `Excel Ordinateur (staging) : ${ordinateurRows} ligne(s)`,
+    message: `Excel Ordinateur / Suite (staging) : ${ordinateurRows} ligne(s)`,
   });
   log.push({
     level: narrationRows > 0 ? "ok" : "info",
     message: `Excel Narration / décisions (staging) : ${narrationRows} ligne(s)`,
+  });
+  log.push({
+    level: campusRows > 0 ? "ok" : "info",
+    message: `Excel Campus / Hotspots (staging) : ${campusRows} ligne(s)`,
+  });
+  log.push({
+    level: productionRows > 0 ? "ok" : "info",
+    message: `Excel Vue Live Production (staging) : ${productionRows} ligne(s)`,
   });
 
   const skeleton = buildSkeletonParamFile({
@@ -220,11 +243,25 @@ export function assembleParamFromAtelier(
     });
   }
 
-  if (ordinateurRows === 0 && narrationRows === 0) {
+  if (ordinateurRows === 0 && narrationRows === 0 && mondeRows === 0) {
     log.push({
       level: "warn",
       message:
-        "Aucun pack Excel staging — Vue Code = structure + contexte/events seulement (blocs feeling vides).",
+        "Aucun pack Excel staging — Vue Code = structure + contexte/events seulement (blocs feeling / campus vides).",
+    });
+  }
+
+  const fromMonde = mondePackToParamBlocks(mondePack);
+  if (campusRows > 0) {
+    log.push({
+      level: "ok",
+      message: `Campus assemblé : ${fromMonde.Campus.wings.length} aile(s), ${fromMonde.Campus.rooms.length} salle(s), ${fromMonde.Hotspots.length} hotspot(s)`,
+    });
+  }
+  if (productionRows > 0) {
+    log.push({
+      level: "ok",
+      message: `ProductionLive assemblé : type ${fromMonde.ProductionLive.valueType}, ${fromMonde.ProductionLive.zones.length} zone(s)`,
     });
   }
 
@@ -233,7 +270,7 @@ export function assembleParamFromAtelier(
     return n + arrLen((d as { options?: unknown }).options);
   }, 0);
 
-  const raw: ScenarioParamFile = {
+  const raw = {
     ...skeleton,
     Décisions: decisions,
     Fins: fins.length ? fins : skeleton.Fins,
@@ -246,16 +283,23 @@ export function assembleParamFromAtelier(
       ? fromNarr.Objectifs
       : skeleton.Objectifs,
     Kpis: fromNarr.Kpis.length ? fromNarr.Kpis : skeleton.Kpis,
-  };
+    ClearCampus: fromMonde.ClearCampus,
+    Campus: fromMonde.Campus,
+    Hotspots: fromMonde.Hotspots,
+    ProductionLive: fromMonde.ProductionLive,
+  } as ScenarioParamFileExtended;
 
   /** Étape 35 — toutes les clés contrat présentes (vides OK). */
-  const paramFile = ensureContractKeysInParam(raw) as ScenarioParamFile;
+  const paramFile = ensureContractKeysInParam(raw);
 
   const stats: AssemblageStats = {
     contexteFields,
     events: args.events.length,
     ordinateurRows,
     narrationRows,
+    mondeRows,
+    campusRows,
+    productionRows,
     decisions: decisions.length,
     optionsApprox,
     interviews: arrLen(paramFile.Interviews),
@@ -291,6 +335,8 @@ export function summarizeAssemblageStats(stats: AssemblageStats): string {
     `Events ${stats.events}`,
     `Ord. Excel ${stats.ordinateurRows}`,
     `Narr. Excel ${stats.narrationRows}`,
+    `Campus ${stats.campusRows}`,
+    `ProdLive ${stats.productionRows}`,
     `Décisions ${stats.decisions}`,
     `PNJ ${stats.interviews}`,
     `Objectifs ${stats.objectifs}`,

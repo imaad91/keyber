@@ -27,6 +27,7 @@ const NAV: NavItem[] = [
     label: "Atelier",
     icon: Briefcase,
     children: [
+      { href: "/admin/atelier/production", label: "Production" },
       { href: "/admin/atelier/creation", label: "Création" },
       { href: "/admin/atelier/workflow", label: "Workflow" },
       { href: "/admin/atelier/roles", label: "Rôles" },
@@ -61,7 +62,7 @@ const NAV: NavItem[] = [
         label: "Progression, Scores & Niveaux",
       },
       { href: "/admin/systeme/interface-joueur", label: "Interface Joueur" },
-      { href: "/admin/systeme/ordinateur", label: "Ordinateur" },
+      { href: "/admin/systeme/ordinateur", label: "Suite outils" },
       { href: "/admin/systeme/campus", label: "Campus" },
       {
         href: "/admin/systeme/production-live",

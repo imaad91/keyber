@@ -40,7 +40,19 @@ import {
   type NarrationExcelPack,
   type NarrationSheetParseSummary,
 } from "@/lib/atelierNarrationExcel";
+import {
+  countCampusPackRows,
+  countProductionPackRows,
+  downloadMondeFilledPack,
+  downloadMondeSheetTemplate,
+  downloadMondeTemplate,
+  MONDE_SHEETS,
+  parseMondeExcelDryRun,
+  type MondeExcelPack,
+  type MondeSheetParseSummary,
+} from "@/lib/atelierMondeExcel";
 import { buildLumiereNarrationPack } from "@/lib/lumiereCoDemoData";
+import { buildLumiereMondePack } from "@/lib/lumiereMondePack";
 import { useAtelierRolesStore } from "@/lib/atelierRolesStore";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import { cn } from "@/lib/utils";
@@ -66,6 +78,7 @@ export default function AtelierCreationDetailPage() {
     setCompetenceNames,
     setOrdinateurPack,
     setNarrationPack,
+    setMondePack,
     addScenario,
     removeScenario,
     markPrototypeTested,
@@ -79,6 +92,7 @@ export default function AtelierCreationDetailPage() {
   const creation = getCreation(id);
   const ordinateurFileRef = useRef<HTMLInputElement>(null);
   const narrationFileRef = useRef<HTMLInputElement>(null);
+  const mondeFileRef = useRef<HTMLInputElement>(null);
 
   const [scenarioNom, setScenarioNom] = useState("");
   const [scenarioMode, setScenarioMode] =
@@ -98,6 +112,13 @@ export default function AtelierCreationDetailPage() {
   const [narrBusy, setNarrBusy] = useState(false);
   const [pendingNarrPack, setPendingNarrPack] =
     useState<NarrationExcelPack | null>(null);
+  const [mondeDryRun, setMondeDryRun] = useState<
+    MondeSheetParseSummary[] | null
+  >(null);
+  const [mondeError, setMondeError] = useState<string | null>(null);
+  const [mondeBusy, setMondeBusy] = useState(false);
+  const [pendingMondePack, setPendingMondePack] =
+    useState<MondeExcelPack | null>(null);
 
   if (!creation) {
     return (
@@ -207,10 +228,131 @@ export default function AtelierCreationDetailPage() {
         </p>
       )}
 
-      {/* Étape 32 — Templates Excel Ordinateur */}
+      {/* Phase 4 — Campus + Vue Live Production */}
+      <section className="mb-8 rounded-2xl border border-teal-200 bg-teal-50/40 p-5 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">
+          Campus &amp; Vue Live Production — Excel Monde (Phase 4)
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Ailes, salles, hotspots + sol opérationnel (zones, nœuds, flux,
+          véhicules, opérateurs). Contenu métier = ton Excel ; l&apos;OS
+          n&apos;invente rien. Thème clair forcé.
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Staging Campus :{" "}
+          {countCampusPackRows(creation.mondePack ?? {})} ligne(s) · Prod :{" "}
+          {countProductionPackRows(creation.mondePack ?? {})} ligne(s)
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <AdminButton type="button" onClick={() => downloadMondeTemplate()}>
+            <Download className="h-4 w-4" />
+            Template Monde Clear Campus
+          </AdminButton>
+          <AdminButton
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              downloadMondeFilledPack(
+                buildLumiereMondePack(),
+                "KEYBER_Monde_Lumiere_Co.xlsx"
+              )
+            }
+          >
+            <Download className="h-4 w-4" />
+            Exemple rempli Lumière
+          </AdminButton>
+          <AdminButton
+            type="button"
+            variant="secondary"
+            disabled={locked || mondeBusy}
+            onClick={() => mondeFileRef.current?.click()}
+          >
+            <Upload className="h-4 w-4" />
+            Importer Excel (dry-run)
+          </AdminButton>
+          <input
+            ref={mondeFileRef}
+            type="file"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0] ?? null;
+              setMondeError(null);
+              setMondeDryRun(null);
+              setPendingMondePack(null);
+              if (!file) return;
+              setMondeBusy(true);
+              try {
+                const buf = await file.arrayBuffer();
+                const res = parseMondeExcelDryRun(buf);
+                if (!res.ok) {
+                  setMondeError(res.error);
+                  return;
+                }
+                setMondeDryRun(res.sheets);
+                setPendingMondePack(res.pack);
+              } finally {
+                setMondeBusy(false);
+                if (mondeFileRef.current) mondeFileRef.current.value = "";
+              }
+            }}
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {MONDE_SHEETS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className="rounded-md border border-teal-200 bg-white px-2 py-1 text-[10px] font-semibold text-teal-900 hover:bg-teal-50"
+              onClick={() => downloadMondeSheetTemplate(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        {mondeError ? (
+          <p className="mt-3 text-sm text-rose-600">{mondeError}</p>
+        ) : null}
+        {mondeDryRun ? (
+          <div className="mt-3 rounded-xl border border-teal-100 bg-white p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">
+              Dry-run — {mondeDryRun.reduce((n, s) => n + s.rowCount, 0)}{" "}
+              ligne(s)
+            </p>
+            <ul className="mt-2 max-h-40 space-y-1 overflow-y-auto text-xs text-slate-600">
+              {mondeDryRun.map((s) => (
+                <li key={s.sheetId}>
+                  {s.label} : {s.rowCount} ligne(s) · colonnes{" "}
+                  {s.recognizedColumns}/{s.expectedColumns}
+                  {s.warnings.length ? ` · ${s.warnings.join(" · ")}` : ""}
+                </li>
+              ))}
+            </ul>
+            {!locked && pendingMondePack ? (
+              <AdminButton
+                type="button"
+                className="mt-3"
+                onClick={() => {
+                  const res = setMondePack(creation.id, pendingMondePack);
+                  if (res.error) {
+                    setMondeError(res.error);
+                    return;
+                  }
+                  setMondeDryRun(null);
+                  setPendingMondePack(null);
+                }}
+              >
+                Enregistrer le staging Monde
+              </AdminButton>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
+
+      {/* Étape 32 — Templates Excel Ordinateur / Suite */}
       <section className="mb-8 rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm">
         <h2 className="text-sm font-semibold text-slate-900">
-          Ordinateur — templates Excel (Étape 32)
+          Suite outils (ex-Ordinateur) — templates Excel (Étape 32)
         </h2>
         <p className="mt-1 text-sm text-slate-600">
           Stocks, commandes, mails, chat, docs, browser… Tu fournis le contenu ;

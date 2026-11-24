@@ -5,3 +5,4 @@
 export * from "@/lib/clearCampus/charter";
 export * from "@/lib/clearCampus/types";
 export * from "@/lib/clearCampus/schema";
+export * from "@/lib/clearCampus/serviceStub";

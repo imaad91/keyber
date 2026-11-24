@@ -53,6 +53,7 @@ import {
 } from "@/lib/atelierMondeExcel";
 import { buildLumiereNarrationPack } from "@/lib/lumiereCoDemoData";
 import { buildLumiereMondePack } from "@/lib/lumiereMondePack";
+import { buildNovacierMondePack } from "@/lib/novacierMondePack";
 import { useAtelierRolesStore } from "@/lib/atelierRolesStore";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import { cn } from "@/lib/utils";
@@ -259,7 +260,20 @@ export default function AtelierCreationDetailPage() {
             }
           >
             <Download className="h-4 w-4" />
-            Exemple rempli Lumière
+            Exemple rempli Lumière (entrepôt)
+          </AdminButton>
+          <AdminButton
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              downloadMondeFilledPack(
+                buildNovacierMondePack(),
+                "KEYBER_Monde_Novacier.xlsx"
+              )
+            }
+          >
+            <Download className="h-4 w-4" />
+            Exemple rempli Novacier (usine)
           </AdminButton>
           <AdminButton
             type="button"

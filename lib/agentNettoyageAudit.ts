@@ -112,11 +112,9 @@ const FINDINGS: Finding[] = [
     gravite: "Mineure",
     fichier: "lib/atelierBriefs.ts",
     ligne: "fichier",
-    extrait: "Ancien modèle Briefs markdown",
-    pourquoi:
-      "Code mort potentiel si plus aucune page Briefs ne l'importe (redirects).",
-    proposition:
-      "Supprimer si unused ; sinon archiver sous content/legacy/.",
+    extrait: "Ancien modèle Briefs markdown — SUPPRIMÉ",
+    pourquoi: "Code mort ; fichier retiré du repo.",
+    proposition: "Aucune action — déjà nettoyé.",
   },
   {
     gravite: "Mineure",

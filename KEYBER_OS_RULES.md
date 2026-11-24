@@ -74,7 +74,7 @@ Go / no-go V1 = validation humaine.
 Seed Admin : `/admin/book/demo-novacier`. Jouer via Book `/jouer/book/[id]`. **Aucun** nom Novacier dans `lib/keyberOs/*`.
 
 **Porte unique joueur (Étape 42)** : Accueil / liens → `/jouer/live` uniquement.
-`/play` **redirige** vers `/jouer/live`. POC archivé : `/play?archive=1` (hors catalogue).
+`/play` et `/intro` **redirigent** toujours vers `/jouer/live`. L’UI POC legacy a été retirée.
 Code `app/play` conservé comme archive, plus d’entrée produit.
 **Fence legacy** : `/jouer/histoire`, `/jouer/competence*`, `/story`, `/skills`, `/jouer` (slots) → Live.
 Journal / Livre / Profil / ERP hors session Book → CTA Live (plus de fallback Novacier).

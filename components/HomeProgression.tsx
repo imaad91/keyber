@@ -14,28 +14,17 @@ import {
   osDonneesMostRecentSave,
   type OsBookSaveSummary,
 } from "@/lib/keyberOs/donneesSauvegarde";
-import {
-  lumiereDemoAlreadySeeded,
-  seedLumiereCoDemo,
-} from "@/lib/lumiereCoSeed";
-import {
-  novacierPackAlreadySeeded,
-  seedNovacierBookPack,
-} from "@/lib/novacierBookSeed";
 
+/**
+ * Accueil joueur — seed unique via ClearCampusDemoBootstrap (silent).
+ * Pas de double appel seedLumiere/Novacier ici.
+ */
 export function HomeProgression() {
   const router = useRouter();
   const [resume, setResume] = useState<OsBookSaveSummary | null>(null);
 
   useEffect(() => {
     setResume(osDonneesMostRecentSave());
-    // Seed démos si Book vide (Preview live sinon = ancien feeling + 0 scénario).
-    try {
-      if (!lumiereDemoAlreadySeeded()) seedLumiereCoDemo();
-      if (!novacierPackAlreadySeeded()) seedNovacierBookPack();
-    } catch {
-      /* ignore */
-    }
   }, []);
 
   function onResume() {
@@ -45,7 +34,7 @@ export function HomeProgression() {
 
   return (
     <section className="hero-enter max-w-3xl">
-      <ClearCampusDemoBootstrap />
+      <ClearCampusDemoBootstrap variant="silent" />
       <p className="font-display text-5xl font-semibold tracking-tight text-accent md:text-7xl">
         KEYBER
       </p>

@@ -12,6 +12,7 @@ import {
   osTempsCanSpend,
 } from "@/lib/keyberOs/temps";
 import { syncDashboardCards } from "@/lib/keyberOs/ordinateurPack";
+import { osProductionLiveSync } from "@/lib/keyberOs/productionLive";
 import type {
   OsComputerAppId,
   OsPlayState,
@@ -27,6 +28,13 @@ export function osOrdinateurSetAction(
       ...state,
       feedback: "Module Ordinateur désactivé dans Keyber OS Admin",
       log: [...state.log, "Ordinateur → module désactivé (Admin)"],
+    };
+  }
+  if (action === "atelier-live" && !isOsModuleEnabled("production-live")) {
+    return {
+      ...state,
+      feedback: "Module Vue Live Production désactivé dans Keyber OS Admin",
+      log: [...state.log, "Production Live → module désactivé (Admin)"],
     };
   }
 
@@ -75,6 +83,9 @@ export function osOrdinateurSetAction(
       next = osEvenementsTrigger(next);
     }
     next = osOnboardingAdvance(next, action);
+  }
+  if (action === "atelier-live") {
+    next = osProductionLiveSync(next);
   }
   return next;
 }

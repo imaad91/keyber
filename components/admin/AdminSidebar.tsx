@@ -62,6 +62,11 @@ const NAV: NavItem[] = [
       },
       { href: "/admin/systeme/interface-joueur", label: "Interface Joueur" },
       { href: "/admin/systeme/ordinateur", label: "Ordinateur" },
+      { href: "/admin/systeme/campus", label: "Campus" },
+      {
+        href: "/admin/systeme/production-live",
+        label: "Vue Live Production",
+      },
       { href: "/admin/systeme/temps", label: "Temps & Horloge" },
       { href: "/admin/systeme/cycle-vie", label: "Cycle de vie" },
       { href: "/admin/systeme/notifications", label: "Notifications" },

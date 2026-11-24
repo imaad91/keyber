@@ -99,6 +99,10 @@ function moduleEnabled(
       return cfg.fins.enabled;
     case "donnees-sauvegarde":
       return cfg.donneesSauvegarde.enabled;
+    case "campus":
+      return cfg.campus.enabled;
+    case "production-live":
+      return cfg.productionLive.enabled;
     default:
       return true;
   }
@@ -157,6 +161,8 @@ export function diagnoseOsModule(
   signals["profil-on"] = sig(cfg.profil.enabled);
   signals["fins-on"] = sig(cfg.fins.enabled);
   signals["donnees-on"] = sig(cfg.donneesSauvegarde.enabled);
+  signals["campus-on"] = sig(cfg.campus.enabled);
+  signals["production-live-on"] = sig(cfg.productionLive.enabled);
 
   signals["live-param"] = sig(stats.withParam > 0 || stats.liveCount === 0, "soft");
   signals["live-ordinateur"] = sig(
@@ -385,6 +391,33 @@ export function diagnoseOsModule(
         id: "shell",
         label: "Chrome shell affiché",
         ok: cfg.interfaceJoueur.showShell,
+      });
+      checks.push({
+        id: "force-light",
+        label: "Thème clair forcé (Clear Campus)",
+        ok: cfg.interfaceJoueur.forceLightTheme === true,
+      });
+      break;
+    }
+    case "campus": {
+      checks.push({
+        id: "campus-on",
+        label: "Campus ON",
+        ok: cfg.campus.enabled,
+      });
+      checks.push({
+        id: "light",
+        label: "Interface light forcée",
+        ok: cfg.interfaceJoueur.forceLightTheme,
+        soft: true,
+      });
+      break;
+    }
+    case "production-live": {
+      checks.push({
+        id: "production-live-on",
+        label: "Vue Live Production ON",
+        ok: cfg.productionLive.enabled,
       });
       break;
     }

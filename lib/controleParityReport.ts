@@ -66,6 +66,8 @@ const OS_MODULE_LABELS: { id: OsModuleId; label: string }[] = [
   { id: "progression", label: "Progression" },
   { id: "interface-joueur", label: "Interface Joueur" },
   { id: "ordinateur", label: "Ordinateur" },
+  { id: "campus", label: "Campus" },
+  { id: "production-live", label: "Vue Live Production" },
   { id: "temps", label: "Temps" },
   { id: "cycle-vie", label: "Cycle de vie" },
   { id: "interviews", label: "Interviews" },

@@ -7,6 +7,7 @@ import { getOsRuntimeConfig, isOsModuleEnabled } from "@/lib/keyberOsRuntime";
 import { osDonneesSaveProgress } from "@/lib/keyberOs/donneesSauvegarde";
 import { osOpenDebrief } from "@/lib/keyberOs/debrief";
 import { osEvenementsTrigger } from "@/lib/keyberOs/moteurEvenements";
+import { osCampusOnDayChange } from "@/lib/keyberOs/campus";
 import { osObjectifsOnDayEnd } from "@/lib/keyberOs/objectifs";
 import {
   formatOsClock,
@@ -147,5 +148,6 @@ export function osCycleVieCloseAndAdvance(state: OsPlayState): OsPlayState {
       `Cycle de vie → Jour ${nextDay} (horloge ${formatOsClock(0)})`,
     ],
   };
+  next = osCampusOnDayChange(next);
   return osDonneesSaveProgress(next);
 }

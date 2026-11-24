@@ -24,6 +24,7 @@ import {
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 import { buildParamFileName } from "@/lib/bookGenerationPrompt";
 import type { BookGraphView } from "@/lib/bookStore";
+import { novacierClearCampusBlocks } from "@/lib/novacierMondePack";
 import type { ScenarioParamFileExtended } from "@/lib/scenarioParamSchema";
 import { normalizeScenarioParamFile } from "@/lib/scenarioParamSchema";
 
@@ -375,6 +376,7 @@ export function buildNovacierHistoireParam(
     Conséquences: [],
     Intro: [...novacierRuntimeCopy.roleIntroLines],
     Livre: mapLivre(),
+    ...novacierClearCampusBlocks(),
   };
   return normalizeScenarioParamFile(raw) as ScenarioParamFileExtended;
 }

@@ -52,18 +52,20 @@ export default function DemoNovacierPage() {
           { label: "Book", href: "/admin/book/en-cours-de-test" },
           { label: "Pack Novacier" },
         ]}
-        title="Pack — Novacier (Étape 41)"
+        title="Pack — Novacier (Clear Campus Phase 5)"
       />
 
       <p className="mb-4 max-w-2xl text-sm text-slate-600">
-        Injection Studio : cartes Book Histoire (En test + Live) + rôle + secteur
-        pour le catalogue joueur. Contenu = extraction{" "}
+        Injection Studio : cartes Book Histoire (En test + Live) + Campus usine
+        + Vue Live Production (manufactured). Contenu = extraction{" "}
         <code className="rounded bg-slate-100 px-1">data/contextes/novacier</code>{" "}
         →{" "}
         <code className="rounded bg-slate-100 px-1">
           data/scenarios/novacier/
         </code>
-        . <strong>Ne modifie pas</strong> Keyber OS. Jouer via{" "}
+        . <strong>Ne modifie pas</strong> Keyber OS. Après seed, Tester → carte
+        Campus → hotspot « Vue Live Production » (presses / assemblage ≠ entrepôt
+        Lumière). Jouer via{" "}
         <code className="rounded bg-slate-100 px-1">/jouer/live</code>.
       </p>
 

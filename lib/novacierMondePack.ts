@@ -1,7 +1,6 @@
 /**
- * Clear Campus Phase 5 — pack Monde Novacier (usine métallique).
- * Structure dérivée du contenu ERP / POC existant (machines, employes, stock).
- * Aucune invention métier hors de ce qui existe déjà dans le pack.
+ * Clear Campus Phase 5 — pack Monde Novacier (usine métallique) — démo.
+ * Structure dérivée du POC existant + enrichissements démo (hotspots, flux).
  */
 
 import {
@@ -32,19 +31,22 @@ export const NOVACIER_CAMPUS: ScenarioParamCampus = {
     { id: "accueil", wingId: "dir", label: "Accueil" },
     { id: "bureau-dir", wingId: "dir", label: "Bureau direction" },
     { id: "salle-dec", wingId: "dir", label: "Salle de décision" },
+    { id: "bureau-prod", wingId: "dir", label: "Bureau responsable production" },
     { id: "presses", wingId: "atelier", label: "Zone presses" },
     { id: "cnc", wingId: "atelier", label: "Usinage CNC" },
     { id: "assemblage", wingId: "atelier", label: "Ligne assemblage" },
     { id: "quai-matieres", wingId: "atelier", label: "Quai matières" },
+    { id: "stock-pieces", wingId: "atelier", label: "Stock pièces / allées" },
     { id: "controle", wingId: "support", label: "Contrôle qualité" },
     { id: "maintenance", wingId: "support", label: "Atelier maintenance" },
   ],
+  map: { kind: "floorplan", assetId: "novacier-atelier-v1" },
 };
 
 export const NOVACIER_HOTSPOTS: ScenarioParamHotspot[] = [
   {
     id: "hs-suite",
-    roomId: "bureau-dir",
+    roomId: "bureau-prod",
     label: "Poste Suite outils",
     type: "suite",
     targetId: "erp",
@@ -59,9 +61,32 @@ export const NOVACIER_HOTSPOTS: ScenarioParamHotspot[] = [
     timeCostMin: 5,
   },
   {
+    id: "hs-chat",
+    roomId: "bureau-prod",
+    label: "Chat atelier",
+    type: "suite",
+    targetId: "chat",
+    timeCostMin: 5,
+  },
+  {
+    id: "hs-dashboard",
+    roomId: "bureau-prod",
+    label: "Dashboard production",
+    type: "suite",
+    targetId: "dashboard",
+    timeCostMin: 10,
+  },
+  {
     id: "hs-prod-presses",
     roomId: "presses",
     label: "Vue Live Production",
+    type: "productionLive",
+    timeCostMin: 10,
+  },
+  {
+    id: "hs-prod-cnc",
+    roomId: "cnc",
+    label: "Live CNC 2",
     type: "productionLive",
     timeCostMin: 10,
   },
@@ -73,10 +98,25 @@ export const NOVACIER_HOTSPOTS: ScenarioParamHotspot[] = [
     timeCostMin: 10,
   },
   {
+    id: "hs-prod-matieres",
+    roomId: "quai-matieres",
+    label: "Live quai coils",
+    type: "productionLive",
+    timeCostMin: 10,
+  },
+  {
+    id: "hs-controle",
+    roomId: "controle",
+    label: "Banc contrôle Q4",
+    type: "productionLive",
+    timeCostMin: 10,
+  },
+  {
     id: "hs-dec",
     roomId: "salle-dec",
     label: "Briefing décision",
     type: "decision",
+    targetId: "dec-jour-1",
     timeCostMin: 20,
   },
   {
@@ -96,17 +136,50 @@ export const NOVACIER_HOTSPOTS: ScenarioParamHotspot[] = [
     timeCostMin: 15,
   },
   {
-    id: "hs-controle",
-    roomId: "controle",
-    label: "Banc contrôle Q4",
-    type: "productionLive",
-    timeCostMin: 10,
+    id: "hs-iv-henri",
+    roomId: "bureau-prod",
+    label: "Interview Henri (mentor)",
+    type: "interview",
+    targetId: "pers-henri",
+    timeCostMin: 15,
+  },
+  {
+    id: "hs-iv-laurent",
+    roomId: "bureau-dir",
+    label: "Interview Laurent",
+    type: "interview",
+    targetId: "pers-laurent",
+    timeCostMin: 15,
+  },
+  {
+    id: "hs-doc-contrat",
+    roomId: "bureau-dir",
+    label: "Contrat AutoVolt",
+    type: "document",
+    targetId: "doc-autovolt",
+    timeCostMin: 5,
+  },
+  {
+    id: "hs-doc-m3",
+    roomId: "assemblage",
+    label: "Fiche panne Assembleuse 3",
+    type: "document",
+    targetId: "doc-m3",
+    timeCostMin: 5,
+  },
+  {
+    id: "hs-doc-planning",
+    roomId: "bureau-prod",
+    label: "Planning semaine",
+    type: "document",
+    targetId: "doc-planning",
+    timeCostMin: 5,
   },
 ];
 
 /**
  * Vue Live Production — manufactured.
- * Nœuds / flux alignés sur machines & lignes ERP Novacier existantes.
+ * Nœuds / flux alignés sur machines & lignes ERP Novacier + stock A-42.
  */
 export const NOVACIER_PRODUCTION_LIVE: ScenarioParamProductionLive = {
   valueType: "manufactured",
@@ -116,6 +189,7 @@ export const NOVACIER_PRODUCTION_LIVE: ScenarioParamProductionLive = {
     { id: "z-presses", label: "Presses", kind: "press" },
     { id: "z-cnc", label: "Usinage CNC", kind: "cnc" },
     { id: "z-assemblage", label: "Assemblage", kind: "assembly" },
+    { id: "z-stock", label: "Stock pièces", kind: "storage" },
     { id: "z-controle", label: "Contrôle qualité", kind: "qc" },
   ],
   nodes: [
@@ -148,6 +222,20 @@ export const NOVACIER_PRODUCTION_LIVE: ScenarioParamProductionLive = {
       status: "Capteur HS",
     },
     {
+      id: "n-stock-a42",
+      zoneId: "z-stock",
+      label: "Allée B — Support Moteur A-42",
+      kind: "stock",
+      status: "Stock bas",
+    },
+    {
+      id: "n-stock-b17",
+      zoneId: "z-stock",
+      label: "Allée A — Bride B-17",
+      kind: "stock",
+      status: "OK",
+    },
+    {
       id: "n-q4",
       zoneId: "z-controle",
       label: "Contrôle Q4",
@@ -175,10 +263,16 @@ export const NOVACIER_PRODUCTION_LIVE: ScenarioParamProductionLive = {
       label: "Bride / support → Assemblage",
     },
     {
-      id: "f-asm-qc",
+      id: "f-asm-stock",
       fromNodeId: "n-asm3",
+      toNodeId: "n-stock-a42",
+      label: "Assemblage → Stock A-42",
+    },
+    {
+      id: "f-stock-qc",
+      fromNodeId: "n-stock-a42",
       toNodeId: "n-q4",
-      label: "Assemblage → Contrôle",
+      label: "Stock → Contrôle",
     },
   ],
   vehicles: [
@@ -193,6 +287,12 @@ export const NOVACIER_PRODUCTION_LIVE: ScenarioParamProductionLive = {
       label: "Camion MétalPro",
       kind: "truck",
       zoneId: "z-matieres",
+    },
+    {
+      id: "v-transpalette",
+      label: "Transpalette allées",
+      kind: "pallet",
+      zoneId: "z-stock",
     },
   ],
   operators: [
@@ -233,6 +333,18 @@ export const NOVACIER_PRODUCTION_LIVE: ScenarioParamProductionLive = {
       label: "Stock A-42",
       path: "stock",
       unit: "u",
+    },
+    {
+      id: "kpi-ethique",
+      label: "Éthique",
+      path: "ethique",
+      unit: "%",
+    },
+    {
+      id: "kpi-cash",
+      label: "Trésorerie",
+      path: "tresorerie",
+      unit: "€",
     },
   ],
 };

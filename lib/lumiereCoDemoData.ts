@@ -21,6 +21,7 @@ import {
   lumiereLivre,
   lumiereOrdinateurFeeling,
 } from "@/lib/lumiereCoFeeling";
+import { lumiereClearCampusBlocks } from "@/lib/lumiereMondePack";
 
 export const LUMIERE_NOM = "Lumière & Co";
 export const LUMIERE_SECTEUR = "E-commerce / Éclairage";
@@ -823,6 +824,8 @@ function withLumiereOrdinateur(
     Conséquences: lumiereConsequences(),
     Intro: lumiereIntro(),
     Livre: lumiereLivre(),
+    /** Démo Clear Campus — monde entrepôt (source : lumiereMondePack). */
+    ...lumiereClearCampusBlocks(),
   } as ScenarioParamFile;
 }
 

@@ -5,7 +5,10 @@
  * Display names come from the active contexte (chatContacts), not hardcoded cast.
  */
 
-import { getContexteActif } from "@/data/registry";
+/**
+ * Noms d'affichage : CHARACTER_META (rôles génériques) + overrides appelant.
+ * Plus de lookup registry Novacier — Book OS passe les noms via session.
+ */
 
 export const CHARACTER_PALETTE = {
   navy: "#0C3B38",
@@ -191,17 +194,7 @@ export function resolveCharacterId(
   if (n.includes("pers-lea")) return "pers-lea";
   if (n.includes("pers-claire")) return "pers-claire";
 
-  // Match against active contexte contacts (display names), not hardcoded cast.
-  for (const c of getContexteActif().computer.chatContacts) {
-    const first = c.name.split(" ")[0]?.toLowerCase() ?? "";
-    const id = c.id as CharacterVisualId;
-    if (first && n.includes(first) && id in CHARACTER_META) return id;
-    if (c.role && n.includes(c.role.toLowerCase()) && id in CHARACTER_META) {
-      return id;
-    }
-  }
-
-  // Book OS / Lumière — ids & prénoms hors registry Novacier.
+  // Book OS / Lumière — ids & prénoms.
   if (n in VISUAL_ALIASES) return VISUAL_ALIASES[n]!;
   const firstToken = n.split(/[\s,—\-]+/)[0] ?? "";
   if (firstToken && firstToken in VISUAL_ALIASES) {
@@ -221,17 +214,7 @@ export function resolveCharacterId(
 }
 
 export function getCharacterMeta(id: CharacterVisualId) {
-  const base = CHARACTER_META[id];
-  const contact = getContexteActif().computer.chatContacts.find(
-    (c) => c.id === id
-  );
-  if (!contact) return base;
-  return {
-    ...base,
-    displayName: contact.name,
-    shortName: contact.name.split(" ")[0] ?? base.shortName,
-    role: contact.role || base.role,
-  };
+  return CHARACTER_META[id];
 }
 
 export function firstNameFromId(id: CharacterVisualId): string {

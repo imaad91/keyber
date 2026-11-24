@@ -6,6 +6,6 @@ Contenu extrait de `data/contextes/novacier/` + `data/scenarioNovacier.ts` vers 
 - Régénérer : `npx tsx scripts/write-novacier-scenario.ts`
 - Seed Admin : `/admin/book/demo-novacier`
 - Jouer : `/jouer/live` → Book → `/jouer/book/[id]` (Keyber OS)
-- Étape 42 : `/play` redirige vers `/jouer/live` (archive `?archive=1`)
+- `/play` redirige vers `/jouer/live` (POC joueur retiré)
 
 **Règle** : aucun nom Novacier dans `lib/keyberOs/*`.

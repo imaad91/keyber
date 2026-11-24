@@ -42,7 +42,7 @@ export const V1_GEL = {
   /** Historique post-gel (étapes 41–42 livrées). */
   deferred: [
     "Étape 41 — Pack Novacier Book (exemple) : FAIT.",
-    "Étape 42 — /play redirigé vers /jouer/live (archive ?archive=1) : FAIT.",
+    "Étape 42 — /play redirigé vers /jouer/live ; POC joueur retiré : FAIT.",
   ],
   contractRefs: [
     SCENARIO_FILE_CONTRACT.id,
@@ -206,7 +206,7 @@ export function buildV1LumiereProofReport(
       id: "legacy-play",
       label: "Legacy /play retiré de l'entrée joueur (Étape 42)",
       ok: true,
-      detail: `${OS_LEGACY_PLAY_PATH} → /jouer/live ; archive ${OS_LEGACY_PLAY_PATH}?archive=1.`,
+      detail: `${OS_LEGACY_PLAY_PATH} → /jouer/live (POC joueur retiré, plus d'archive).`,
     },
   ];
 

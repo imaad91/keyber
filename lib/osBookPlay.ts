@@ -1,7 +1,7 @@
 /**
  * Session de jeu Book → Keyber OS (Front-End).
  * Pont officiel Étape 20 : `/jouer/book/[id]` → OsPlayShell.
- * `/play` redirige vers `/jouer/live` (Étape 42 ; archive `?archive=1`).
+ * `/play` redirige vers `/jouer/live` (POC joueur retiré).
  * Délègue aux modules runtime lib/keyberOs/*
  */
 

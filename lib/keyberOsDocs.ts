@@ -421,7 +421,7 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "app/jouer/book/[id]/page.tsx — pont Book officiel (OsPlayShell).",
         "components/osPlay/OsPlayShell.tsx — chrome joueur générique.",
         "lib/keyberOs/bookBridge.ts — href Live / Book ; /play redirigé (Étape 42).",
-        "app/play/page.tsx — redirect `/jouer/live` ; archive `?archive=1`.",
+        "app/play/page.tsx — redirect permanent `/jouer/live` (POC retiré).",
       ],
       commentCaMarche: [
         "Accueil « C'est parti » → `/jouer/live` (hub Étape 39).",
@@ -429,7 +429,7 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "Histoire : rôle (Atelier Rôles) → secteur (Création) → entreprise → histoire → `/jouer/book/[id]?new=1`.",
         "Admin Tester / Live → `/jouer/book/[id]` charge le param Book.",
         "OsPlayShell affiche l’état (jauges) et la décision en cours.",
-        "`/play` redirige vers `/jouer/live` (POC archivé `?archive=1`).",
+        "`/play` redirige vers `/jouer/live` (POC joueur retiré).",
       ],
       workflowSteps: [
         "Hub Live → Compétence ou Histoire",
@@ -807,7 +807,7 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
       ],
       deQuoiCompose: [
         "OsJournalEntry dans world.journal.",
-        "Page /journal (OS si session Book active, sinon POC /play).",
+        "Page /journal (OS si session Book active, sinon CTA Live).",
         "Lien sidebar OsPlayShell.",
       ],
       commentCaMarche: [

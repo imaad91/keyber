@@ -211,20 +211,16 @@ export default function KeyberOsVueGlobalePage() {
           </div>
           <div className="rounded-xl border border-violet-200/80 bg-white/80 px-3 py-2">
             <dt className="text-[10px] font-bold uppercase tracking-wider text-violet-600">
-              Legacy `/play` (Étape 42)
+              Legacy `/play`
             </dt>
             <dd className="mt-1 font-mono text-xs text-slate-900">
               {bridge.legacyPath} → {bridge.liveCatalog}
             </dd>
             <dd className="mt-1 text-xs text-slate-600">
               {bridge.legacyRetired
-                ? "Retiré de l'entrée joueur — POC archivé"
-                : "Encore actif"}{" "}
-              (
-              <code className="rounded bg-violet-100 px-1">
-                {bridge.legacyArchiveHref}
-              </code>
-              ).
+                ? "POC joueur retiré — redirection permanente"
+                : "Encore actif"}
+              .
             </dd>
           </div>
           <div className="rounded-xl border border-violet-200/80 bg-white/80 px-3 py-2">

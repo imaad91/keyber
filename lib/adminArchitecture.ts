@@ -122,7 +122,7 @@ const CORE_BLOCKS: ArchBlock[] = [
     id: "gamestate",
     label: "GameState",
     role: "État unique de la partie",
-    files: ["lib/store.ts", "lib/viewModel.ts", "lib/migrateGameState.ts"],
+    files: ["lib/osActivePlayStore.ts", "lib/keyberOs/donneesSauvegarde.ts"],
     links: ["lu par → ERP, Dashboard, Profil, Journal"],
   },
   {
@@ -136,7 +136,7 @@ const CORE_BLOCKS: ArchBlock[] = [
     id: "sauvegarde",
     label: "Sauvegarde Locale",
     role: "Persistance navigateur (localStorage)",
-    files: ["lib/store.ts", "components/SaveIndicator.tsx"],
+    files: ["lib/keyberOs/donneesSauvegarde.ts"],
     links: ["sauvegarde → GameState"],
   },
   {

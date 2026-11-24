@@ -38,8 +38,8 @@ export const OS_SHELL_ACTIONS: OsShellActionDef[] = [
   },
   {
     id: "atelier-live",
-    titre: "Atelier Live",
-    description: "Vue production live",
+    titre: "Vue Live Production",
+    description: "Flux, postes, machines — selon le contexte",
     timeCostMinutes: 10,
     icon: Factory,
   },

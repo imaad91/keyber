@@ -333,6 +333,38 @@ const ARCH: Record<KeyberOsComposanteId, OsModuleArchitecture> = {
       { from: "auto", to: "slots" },
     ],
   },
+  campus: {
+    moduleId: "campus",
+    summary:
+      "param.Campus / Hotspots → navigation salles → actions shell (Clear Campus).",
+    nodes: [
+      { id: "param", label: "param.Campus", signal: "live-param" },
+      { id: "hotspots", label: "Hotspots", signal: "campus-on" },
+      { id: "nav", label: "Salle courante", signal: "campus-on" },
+      { id: "action", label: "Action shell", signal: "interface-on" },
+    ],
+    edges: [
+      { from: "param", to: "hotspots" },
+      { from: "hotspots", to: "nav" },
+      { from: "nav", to: "action" },
+    ],
+  },
+  "production-live": {
+    moduleId: "production-live",
+    summary:
+      "param.ProductionLive → vue sol opérationnel (fallback ERP machines).",
+    nodes: [
+      { id: "param", label: "param.ProductionLive", signal: "live-param" },
+      { id: "sync", label: "Sync statuts", signal: "production-live-on" },
+      { id: "view", label: "Vue 2D claire", signal: "production-live-on" },
+      { id: "erp", label: "Fallback ERP", signal: "ordinateur-on" },
+    ],
+    edges: [
+      { from: "param", to: "sync" },
+      { from: "sync", to: "view" },
+      { from: "erp", to: "view" },
+    ],
+  },
 };
 
 export function getModuleArchitecture(

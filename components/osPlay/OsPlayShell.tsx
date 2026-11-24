@@ -42,9 +42,11 @@ import {
   BookMarked,
   BookOpen,
   Lock,
+  Map as MapIcon,
   Settings2,
   User,
 } from "lucide-react";
+import { OsCampusWorld } from "@/components/osPlay/OsCampusWorld";
 
 type Props = {
   play: OsPlayState;
@@ -211,6 +213,34 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
           aria-label="Actions"
         >
           <p className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+            Monde
+          </p>
+          <button
+            type="button"
+            onClick={() => setPlay(osOrdinateurSetAction(play, null))}
+            className={cn(
+              "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
+              !play.activeAction
+                ? "bg-accent/15 text-foreground shadow-glow ring-1 ring-accent/40"
+                : "text-muted hover:bg-white/5 hover:text-foreground"
+            )}
+          >
+            <MapIcon
+              className={cn(
+                "mt-0.5 h-4 w-4 shrink-0",
+                !play.activeAction ? "text-accent" : "text-muted"
+              )}
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold leading-tight text-foreground">
+                Campus
+              </span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-muted">
+                Carte &amp; exploration · monde libre
+              </span>
+            </span>
+          </button>
+          <p className="px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
             Actions
           </p>
           {OS_SHELL_ACTIONS.map((action) => {
@@ -330,7 +360,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
               <OsOnboardingCoach play={play} setPlay={setPlay} />
             ) : null}
 
-            {!computerOpen ? (
+            {!computerOpen && play.activeAction ? (
               <>
                 <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
                   {entreprise}
@@ -338,15 +368,8 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
                 <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
                   {title}
                 </h1>
-                <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted">
-                  {subtitle}. Ouvre l&apos;ordinateur, interviewe un
-                  interlocuteur, visite l&apos;atelier, puis prends une
-                  décision.
-                </p>
               </>
             ) : null}
-
-            {!play.activeAction ? null : null}
 
             {play.activeAction === "computer" ? (
               <OsComputerDesktop play={play} setPlay={setPlay} fog={fog} />
@@ -362,9 +385,9 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
             ) : null}
 
             {!play.activeAction ? (
-              <p className="mt-8 text-sm text-muted">
-                Choisis une action dans la barre de gauche.
-              </p>
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/90 p-3 md:p-4">
+                <OsCampusWorld play={play} setPlay={setPlay} />
+              </div>
             ) : null}
 
             {fog && !computerOpen ? (

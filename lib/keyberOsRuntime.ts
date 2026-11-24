@@ -84,6 +84,19 @@ export type KeyberOsRuntimeConfig = {
     showRightAside: boolean;
     showSidebarLinks: boolean;
     fullBleedShell: boolean;
+    /**
+     * Clear Campus — thème clair forcé (dark interdit).
+     * Toujours true en produit ; flag Admin lecture / doc.
+     */
+    forceLightTheme: boolean;
+  };
+  /** Clear Campus — navigation monde. */
+  campus: {
+    enabled: boolean;
+  };
+  /** Clear Campus — Vue Live Production. */
+  productionLive: {
+    enabled: boolean;
   };
   ordinateur: {
     enabled: boolean;
@@ -228,6 +241,13 @@ export const OS_RUNTIME_DEFAULTS: KeyberOsRuntimeConfig = {
     showRightAside: true,
     showSidebarLinks: true,
     fullBleedShell: true,
+    forceLightTheme: true,
+  },
+  campus: {
+    enabled: true,
+  },
+  productionLive: {
+    enabled: true,
   },
   ordinateur: {
     enabled: true,
@@ -489,6 +509,14 @@ function normalize(raw: Partial<KeyberOsRuntimeConfig> | null): KeyberOsRuntimeC
         d.interfaceJoueur.showSidebarLinks,
       fullBleedShell:
         raw.interfaceJoueur?.fullBleedShell ?? d.interfaceJoueur.fullBleedShell,
+      // Clear Campus : dark interdit — toujours light
+      forceLightTheme: true,
+    },
+    campus: {
+      enabled: raw.campus?.enabled ?? d.campus.enabled,
+    },
+    productionLive: {
+      enabled: raw.productionLive?.enabled ?? d.productionLive.enabled,
     },
     ordinateur: {
       enabled: raw.ordinateur?.enabled ?? d.ordinateur.enabled,
@@ -686,6 +714,12 @@ export function setOsRuntimeConfig(
     interfaceJoueur: {
       ...b.config.interfaceJoueur,
       ...patch.interfaceJoueur,
+      forceLightTheme: true,
+    },
+    campus: { ...b.config.campus, ...patch.campus },
+    productionLive: {
+      ...b.config.productionLive,
+      ...patch.productionLive,
     },
     ordinateur: {
       ...b.config.ordinateur,
@@ -777,6 +811,10 @@ export function isOsModuleEnabled(id: OsModuleId): boolean {
       return c.profil.enabled;
     case "fins":
       return c.fins.enabled;
+    case "campus":
+      return c.campus.enabled;
+    case "production-live":
+      return c.productionLive.enabled;
     default:
       return true;
   }

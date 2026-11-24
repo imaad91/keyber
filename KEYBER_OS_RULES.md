@@ -89,6 +89,14 @@ Config runtime OS : `keyber-os-runtime-v1` (une section par composante) — Admi
 Pont Book → Front-End : `keyber-play-catalog-v1` (Live) + cartes Admin Tester → `/jouer/book/[id]`. Doc : Vue Globale « Pont Book ». Le jeu ne lit pas `keyber-studio-*` (Atelier).
 Sans fichier sous `data/scenarios/`, le scénario disparaît du catalogue joueur.
 
+## Clear Campus (Phase 0–1+)
+
+- **Thème clair uniquement** — aucun dark mode produit (joueur ni Studio pour cette direction).
+- Blocs param : `ClearCampus`, `Campus`, `Hotspots`, `ProductionLive` (+ alias `Suite` → `Ordinateur`).
+- **Vue Live Production** = sol opérationnel **du contexte** (pas une preview Admin) ; contenu différent par entreprise.
+- Personnages / opérateurs : **vector** (défaut) ou **aucun** — jamais de photos de vraies personnes.
+- Charte code : `lib/clearCampus/*`. OS reste générique — zéro hardcode Novacier / Lumière dans le moteur.
+
 ## Agent Nettoyage
 
 - Identifie, priorise, propose. **Ne supprime jamais** tout seul.

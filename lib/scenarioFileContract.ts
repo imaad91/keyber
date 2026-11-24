@@ -136,13 +136,22 @@ export function validateScenarioFileContract(
   const param = normalizeScenarioParamFile(raw);
 
   // Blocs obligatoires : présents comme clés dans le fichier source (pas seulement après normalize)
+  // Clear Campus (contractSoft) : warn seulement — packs existants restent VERT avant ré-assemblage.
   for (const def of SCENARIO_PARAM_BLOCKS) {
     if (raw[def.key] === undefined) {
-      issues.push({
-        level: "error",
-        code: "bloc_manquant",
-        message: `Bloc manquant dans le fichier : \`${def.key}\` (${def.label}). Ajoute-le (vide OK) — refus hors fichier.`,
-      });
+      if (def.contractSoft) {
+        issues.push({
+          level: "warn",
+          code: "bloc_clear_campus_manquant",
+          message: `Bloc Clear Campus optionnel absent : \`${def.key}\` (${def.label}) — coquille vide à la normalisation.`,
+        });
+      } else {
+        issues.push({
+          level: "error",
+          code: "bloc_manquant",
+          message: `Bloc manquant dans le fichier : \`${def.key}\` (${def.label}). Ajoute-le (vide OK) — refus hors fichier.`,
+        });
+      }
     }
   }
 

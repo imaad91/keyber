@@ -68,6 +68,31 @@ export {
 } from "@/lib/keyberOs/ordinateur";
 
 export {
+  emptyOsCampusState,
+  ensureOsCampus,
+  osCampusBoot,
+  osCampusEnsureOnState,
+  osCampusGoToRoom,
+  osCampusListHotspotsInRoom,
+  osCampusOnDayChange,
+  osCampusUiPolicy,
+} from "@/lib/keyberOs/campus";
+export type { OsCampusState } from "@/lib/keyberOs/campus";
+
+export { osHotspotActivate } from "@/lib/keyberOs/hotspots";
+
+export {
+  emptyOsProductionLiveRuntime,
+  osProductionLiveSync,
+  osProductionLiveViewModel,
+} from "@/lib/keyberOs/productionLive";
+export type {
+  OsProductionLiveRuntime,
+  OsProductionLiveView,
+  OsProductionLiveViewNode,
+} from "@/lib/keyberOs/productionLive";
+
+export {
   syncErpTablesFromScalars,
   collectErpAlerts,
   ensureErpTablesNonEmpty,

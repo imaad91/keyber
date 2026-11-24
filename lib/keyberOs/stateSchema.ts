@@ -225,6 +225,32 @@ export const OS_STATE_FIELD_FAMILIES: OsStateFieldFamily[] = [
     ],
   },
   {
+    id: "clear-campus",
+    label: "Clear Campus (param)",
+    role: "Monde libre + Vue Live Production — données param Phase 1 (runtime Phase 2+).",
+    fields: [
+      { path: "param.ClearCampus.theme", meaning: "Toujours light" },
+      {
+        path: "param.ClearCampus.characterStyle",
+        meaning: "vector | none",
+      },
+      { path: "param.Campus.wings[]", meaning: "Ailes du campus" },
+      { path: "param.Campus.rooms[]", meaning: "Salles (wingId)" },
+      {
+        path: "param.Hotspots[]",
+        meaning: "suite | interview | decision | document | productionLive",
+      },
+      {
+        path: "param.ProductionLive",
+        meaning: "zones / nodes / flows / vehicles / operators / kpis",
+      },
+      {
+        path: "param.Suite",
+        meaning: "Alias Ordinateur (fusion à la normalisation)",
+      },
+    ],
+  },
+  {
     id: "kpis",
     label: "KPI définitions",
     role: "Déclaratif : quelles jauges afficher (scalable).",

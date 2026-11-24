@@ -22,7 +22,9 @@ export type KeyberOsComposanteId =
   | "journal"
   | "livre"
   | "profil"
-  | "fins";
+  | "fins"
+  | "campus"
+  | "production-live";
 
 export type KeyberOsNavItem = {
   id: KeyberOsComposanteId | "vue-globale";
@@ -82,6 +84,20 @@ export const KEYBER_OS_NAV: KeyberOsNavItem[] = [
     href: "/admin/systeme/ordinateur",
     label: "Ordinateur",
     blurb: "Apps : ERP, mail, chat, dashboard, documents, browser.",
+  },
+  {
+    id: "campus",
+    href: "/admin/systeme/campus",
+    label: "Campus",
+    blurb:
+      "Clear Campus : ailes, salles, hotspots (thème clair).",
+  },
+  {
+    id: "production-live",
+    href: "/admin/systeme/production-live",
+    label: "Vue Live Production",
+    blurb:
+      "Sol opérationnel du contexte (param ProductionLive).",
   },
   {
     id: "temps",
@@ -869,6 +885,76 @@ export const KEYBER_OS_COMPOSANTES: Record<KeyberOsComposanteId, ComposanteDoc> 
         "app/jouer/book/[id]/page.tsx",
         "app/admin/systeme/donnees-sauvegarde/page.tsx",
         "app/api/scenarios/write/route.ts",
+      ],
+    },
+    campus: {
+      id: "campus",
+      title: "Campus",
+      ceQueCaFait: [
+        "Initialise la navigation monde depuis param.Campus (ailes / salles).",
+        "Débloque les lieux selon le jour ; résout les hotspots vers Suite / interview / décision / Production Live.",
+        "Applique la politique UI Clear Campus (thème light, personnages vector|none).",
+      ],
+      deQuoiCompose: [
+        "lib/keyberOs/campus.ts",
+        "lib/keyberOs/hotspots.ts",
+        "lib/clearCampus/*",
+        "param.Campus / Hotspots / ClearCampus",
+      ],
+      commentCaMarche: [
+        "Boot scénario → osCampusBoot.",
+        "osHotspotActivate → salle + activeAction.",
+        "Module OFF → hotspots refusés.",
+      ],
+      workflowSteps: [
+        "Param Campus + Hotspots",
+        "Boot Book",
+        "Aller salle",
+        "Activer hotspot",
+        "Action shell",
+      ],
+      ceQueCaNeFaitPas: [
+        "N'invente pas le plan Novacier / Lumière.",
+        "Ne propose pas de dark mode.",
+      ],
+      codeRefs: [
+        "lib/keyberOs/campus.ts",
+        "lib/keyberOs/hotspots.ts",
+        "app/admin/systeme/campus/page.tsx",
+      ],
+    },
+    "production-live": {
+      id: "production-live",
+      title: "Vue Live Production",
+      ceQueCaFait: [
+        "Affiche le sol opérationnel du contexte (zones, nœuds, flux, véhicules, opérateurs).",
+        "Sync léger des statuts depuis ERP machines / alarmes.",
+        "Fallback machines ERP si ProductionLive vide (packs legacy).",
+      ],
+      deQuoiCompose: [
+        "lib/keyberOs/productionLive.ts",
+        "components/osPlay/OsAtelierLive.tsx",
+        "param.ProductionLive",
+      ],
+      commentCaMarche: [
+        "Action atelier-live ou hotspot productionLive → sync + vue.",
+        "View model data-driven — même code pour usine ou entrepôt.",
+        "UI claire (Clear Campus).",
+      ],
+      workflowSteps: [
+        "Param ProductionLive",
+        "Ouvrir Vue Live Production",
+        "Sync statuts",
+        "Inspection nœud",
+      ],
+      ceQueCaNeFaitPas: [
+        "N'est pas la preview Studio Live Admin.",
+        "Ne hardcode pas une usine unique.",
+      ],
+      codeRefs: [
+        "lib/keyberOs/productionLive.ts",
+        "components/osPlay/OsAtelierLive.tsx",
+        "app/admin/systeme/production-live/page.tsx",
       ],
     },
   };

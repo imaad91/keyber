@@ -20,6 +20,8 @@ import { osProgressionBootFromParam, osSkillSlug } from "@/lib/keyberOs/progress
 import { osRelationsInitFromInterviews } from "@/lib/keyberOs/relations";
 import { readParamKpis } from "@/lib/scenarioParamSchema";
 import { formatOsClock } from "@/lib/keyberOs/temps";
+import { osCampusBoot } from "@/lib/keyberOs/campus";
+import { emptyOsProductionLiveRuntime } from "@/lib/keyberOs/productionLive";
 import type {
   OsChoice,
   OsConsequence,
@@ -247,6 +249,8 @@ export function osScenariosBoot(
       ...osOnboardingBootWorld(param),
     }),
     kpis: readParamKpis(param) ?? createDefaultOsKpis(),
+    campus: osCampusBoot(param, day),
+    productionLiveRuntime: emptyOsProductionLiveRuntime(),
   };
 }
 

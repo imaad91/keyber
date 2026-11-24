@@ -424,6 +424,20 @@ export type OsPlayState = {
   flags: OsFlags;
   world: OsWorld;
   kpis: OsKpiDef[];
+  /** Clear Campus Phase 2 — navigation monde (optionnel sur saves anciens). */
+  campus?: {
+    currentWingId: string | null;
+    currentRoomId: string | null;
+    unlockedWingIds: string[];
+    unlockedRoomIds: string[];
+    selectedHotspotId: string | null;
+  };
+  /** Clear Campus Phase 2 — runtime Vue Live Production. */
+  productionLiveRuntime?: {
+    nodeStatus: Record<string, string>;
+    vehicleZone: Record<string, string>;
+    tick: number;
+  };
 };
 
 export type OsErpSnapshot = {
@@ -459,4 +473,6 @@ export type OsModuleId =
   | "journal"
   | "livre"
   | "profil"
-  | "fins";
+  | "fins"
+  | "campus"
+  | "production-live";

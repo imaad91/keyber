@@ -181,6 +181,80 @@ export function seedGlossaire(): GlossaireTerme[] {
       updatedAt: NOW,
       seed: true,
     },
+    {
+      terme: "campus",
+      nomLisible: "Campus",
+      definitionCourte:
+        "Monde libre de l'entreprise (ailes, salles, plan) navigable en thème clair Clear Campus.",
+      definitionPrecise:
+        "Monde libre de l'entreprise (ailes, salles, plan) navigable en thème clair Clear Campus. Contenu param `Campus` — jamais hardcodé dans l'OS.",
+      exempleConcret:
+        "Chez Lumière, l'aile Logistique contient la salle Entrepôt avec un hotspot Vue Live Production.",
+      utilisations: ["GameState", "Workflow", "Décisions"],
+      synonymesInterdits: ["map jeu sombre", "open world GTA", "dark campus"],
+      updatedAt: NOW,
+      seed: true,
+    },
+    {
+      terme: "hotspot",
+      nomLisible: "Hotspot",
+      definitionCourte:
+        "Point d'action dans un lieu : Suite, interview, décision, document ou Vue Live Production.",
+      definitionPrecise:
+        "Point d'action dans un lieu du Campus. Types : suite | interview | decision | document | productionLive. Param `Hotspots`.",
+      exempleConcret:
+        "Le hotspot « Poste Direction » ouvre la Suite outils (Tableaux).",
+      utilisations: ["GameState", "Workflow", "Décisions"],
+      synonymesInterdits: ["bouton flottant décoratif", "warp"],
+      updatedAt: NOW,
+      seed: true,
+    },
+    {
+      terme: "suite_outils",
+      nomLisible: "Suite outils",
+      definitionCourte:
+        "Outils corporate SaaS (ex-Ordinateur) ouverts depuis un hotspot poste. Alias param de Ordinateur.",
+      definitionPrecise:
+        "Outils corporate SaaS (Tableaux, Flux, Équipe…) ouverts depuis un hotspot. Canonique param = `Ordinateur` ; `Suite` est un alias fusionné à la normalisation.",
+      exempleConcret:
+        "S'asseoir au poste ouvre la Suite light — même pack qu'Ordinateur Book.",
+      utilisations: ["ERP", "GameState", "Workflow"],
+      synonymesInterdits: ["desktop sombre", "ordinateur dark"],
+      updatedAt: NOW,
+      seed: true,
+    },
+    {
+      terme: "vue_live_production",
+      nomLisible: "Vue Live Production",
+      definitionCourte:
+        "Sol opérationnel du contexte (flux, machines/postes, opérateurs, véhicules) — propre à chaque entreprise.",
+      definitionPrecise:
+        "Sol opérationnel du contexte (flux, machines/postes, opérateurs vector, véhicules). Param `ProductionLive`. Novacier ≠ Lumière. Commun à tous les profils joueur.",
+      exempleConcret:
+        "Novacier montre lignes et coils ; Lumière montre réception → picking → expédition.",
+      utilisations: ["GameState", "ERP", "Workflow"],
+      synonymesInterdits: [
+        "preview Studio Live",
+        "iframe joueur Admin",
+        "dark factory",
+      ],
+      updatedAt: NOW,
+      seed: true,
+    },
+    {
+      terme: "clear_campus",
+      nomLisible: "Clear Campus",
+      definitionCourte:
+        "Direction UX joueur : monde libre clair + Suite corporate + Vue Live Production. Thème clair uniquement.",
+      definitionPrecise:
+        "Direction UX joueur : monde libre clair + Suite corporate + Vue Live Production. Thème clair uniquement — dark interdit. Personnages vector ou aucun.",
+      exempleConcret:
+        "ClearCampus.theme = light ; characterStyle = vector (défaut) ou none.",
+      utilisations: ["Workflow", "GameState", "Agents"],
+      synonymesInterdits: ["Ops Playground sombre", "dark mode corporate"],
+      updatedAt: NOW,
+      seed: true,
+    },
   ];
 }
 

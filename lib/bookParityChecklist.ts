@@ -6,6 +6,12 @@
 
 import type { ScenarioParamFile } from "@/lib/bookGenerationPrompt";
 import {
+  normalizeCampus,
+  normalizeClearCampusUi,
+  normalizeHotspots,
+  normalizeProductionLive,
+} from "@/lib/clearCampus/schema";
+import {
   normalizeScenarioParamFile,
   type ScenarioParamFileExtended,
   type ScenarioParamOrdinateur,
@@ -28,7 +34,11 @@ export type BookParityItemId =
   | "consequences"
   | "evenements"
   | "fins"
-  | "dayend";
+  | "dayend"
+  | "campus"
+  | "hotspots"
+  | "productionLive"
+  | "clearCampusTheme";
 
 export type BookParityItem = {
   id: BookParityItemId;
@@ -338,6 +348,54 @@ export function evaluateBookParityChecklist(
         : decisionsHaveJour(decisions)
           ? "Décisions datées (jour)"
           : "Pas de signal DayEnd",
+    },
+    {
+      id: "campus",
+      label: "Clear Campus — Campus",
+      hint: "`Campus` avec au moins 1 aile ou 1 salle",
+      ok:
+        normalizeCampus(param.Campus).wings.length > 0 ||
+        normalizeCampus(param.Campus).rooms.length > 0,
+      detail: (() => {
+        const c = normalizeCampus(param.Campus);
+        return c.wings.length || c.rooms.length
+          ? `${c.wings.length} aile(s) · ${c.rooms.length} salle(s)`
+          : "Campus vide";
+      })(),
+    },
+    {
+      id: "hotspots",
+      label: "Clear Campus — Hotspots",
+      hint: "≥1 hotspot (dont idéalement productionLive ou suite)",
+      ok: normalizeHotspots(param.Hotspots).length > 0,
+      detail: (() => {
+        const hs = normalizeHotspots(param.Hotspots);
+        return hs.length > 0
+          ? `${hs.length} hotspot(s)`
+          : "Aucun hotspot";
+      })(),
+    },
+    {
+      id: "productionLive",
+      label: "Vue Live Production",
+      hint: "`ProductionLive` avec zones ou nœuds (propre au contexte)",
+      ok: (() => {
+        const p = normalizeProductionLive(param.ProductionLive);
+        return p.zones.length > 0 || p.nodes.length > 0;
+      })(),
+      detail: (() => {
+        const p = normalizeProductionLive(param.ProductionLive);
+        return p.zones.length || p.nodes.length
+          ? `type ${p.valueType} · ${p.zones.length} zone(s) · ${p.nodes.length} nœud(s)`
+          : "ProductionLive vide";
+      })(),
+    },
+    {
+      id: "clearCampusTheme",
+      label: "Thème clair Clear Campus",
+      hint: "`ClearCampus.theme` = light (dark interdit)",
+      ok: normalizeClearCampusUi(param.ClearCampus).theme === "light",
+      detail: `thème ${normalizeClearCampusUi(param.ClearCampus).theme} · personnages ${normalizeClearCampusUi(param.ClearCampus).characterStyle}`,
     },
   ];
 

@@ -7,6 +7,7 @@ import {
   OsToggle,
 } from "@/components/admin/KeyberOsRuntimePanel";
 import { OsStateSchemaPanel } from "@/components/admin/OsStateSchemaPanel";
+import { ClearCampusSchemaPanel } from "@/components/admin/ClearCampusSchemaPanel";
 import { ScenarioFileContractPanel } from "@/components/admin/ScenarioFileContractPanel";
 import { KEYBER_OS_COMPOSANTES } from "@/lib/keyberOsDocs";
 import {
@@ -171,6 +172,8 @@ export default function Page() {
           }
         />
       </KeyberOsRuntimePanel>
+
+      <ClearCampusSchemaPanel param={lumiereParam} />
 
       <OsStateSchemaPanel />
     </div>

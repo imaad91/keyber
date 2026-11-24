@@ -17,6 +17,22 @@ import {
   normalizeParamLivre,
   type ScenarioParamLivre,
 } from "@/lib/osLivre";
+import {
+  emptyCampus,
+  emptyClearCampusUi,
+  emptyHotspots,
+  emptyProductionLive,
+  normalizeCampus,
+  normalizeClearCampusUi,
+  normalizeHotspots,
+  normalizeProductionLive,
+} from "@/lib/clearCampus/schema";
+import type {
+  ClearCampusUiConfig,
+  ScenarioParamCampus,
+  ScenarioParamHotspot,
+  ScenarioParamProductionLive,
+} from "@/lib/clearCampus/types";
 
 /** Jour / phase déclaratif (timeline Book + futurs moteurs). */
 export type ScenarioParamJour = {
@@ -58,7 +74,7 @@ export type ScenarioParamOrdinateur = {
   sensors?: unknown[];
 };
 
-/** Clés top-level du schéma étendu (Vue Code). */
+/** Clés top-level du schéma étendu (Vue Code) — Étape 21 + Clear Campus. */
 export const SCENARIO_PARAM_EXTENDED_KEYS = [
   "Ordinateur",
   "Jours",
@@ -68,14 +84,20 @@ export const SCENARIO_PARAM_EXTENDED_KEYS = [
   "Conséquences",
   "Intro",
   "Livre",
+  "ClearCampus",
+  "Campus",
+  "Hotspots",
+  "ProductionLive",
 ] as const;
 
 export type ScenarioParamExtendedKey =
   (typeof SCENARIO_PARAM_EXTENDED_KEYS)[number];
 
-/** ScenarioParamFile + blocs étendus Étape 21. */
+/** ScenarioParamFile + blocs étendus Étape 21 + Clear Campus Phase 1. */
 export type ScenarioParamFileExtended = ScenarioParamFile & {
   Ordinateur?: ScenarioParamOrdinateur;
+  /** Alias produit de Ordinateur (Suite outils) — fusionné à la normalisation. */
+  Suite?: ScenarioParamOrdinateur;
   Jours?: ScenarioParamJour[];
   Interviews?: OsInterview[];
   Objectifs?: OsObjective[];
@@ -83,6 +105,10 @@ export type ScenarioParamFileExtended = ScenarioParamFile & {
   Conséquences?: ScenarioParamConsequencePack[];
   Intro?: string[];
   Livre?: ScenarioParamLivre;
+  ClearCampus?: ClearCampusUiConfig;
+  Campus?: ScenarioParamCampus;
+  Hotspots?: ScenarioParamHotspot[];
+  ProductionLive?: ScenarioParamProductionLive;
 };
 
 export type ScenarioParamBlockKind =
@@ -98,6 +124,11 @@ export type ScenarioParamBlockDef = {
   kind: ScenarioParamBlockKind;
   /** Bloc POC / feeling — visible même vide. */
   extended?: boolean;
+  /**
+   * Clear Campus Phase 1 : absence dans le JSON source = warn, pas error contrat.
+   * (évite de casser les packs disque existants avant ré-assemblage)
+   */
+  contractSoft?: boolean;
   emptyValue: unknown;
 };
 
@@ -187,6 +218,38 @@ export const SCENARIO_PARAM_BLOCKS: ScenarioParamBlockDef[] = [
     label: "Livre",
     kind: "object",
     extended: true,
+    emptyValue: {},
+  },
+  {
+    key: "ClearCampus",
+    label: "Clear Campus (UI)",
+    kind: "object",
+    extended: true,
+    contractSoft: true,
+    emptyValue: {},
+  },
+  {
+    key: "Campus",
+    label: "Campus",
+    kind: "object",
+    extended: true,
+    contractSoft: true,
+    emptyValue: {},
+  },
+  {
+    key: "Hotspots",
+    label: "Hotspots",
+    kind: "array",
+    extended: true,
+    contractSoft: true,
+    emptyValue: [],
+  },
+  {
+    key: "ProductionLive",
+    label: "Vue Live Production",
+    kind: "object",
+    extended: true,
+    contractSoft: true,
     emptyValue: {},
   },
 ];
@@ -286,6 +349,10 @@ export function emptyExtendedParamShells(): Pick<
     Conséquences: [],
     Intro: [],
     Livre: emptyLivreStructure(),
+    ClearCampus: emptyClearCampusUi(),
+    Campus: emptyCampus(),
+    Hotspots: emptyHotspots(),
+    ProductionLive: emptyProductionLive(),
   };
 }
 
@@ -323,6 +390,20 @@ export function normalizeScenarioParamFile(
     }
   }
 
+  // Suite outils = alias Ordinateur (Phase 1.4) — fusion sans inventer de métier
+  if (isPlainObject(base.Suite)) {
+    const suitePack = base.Suite as ScenarioParamOrdinateur;
+    if (!isPlainObject(base.Ordinateur)) {
+      base.Ordinateur = { ...emptyOrdinateurStructure(), ...suitePack };
+    } else {
+      base.Ordinateur = {
+        ...emptyOrdinateurStructure(),
+        ...suitePack,
+        ...(base.Ordinateur as object),
+      };
+    }
+  }
+
   if (!isPlainObject(base.Ordinateur)) {
     base.Ordinateur = emptyOrdinateurStructure();
   } else {
@@ -341,9 +422,13 @@ export function normalizeScenarioParamFile(
     typeof base.Entreprise === "string" ? base.Entreprise : "";
   base.Livre = normalizeParamLivre(base.Livre, entreprise);
 
+  base.ClearCampus = normalizeClearCampusUi(base.ClearCampus);
+  base.Campus = normalizeCampus(base.Campus);
+  base.Hotspots = normalizeHotspots(base.Hotspots);
+  base.ProductionLive = normalizeProductionLive(base.ProductionLive);
+
   return base as ScenarioParamFileExtended;
 }
-
 /** Validation légère — JSON objet + types de blocs ; pas de rejet métier. */
 export function validateScenarioParamFile(
   raw: unknown
@@ -459,6 +544,9 @@ export function buildScenarioParamBlocksGraph(
   const statuses = summarizeScenarioParamBlocks(param);
   const focusKeys = [
     "Contexte",
+    "Campus",
+    "Hotspots",
+    "ProductionLive",
     "Événements entreprise",
     "Décisions",
     "Ordinateur",

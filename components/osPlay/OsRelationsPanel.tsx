@@ -23,7 +23,7 @@ export function OsRelationsPanel({ play, compact }: Props) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-white/10 bg-panel-2/80",
+        "rounded-xl border border-slate-200 bg-panel-2/80",
         compact ? "px-3 py-2" : "p-4"
       )}
     >
@@ -49,7 +49,7 @@ export function OsRelationsPanel({ play, compact }: Props) {
                 {s.trust}/100
               </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
               <div
                 className={cn(
                   "h-full rounded-full transition-all duration-500",

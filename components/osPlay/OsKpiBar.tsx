@@ -23,11 +23,11 @@ export function OsKpiBar({ play, setPlay }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-stretch gap-2 border-b border-white/10 bg-panel/80 px-4 py-3 backdrop-blur-md">
+      <div className="flex flex-wrap items-stretch gap-2 border-b border-slate-200 bg-panel/80 px-4 py-3 backdrop-blur-md">
         {items.map((kpi, index) => (
           <div
             key={kpi.id}
-            className="kpi-tick reward-pop flex min-w-[110px] flex-1 items-center gap-2 rounded-xl border border-white/10 bg-panel-2 px-3 py-2 shadow-soft"
+            className="kpi-tick reward-pop flex min-w-[110px] flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-panel-2 px-3 py-2 shadow-soft"
             style={{ animationDelay: `${index * 40}ms` }}
           >
             <div className="min-w-0 flex-1">

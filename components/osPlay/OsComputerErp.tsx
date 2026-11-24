@@ -199,7 +199,7 @@ export function OsComputerErp({ play, fog }: Props) {
                   className={cn(
                     "rounded-full px-1.5 py-0.5 text-[10px] tabular-nums",
                     module === m.id
-                      ? "bg-white/20 text-white"
+                      ? "bg-slate-800 text-white"
                       : "bg-slate-200 text-slate-600"
                   )}
                 >

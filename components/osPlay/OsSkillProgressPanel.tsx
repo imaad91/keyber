@@ -31,7 +31,7 @@ export function OsSkillProgressPanel({ play }: Props) {
           return (
             <li
               key={s.id}
-              className="rounded-xl border border-white/10 bg-panel-2 px-3 py-2"
+              className="rounded-xl border border-slate-200 bg-panel-2 px-3 py-2"
             >
               <div className="mb-1 flex items-center justify-between gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
@@ -42,7 +42,7 @@ export function OsSkillProgressPanel({ play }: Props) {
                 </span>
               </div>
               <p className="text-sm font-semibold text-foreground">{s.nom}</p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
                 <div
                   className={cn(
                     "h-full rounded-full bg-accent transition-all duration-500"

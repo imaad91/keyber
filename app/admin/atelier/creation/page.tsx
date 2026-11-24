@@ -14,6 +14,7 @@ import {
 } from "@/lib/atelierCreationExcel";
 import { downloadOrdinateurTemplate } from "@/lib/atelierOrdinateurExcel";
 import { downloadNarrationTemplate } from "@/lib/atelierNarrationExcel";
+import { downloadMondeTemplate } from "@/lib/atelierMondeExcel";
 import {
   creationPendingItems,
   creationProgress,
@@ -82,9 +83,9 @@ export default function AtelierCreationPage() {
         Vous ne remplissez jamais les champs ici. Vous téléchargez le template
         Excel, vous le remplissez, vous l&apos;importez, vous validez. C&apos;est
         la seule façon de créer un contexte. Pas encore dans le Book tant que
-        le prototype n&apos;est pas validé. Templates Ordinateur (32) et
-        Narration / décisions (33) : download ici ou sur la fiche — import
-        dry-run sur la fiche.
+        le prototype n&apos;est pas validé. Templates Monde Clear Campus,
+        Ordinateur / Suite (32) et Narration / décisions (33) : download ici
+        ou sur la fiche — import dry-run sur la fiche.
       </p>
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -95,10 +96,18 @@ export default function AtelierCreationPage() {
         <AdminButton
           type="button"
           variant="secondary"
+          onClick={() => downloadMondeTemplate()}
+        >
+          <Download className="h-4 w-4" />
+          Template Monde Clear Campus
+        </AdminButton>
+        <AdminButton
+          type="button"
+          variant="secondary"
           onClick={() => downloadOrdinateurTemplate()}
         >
           <Download className="h-4 w-4" />
-          Template Ordinateur (ERP / mail / …)
+          Template Suite / Ordinateur
         </AdminButton>
         <AdminButton
           type="button"

@@ -37,7 +37,7 @@ export default function Page() {
       </section>
 
       <KeyberOsRuntimePanel
-        title="Ordinateur — apps runtime"
+        title="Suite outils (ex-Ordinateur) — apps runtime"
         description="Active ou désactive les applications du desktop joueur (ERP, mail, chat…). Les apps OFF disparaissent de la grille Bureau."
         onReset={() =>
           setConfig({

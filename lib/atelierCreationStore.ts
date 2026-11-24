@@ -13,6 +13,7 @@ import {
 } from "@/lib/atelierCreationExcel";
 import type { OrdinateurExcelPack } from "@/lib/atelierOrdinateurExcel";
 import type { NarrationExcelPack } from "@/lib/atelierNarrationExcel";
+import type { MondeExcelPack } from "@/lib/atelierMondeExcel";
 import type { AtelierScenarioMode } from "@/lib/atelierScenarioMode";
 import {
   useBookStore,
@@ -89,6 +90,10 @@ export type AtelierCreation = {
    * Rempli via import template ; pas d'invention OS (Lumière = exception seed).
    */
   narrationPack: NarrationExcelPack;
+  /**
+   * Clear Campus Phase 4 — staging Excel Monde (Campus / Hotspots / Vue Live Production).
+   */
+  mondePack: MondeExcelPack;
   roleNames: string[];
   competenceNames: string[];
   scenarios: CreationScenarioDraft[];
@@ -132,6 +137,8 @@ function normalizeCreation(
       c.narrationPack && typeof c.narrationPack === "object"
         ? c.narrationPack
         : {},
+    mondePack:
+      c.mondePack && typeof c.mondePack === "object" ? c.mondePack : {},
     roleNames: Array.isArray(c.roleNames) ? c.roleNames : [],
     competenceNames: Array.isArray(c.competenceNames)
       ? c.competenceNames
@@ -321,6 +328,7 @@ export function useAtelierCreationStore() {
         fields: { ...emptyContexteFields(), ...fields },
         ordinateurPack: {},
         narrationPack: {},
+        mondePack: {},
         roleNames: [],
         competenceNames: [],
         scenarios: [],
@@ -426,6 +434,24 @@ export function useAtelierCreationStore() {
         ...state,
         creations: state.creations.map((x) => (x.id === id ? next : x)),
         toast: "Narration / décisions Excel enregistré (staging)",
+      });
+      return {};
+    },
+    /** Phase 4 — staging Excel Monde / Campus / Vue Live Production. */
+    setMondePack(id: string, pack: MondeExcelPack): { error?: string } {
+      ensure();
+      const c = state.creations.find((x) => x.id === id);
+      if (!c) return { error: "Création introuvable" };
+      if (c.dansBook) return { error: "Déjà dans le Book — lecture seule" };
+      const next = {
+        ...c,
+        mondePack: { ...pack },
+        updatedAt: now(),
+      };
+      persist({
+        ...state,
+        creations: state.creations.map((x) => (x.id === id ? next : x)),
+        toast: "Monde Clear Campus Excel enregistré (staging)",
       });
       return {};
     },
@@ -580,6 +606,7 @@ export function useAtelierCreationStore() {
         fields: { ...emptyContexteFields(), ...entry.fields },
         ordinateurPack: {},
         narrationPack: {},
+        mondePack: {},
         roleNames: [...entry.roleNames],
         competenceNames: [...entry.competenceNames],
         scenarios: [

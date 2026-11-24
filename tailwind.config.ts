@@ -36,8 +36,8 @@ const config: Config = {
         display: ["var(--font-display)", "ui-sans-serif", "sans-serif"],
       },
       boxShadow: {
-        soft: "0 8px 30px rgba(0,0,0,0.25)",
-        glow: "0 0 24px rgba(61, 214, 198, 0.2)",
+        soft: "0 8px 24px rgba(15, 23, 42, 0.08)",
+        glow: "0 0 20px rgba(13, 148, 136, 0.15)",
       },
     },
   },

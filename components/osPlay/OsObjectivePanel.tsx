@@ -36,7 +36,7 @@ export function OsObjectivePanel({ play }: Props) {
 
       <div className="space-y-2">
         {objectives.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-white/10 px-3 py-2 text-xs text-muted">
+          <p className="rounded-lg border border-dashed border-slate-200 px-3 py-2 text-xs text-muted">
             Aucun objectif dans le paramétrage.
           </p>
         ) : (
@@ -57,7 +57,7 @@ export function OsObjectivePanel({ play }: Props) {
               <article
                 key={obj.id}
                 className={cn(
-                  "rounded-xl border border-white/10 bg-panel-2 p-3 transition",
+                  "rounded-xl border border-slate-200 bg-panel-2 p-3 transition",
                   obj.status === "COMPLETE" && "border-ok/40 bg-ok/10",
                   obj.status === "ECHOUE" && "border-danger/40 bg-danger/10"
                 )}
@@ -87,7 +87,7 @@ export function OsObjectivePanel({ play }: Props) {
                     {obj.cible}
                   </p>
                 ) : null}
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
                   <div
                     className={cn(
                       "h-full rounded-full transition-all duration-500",

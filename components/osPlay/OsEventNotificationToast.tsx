@@ -39,7 +39,7 @@ export function OsEventNotificationToast({ play, setPlay }: Props) {
   if (!enabled || !latest) return null;
 
   return (
-    <div className="pointer-events-auto fixed right-4 top-4 z-[60] w-[min(360px,calc(100vw-2rem))] rounded-xl border border-white/15 bg-panel p-4 shadow-glow">
+    <div className="pointer-events-auto fixed right-4 top-4 z-[60] w-[min(360px,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-panel p-4 shadow-sm">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-accent/20 text-accent">
           <Bell className="h-4 w-4" />

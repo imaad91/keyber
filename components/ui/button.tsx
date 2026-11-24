@@ -13,8 +13,8 @@ const buttonVariants = cva(
         accent:
           "bg-accent-warm text-navy shadow-sm hover:brightness-110 hover:-translate-y-0.5",
         outline:
-          "border border-white/15 bg-white/5 text-foreground hover:bg-white/10 hover:border-accent/40",
-        ghost: "text-muted hover:bg-white/5 hover:text-foreground",
+          "border border-slate-200 bg-slate-50 text-foreground hover:bg-slate-100 hover:border-accent/40",
+        ghost: "text-muted hover:bg-slate-50 hover:text-foreground",
         erp: "bg-navy text-white shadow-sm hover:bg-navy-light hover:-translate-y-0.5",
         danger:
           "bg-danger/90 text-white shadow-sm hover:bg-danger hover:-translate-y-0.5",

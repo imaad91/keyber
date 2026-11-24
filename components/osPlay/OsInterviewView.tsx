@@ -78,7 +78,7 @@ export function OsInterviewView({ play, setPlay }: Props) {
                 "flex items-center gap-2 rounded-full border px-2 py-1.5 transition",
                 p.id === current.id
                   ? "border-accent bg-accent/15"
-                  : "border-white/10 bg-panel-2 hover:bg-white/5"
+                  : "border-slate-200 bg-panel-2 hover:bg-slate-50"
               )}
               aria-label={p.nom}
             >
@@ -100,7 +100,7 @@ export function OsInterviewView({ play, setPlay }: Props) {
         <OsRelationsPanel play={play} compact />
       ) : null}
 
-      <div className="grid min-h-0 flex-1 gap-6 rounded-3xl border border-white/10 bg-[#F5F1E8] p-5 text-[#0C3B38] shadow-soft md:grid-cols-[minmax(220px,320px)_1fr] md:p-8">
+      <div className="grid min-h-0 flex-1 gap-6 rounded-3xl border border-slate-200 bg-[#F5F1E8] p-5 text-[#0C3B38] shadow-soft md:grid-cols-[minmax(220px,320px)_1fr] md:p-8">
         <div className="flex flex-col items-center gap-3">
           <div className="rounded-2xl border-[3px] border-[#0C3B38] bg-white p-3 shadow-sm">
             <CharacterAvatar

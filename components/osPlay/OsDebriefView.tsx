@@ -55,7 +55,7 @@ export function OsDebriefView({ play, onReplay }: Props) {
     <section className="view-enter flex h-full min-h-[480px] items-center justify-center p-4">
       <div
         className={cn(
-          "reward-pop w-full max-w-xl rounded-3xl border p-8 shadow-glow",
+          "reward-pop w-full max-w-xl rounded-3xl border p-8 shadow-sm",
           tone
         )}
       >
@@ -87,7 +87,7 @@ export function OsDebriefView({ play, onReplay }: Props) {
         </dl>
 
         {skillLines.length > 0 ? (
-          <div className="mt-5 space-y-1.5 rounded-xl border border-white/10 bg-panel/80 p-3 text-sm">
+          <div className="mt-5 space-y-1.5 rounded-xl border border-slate-200 bg-panel/80 p-3 text-sm">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">
               Débrief compétences
             </p>
@@ -119,7 +119,7 @@ export function OsDebriefView({ play, onReplay }: Props) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-panel/80 px-3 py-2">
+    <div className="rounded-xl border border-slate-200 bg-panel/80 px-3 py-2">
       <dt className="text-[10px] uppercase tracking-wider text-muted">{label}</dt>
       <dd className="font-display text-lg font-semibold tabular-nums">{value}</dd>
     </div>

@@ -3,21 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --background: #071f1d;
-  --foreground: #e8f6f1;
-  --navy: #0c3b38;
+  /* Clear Campus — thème clair obligatoire (remplace l'ancien skin dark). */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --navy: #0b3d3a;
   --navy-light: #14524d;
-  --navy-mid: #1a5f59;
-  --accent: #2fd67e;
-  --accent-dark: #24b86a;
-  --accent-warm: #e8b86d;
-  --canvas: #071f1d;
-  --panel: #0c3b38;
-  --panel-2: #0f4743;
+  --navy-mid: #0f766e;
+  --accent: #0d9488;
+  --accent-dark: #0f766e;
+  --accent-warm: #d97706;
+  --canvas: #f8fafc;
+  --panel: #ffffff;
+  --panel-2: #f1f5f4;
   --erp: #ffffff;
-  --danger: #f07178;
-  --ok: #2fd67e;
-  --muted: #9bc4bb;
+  --danger: #dc2626;
+  --ok: #059669;
+  --muted: #64748b;
 }
 
 body {
@@ -27,15 +28,15 @@ body {
 
 .atmosphere-landing {
   background-image:
-    radial-gradient(ellipse 70% 50% at 15% 10%, rgba(47, 214, 126, 0.14), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 90% 0%, rgba(232, 184, 109, 0.1), transparent 50%),
-    linear-gradient(165deg, #071f1d 0%, #0c3b38 45%, #062422 100%);
+    radial-gradient(ellipse 70% 50% at 15% 10%, rgba(13, 148, 136, 0.12), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 0%, rgba(217, 119, 6, 0.08), transparent 50%),
+    linear-gradient(165deg, #f8fafc 0%, #f1f5f4 45%, #ecfeff 100%);
 }
 
 .atmosphere-play {
   background-image:
-    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(47, 214, 126, 0.07), transparent 55%),
-    linear-gradient(180deg, #071f1d 0%, #0a2e2b 100%);
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(13, 148, 136, 0.08), transparent 55%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f4 100%);
 }
 
 .livre-paper {
@@ -205,8 +206,8 @@ body {
 .conveyor-belt {
   background-image: repeating-linear-gradient(
     90deg,
-    #1a5f59 0 20px,
-    #0f4743 20px 40px
+    #99f6e4 0 20px,
+    #5eead4 20px 40px
   );
 }
 

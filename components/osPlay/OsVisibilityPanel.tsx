@@ -39,7 +39,7 @@ export function OsVisibilityPanel({ play, setPlay, open, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="reward-pop max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/15 bg-panel p-5 shadow-soft">
+      <div className="reward-pop max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-panel p-5 shadow-soft">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
@@ -57,7 +57,7 @@ export function OsVisibilityPanel({ play, setPlay, open, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-muted hover:bg-white/10"
+            className="rounded-md p-1 text-muted hover:bg-slate-100"
             aria-label="Fermer"
           >
             <X className="h-4 w-4" />
@@ -65,13 +65,13 @@ export function OsVisibilityPanel({ play, setPlay, open, onClose }: Props) {
         </div>
 
         {showMatrix ? (
-          <div className="mb-4 overflow-hidden rounded-xl border border-white/10">
-            <p className="border-b border-white/10 bg-panel-2 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted">
+          <div className="mb-4 overflow-hidden rounded-xl border border-slate-200">
+            <p className="border-b border-slate-200 bg-panel-2 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted">
               Matrice des tiers
             </p>
             <table className="w-full text-left text-[11px]">
               <thead className="text-muted">
-                <tr className="border-b border-white/10">
+                <tr className="border-b border-slate-200">
                   <th className="px-3 py-1.5 font-semibold">Tier</th>
                   <th className="px-3 py-1.5 font-semibold">ERP</th>
                   <th className="px-3 py-1.5 font-semibold">KPI</th>
@@ -82,7 +82,7 @@ export function OsVisibilityPanel({ play, setPlay, open, onClose }: Props) {
                   <tr
                     key={row.tier}
                     className={cn(
-                      "border-b border-white/5",
+                      "border-b border-slate-100",
                       level === row.tier && "bg-accent/10"
                     )}
                   >
@@ -118,7 +118,7 @@ export function OsVisibilityPanel({ play, setPlay, open, onClose }: Props) {
                 key={inv.level}
                 className={cn(
                   "rounded-xl border p-4",
-                  owned ? "border-ok/40 bg-ok/10" : "border-white/10 bg-panel-2"
+                  owned ? "border-ok/40 bg-ok/10" : "border-slate-200 bg-panel-2"
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -164,7 +164,7 @@ export function OsVisibilityPanel({ play, setPlay, open, onClose }: Props) {
                 "rounded-xl border p-4",
                 s.installed
                   ? "border-ok/40 bg-ok/10"
-                  : "border-white/10 bg-panel-2"
+                  : "border-slate-200 bg-panel-2"
               )}
             >
               <div className="flex items-start justify-between gap-3">

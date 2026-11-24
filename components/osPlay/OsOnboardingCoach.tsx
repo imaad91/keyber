@@ -28,7 +28,7 @@ export function OsOnboardingCoach({ play, setPlay }: Props) {
   const step = Math.min(4, play.world.onboardingStep || 1);
 
   return (
-    <div className="reward-pop mb-4 rounded-2xl border border-accent/40 bg-accent/10 p-4 shadow-glow">
+    <div className="reward-pop mb-4 rounded-2xl border border-accent/40 bg-accent/10 p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
@@ -71,7 +71,7 @@ export function OsOnboardingCoach({ play, setPlay }: Props) {
                 ? "bg-accent"
                 : step === n
                   ? "bg-accent/50"
-                  : "bg-white/15"
+                  : "bg-slate-200"
             }`}
           />
         ))}

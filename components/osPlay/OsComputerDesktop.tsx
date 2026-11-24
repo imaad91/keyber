@@ -112,41 +112,37 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
   const APPS = ALL_APPS.filter((a) => appsEnabled[a.id]);
 
   return (
-    <section className="computer-shell view-enter flex h-full min-h-[520px] flex-col overflow-hidden rounded-xl border border-slate-300 bg-slate-200 shadow-soft">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 bg-slate-800 px-4 py-2.5 text-white">
+    <section className="computer-shell view-enter flex h-full min-h-[520px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-soft">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 py-2.5 text-slate-900">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">
-            {roleLabel} · {entreprise} — {dayLabel} {clock}
+            Suite outils · {roleLabel} · {entreprise} — {dayLabel} {clock}
           </p>
-          <p className="text-[11px] text-slate-300">
-            Ordinateur de production · le temps avance à chaque application
+          <p className="text-[11px] text-slate-500">
+            Outils corporate · le temps avance à chaque application
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="rounded-md bg-slate-700 px-2.5 py-1 font-mono text-sm tabular-nums text-emerald-300">
+          <span className="rounded-md border border-slate-200 bg-teal-50 px-2.5 py-1 font-mono text-sm tabular-nums text-teal-800">
             {clock}
           </span>
           <button
             type="button"
             onClick={() => setPlay(osOrdinateurSetAction(play, null))}
-            className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 transition hover:bg-slate-100"
           >
             <LogOut className="h-3.5 w-3.5" />
-            Quitter l&apos;ordinateur / Retour au jeu
+            Retour au Campus
           </button>
         </div>
       </header>
 
       <div className="relative min-h-0 flex-1">
         {!computerApp ? (
-          <div
-            className="h-full overflow-auto p-6 md:p-8"
-            style={{
-              background:
-                "linear-gradient(160deg, #1e3a5f 0%, #0f766e 45%, #134e4a 100%)",
-            }}
-          >
-            <p className="mb-5 text-sm font-medium text-white/80">Bureau</p>
+          <div className="h-full overflow-auto bg-gradient-to-br from-slate-50 via-white to-teal-50/40 p-6 md:p-8">
+            <p className="mb-5 text-sm font-medium text-slate-600">
+              Applications Suite
+            </p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
               {APPS.map((app) => {
                 const Icon = app.icon;
@@ -159,12 +155,12 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
                     key={app.id}
                     type="button"
                     onClick={() => setPlay(osOrdinateurOpenApp(play, app.id))}
-                    className="group flex flex-col items-start gap-3 rounded-xl border border-white/15 bg-white/10 p-4 text-left text-white backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white/20"
+                    className="group flex flex-col items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
                   >
                     <span className="relative">
                       <span
                         className={cn(
-                          "flex h-12 w-12 items-center justify-center rounded-xl shadow-md",
+                          "flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-md",
                           app.accent
                         )}
                       >
@@ -190,7 +186,7 @@ export function OsComputerDesktop({ play, setPlay, fog }: Props) {
                       <span className="block text-sm font-semibold">
                         {app.titre}
                       </span>
-                      <span className="mt-0.5 block text-[11px] leading-snug text-white/70">
+                      <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">
                         {app.description}
                       </span>
                     </span>

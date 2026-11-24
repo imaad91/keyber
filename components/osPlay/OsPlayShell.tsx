@@ -101,7 +101,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
           "overflow-auto text-foreground atmosphere-play",
           ui.fullBleedShell
             ? "h-[calc(100vh-2.5rem)] min-h-[560px]"
-            : "min-h-[70vh] rounded-2xl border border-white/10 shadow-lg"
+            : "min-h-[70vh] rounded-2xl border border-slate-200 shadow-lg"
         )}
       >
         <OsDebriefView
@@ -151,7 +151,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
         "relative flex overflow-hidden text-foreground atmosphere-play",
         ui.fullBleedShell
           ? "h-[calc(100vh-2.5rem)] min-h-[560px]"
-          : "min-h-[70vh] rounded-2xl border border-white/10 shadow-lg"
+          : "min-h-[70vh] rounded-2xl border border-slate-200 shadow-lg"
       )}
     >
       <OsDayEndScreen play={play} setPlay={setPlay} />
@@ -159,8 +159,8 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
         <OsIntroNarrative play={play} setPlay={setPlay} />
       ) : null}
       {/* Sidebar — même structure que ActionSidebar POC */}
-      <aside className="flex h-full w-[232px] shrink-0 flex-col border-r border-white/10 bg-panel">
-        <div className="border-b border-white/10 px-4 py-4">
+      <aside className="flex h-full w-[232px] shrink-0 flex-col border-r border-slate-200 bg-panel">
+        <div className="border-b border-slate-200 px-4 py-4">
           <Link
             href="/"
             className="font-display text-lg font-semibold tracking-tight text-accent"
@@ -179,7 +179,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
                   ? `Jour ${day} - ${heure} - Il te reste ${formatRemainingLabel(remaining)}`
                   : heure}
               </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
                 <div
                   className="h-full rounded-full bg-accent transition-all duration-500"
                   style={{ width: `${progressPct}%` }}
@@ -190,7 +190,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
         </div>
 
         {ui.showSidebarLinks ? (
-          <div className="border-b border-white/10 p-2">
+          <div className="border-b border-slate-200 p-2">
             <Link
               href="/livre"
               className="flex items-center gap-2 rounded-xl bg-accent/15 px-3 py-2.5 text-sm font-semibold text-accent ring-1 ring-accent/30 transition hover:bg-accent/25"
@@ -200,7 +200,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
             </Link>
             <Link
               href="/journal"
-              className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition hover:bg-white/5 hover:text-foreground"
+              className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition hover:bg-slate-50 hover:text-foreground"
             >
               <BookMarked className="h-4 w-4" />
               Journal de bord
@@ -221,8 +221,8 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
             className={cn(
               "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
               !play.activeAction
-                ? "bg-accent/15 text-foreground shadow-glow ring-1 ring-accent/40"
-                : "text-muted hover:bg-white/5 hover:text-foreground"
+                ? "bg-accent/15 text-foreground shadow-sm ring-1 ring-accent/40"
+                : "text-muted hover:bg-slate-50 hover:text-foreground"
             )}
           >
             <MapIcon
@@ -263,8 +263,8 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
                   "group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
                   locked && "opacity-45",
                   active
-                    ? "bg-accent/15 text-foreground shadow-glow ring-1 ring-accent/40"
-                    : "text-muted hover:bg-white/5 hover:text-foreground"
+                    ? "bg-accent/15 text-foreground shadow-sm ring-1 ring-accent/40"
+                    : "text-muted hover:bg-slate-50 hover:text-foreground"
                 )}
               >
                 {locked ? (
@@ -295,17 +295,17 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
         </nav>
 
         {ui.showSidebarLinks ? (
-          <div className="border-t border-white/10 p-2">
+          <div className="border-t border-slate-200 p-2">
             <Link
               href="/profil"
-              className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted transition hover:bg-white/5 hover:text-foreground"
+              className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted transition hover:bg-slate-50 hover:text-foreground"
             >
               <User className="h-4 w-4" />
               Mon profil
             </Link>
             <Link
               href="/admin/systeme/interface-joueur"
-              className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted transition hover:bg-white/5 hover:text-accent"
+              className="mt-1 flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-muted transition hover:bg-slate-50 hover:text-accent"
             >
               <Settings2 className="h-4 w-4" />
               Mode Admin
@@ -318,7 +318,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
         {ui.showClock ? <OsGameClockBar play={play} /> : null}
         <OsUrgentEventBanner play={play} setPlay={setPlay} />
 
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2 text-xs text-muted">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-2 text-xs text-muted">
           <span>
             {subtitle} · Semaine {week} · Jour {day}
             {ui.stepLabel ? ` · ${ui.stepLabel}` : ""}
@@ -401,7 +401,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
             ) : null}
 
             {ui.showPipelineLog ? (
-              <div className="mt-6 max-h-28 overflow-auto rounded-xl border border-white/10 bg-black/40 p-2 font-mono text-[10px] text-emerald-200/80">
+              <div className="mt-6 max-h-28 overflow-auto rounded-xl border border-slate-200 bg-slate-900 p-2 font-mono text-[10px] text-emerald-200/80">
                 {play.log.slice(-8).map((l, i) => (
                   <div key={`${i}-${l.slice(0, 20)}`}>{l}</div>
                 ))}
@@ -410,7 +410,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
           </main>
 
           {showAside ? (
-            <aside className="hidden min-h-0 space-y-6 overflow-y-auto border-l border-white/10 bg-panel/60 p-4 lg:block">
+            <aside className="hidden min-h-0 space-y-6 overflow-y-auto border-l border-slate-200 bg-panel/60 p-4 lg:block">
               {ui.showObjectives ? <OsObjectivePanel play={play} /> : null}
               <OsSkillProgressPanel play={play} />
               <section>
@@ -422,7 +422,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
                     ? play.historique.evenementsDeclenches
                     : play.eventsFired
                   ).length === 0 ? (
-                    <li className="rounded-lg border border-dashed border-white/10 px-3 py-2">
+                    <li className="rounded-lg border border-dashed border-slate-200 px-3 py-2">
                       Aucun événement déclenché
                     </li>
                   ) : (
@@ -433,7 +433,7 @@ export function OsPlayShell({ play, setPlay, title, subtitle }: Props) {
                     ).map((e) => (
                       <li
                         key={e}
-                        className="rounded-lg border border-white/10 bg-panel-2 px-3 py-2 text-foreground"
+                        className="rounded-lg border border-slate-200 bg-panel-2 px-3 py-2 text-foreground"
                       >
                         {e}
                       </li>
@@ -469,7 +469,7 @@ function OsDecide({
     const finLabel = play.world?.matchedFinLabel;
     const ending = play.world?.ending;
     return (
-      <div className="mt-4 rounded-xl border border-white/10 bg-panel-2 p-4">
+      <div className="mt-4 rounded-xl border border-slate-200 bg-panel-2 p-4">
         <p className="text-[10px] font-bold uppercase tracking-wider text-accent">
           Fin de scénario
           {ending ? ` · ${ending}` : ""}
@@ -492,7 +492,7 @@ function OsDecide({
     return <p className="mt-4 text-sm text-muted">Aucune décision.</p>;
   }
   return (
-    <div className="mt-4 rounded-xl border border-white/10 bg-panel-2 p-4">
+    <div className="mt-4 rounded-xl border border-slate-200 bg-panel-2 p-4">
       <p className="text-xs uppercase tracking-wide text-muted">
         Décision {play.stepIndex + 1}/{play.decisions.length}
         {decision.jour != null ? ` · Jour ${decision.jour}` : ""}
@@ -508,7 +508,7 @@ function OsDecide({
           <button
             key={o.id}
             type="button"
-            className="block w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-left text-sm transition hover:bg-white/10"
+            className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm transition hover:bg-slate-100"
             onClick={() => setPlay(applyOsBookChoice(play, o.id))}
           >
             <span className="block font-semibold text-foreground">
@@ -528,7 +528,7 @@ function OsDecide({
                       "rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
                       imp.tone === "pos" && "bg-ok/15 text-ok",
                       imp.tone === "neg" && "bg-danger/15 text-danger",
-                      imp.tone === "neu" && "bg-white/10 text-muted"
+                      imp.tone === "neu" && "bg-slate-100 text-muted"
                     )}
                   >
                     {imp.label} {imp.value}

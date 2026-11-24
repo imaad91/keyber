@@ -36,7 +36,7 @@ export function OsDayEndScreen({ play, setPlay }: Props) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-white/15 bg-panel p-6 shadow-glow">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-panel p-6 shadow-sm">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
           18:00
         </p>
@@ -70,7 +70,7 @@ export function OsDayEndScreen({ play, setPlay }: Props) {
           </li>
         </ul>
         {debrief.length > 0 ? (
-          <div className="mt-4 space-y-1.5 rounded-xl border border-white/10 bg-panel-2 p-3 text-sm">
+          <div className="mt-4 space-y-1.5 rounded-xl border border-slate-200 bg-panel-2 p-3 text-sm">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">
               Débrief compétences
             </p>

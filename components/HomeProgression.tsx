@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ClearCampusDemoBootstrap } from "@/components/ClearCampusDemoBootstrap";
 import {
   OS_LIVE_CATALOG_PATH,
   osBookPlayHref,
@@ -13,6 +14,14 @@ import {
   osDonneesMostRecentSave,
   type OsBookSaveSummary,
 } from "@/lib/keyberOs/donneesSauvegarde";
+import {
+  lumiereDemoAlreadySeeded,
+  seedLumiereCoDemo,
+} from "@/lib/lumiereCoSeed";
+import {
+  novacierPackAlreadySeeded,
+  seedNovacierBookPack,
+} from "@/lib/novacierBookSeed";
 
 export function HomeProgression() {
   const router = useRouter();
@@ -20,6 +29,13 @@ export function HomeProgression() {
 
   useEffect(() => {
     setResume(osDonneesMostRecentSave());
+    // Seed démos si Book vide (Preview live sinon = ancien feeling + 0 scénario).
+    try {
+      if (!lumiereDemoAlreadySeeded()) seedLumiereCoDemo();
+      if (!novacierPackAlreadySeeded()) seedNovacierBookPack();
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   function onResume() {
@@ -29,15 +45,19 @@ export function HomeProgression() {
 
   return (
     <section className="hero-enter max-w-3xl">
+      <ClearCampusDemoBootstrap />
       <p className="font-display text-5xl font-semibold tracking-tight text-accent md:text-7xl">
         KEYBER
       </p>
+      <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-teal-700">
+        Clear Campus · thème clair · monde libre
+      </p>
       <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight text-foreground md:text-5xl">
-        Prends les commandes.
+        Explore l&apos;entreprise. Décide.
       </h1>
       <p className="mt-5 max-w-xl text-base leading-relaxed text-muted md:text-lg">
-        Une seule porte joueur : le catalogue Live. Compétence ou Histoire —
-        même shell Keyber OS, sauvegarde Book automatique.
+        Démos Lumière (entrepôt) et Novacier (usine) : carte Campus → hotspots →
+        Suite outils ou Vue Live Production. Catalogue Live = même shell OS.
       </p>
 
       {resume ? (
@@ -61,12 +81,18 @@ export function HomeProgression() {
         </div>
       ) : null}
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-wrap gap-3">
         <Button asChild variant="accent" size="lg" className="cta-pulse">
           <Link href={OS_LIVE_CATALOG_PATH}>
-            C&apos;est parti
+            Catalogue Live
             <ArrowRight className="h-4 w-4" />
           </Link>
+        </Button>
+        <Button asChild variant="outline" size="lg">
+          <Link href="/admin/book/en-cours-de-test">Book · Tester Campus</Link>
+        </Button>
+        <Button asChild variant="outline" size="lg">
+          <Link href="/admin/atelier/production">Studio Production</Link>
         </Button>
       </div>
     </section>
